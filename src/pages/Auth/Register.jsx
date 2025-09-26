@@ -105,7 +105,7 @@ const Register = () => {
         <Link to="/">
           <div className="font-extrabold flex flex-row justify-center gap-4">
             <img src={icon} alt="logo" width="30px" />
-            <h1 className="text-xl">jokopi.</h1>
+            <h1 className="text-xl">Kopi.</h1>
           </div>
         </Link>
         <div className="text-xl font-semibold text-tertiary">Login</div>
@@ -225,7 +225,7 @@ const Register = () => {
             className="w-full text-tertiary bg-white focus:ring-4 focus:outline-none focus:ring-primary-300 font-bold rounded-2xl text-lg p-3 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 shadow-xl inline-flex justify-center items-center"
           >
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
+              src="https://i.pinimg.com/1200x/60/41/99/604199df880fb029291ddd7c382e828b.jpg"
               alt=""
               width="23px"
               className="w  -5 h-5 mr-2"
