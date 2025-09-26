@@ -377,50 +377,6 @@ function Profile() {
                         />
                       </div>
                     </div>
-                    <div className="flex justify-around items-center">
-                      <div className="male flex items-center gap-2">
-                        <input
-                          type="radio"
-                          id="genderMale"
-                          name="gender"
-                          value="1"
-                          className="hidden peer"
-                          checked={String(form.gender) === "1"}
-                          disabled={!editMode}
-                          onChange={formHandler}
-                          onClick={() => setForm({ ...form, gender: "1" })}
-                          required
-                        />
-                        <label
-                          htmlFor="genderMale"
-                          className="inline-flex items-center justify-between p-2 text-gray-500 bg-[#BABABA59] rounded-full cursor-pointer peer-checked:text-white peer-checked:bg-secondary peer-checked:font-bold hover:text-gray-600 hover:bg-gray-100 w-2 h-2 border-2 border-tertiary"
-                        >
-                          <div className="block"></div>
-                        </label>
-                        <label htmlFor="genderMale">Male</label>
-                      </div>
-                      <div className="female flex items-center gap-2">
-                        <input
-                          type="radio"
-                          id="genderFemale"
-                          name="gender"
-                          value="2"
-                          className="hidden peer"
-                          checked={String(form.gender) === "2"}
-                          disabled={!editMode}
-                          onClick={() => setForm({ ...form, gender: "1" })}
-                          onChange={formHandler}
-                          required
-                        />
-                        <label
-                          htmlFor="genderFemale"
-                          className="inline-flex items-center justify-between p-2 text-gray-500 bg-[#BABABA59] rounded-full cursor-pointer peer-checked:text-white peer-checked:bg-secondary peer-checked:font-bold hover:text-gray-600 hover:bg-gray-100 w-2 h-2 border-2 border-tertiary"
-                        >
-                          <div className="block"></div>
-                        </label>
-                        <label htmlFor="genderFemale">Female</label>
-                      </div>
-                    </div>
                   </form>
                 </section>
                 <section className="block lg:hidden mt-8">
