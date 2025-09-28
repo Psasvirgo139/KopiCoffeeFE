@@ -125,13 +125,13 @@ const ForgotPass = () => {
         </form>
         {resend >= now() ? (
           <section className="text-center mt-10 space-y-2">
-            <p>Click here if you didn’t receive any link in 2 minutes</p>
+            <p>Click here if you didn’t receive any mail in 2 minutes</p>
             <p className="font-bold">{displaycd}</p>
             <button
               type="submit"
               className="w-full text-white bg-tertiary focus:ring-4 focus:outline-none focus:ring-primary-300 font-bold rounded-2xl text-lg p-3 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 shadow-xl"
             >
-              Resend Link
+              Resend
             </button>
           </section>
         ) : (
