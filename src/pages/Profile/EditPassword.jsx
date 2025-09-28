@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 import { isEqual } from 'lodash';
 import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 
 import Modal from '../../components/Modal';
-import { updatePassword } from '../../utils/dataProvider/userPanel';
+// ĐỔI: dùng changePassword (đã trỏ /apiv1/profile/password)
+import { changePassword } from '../../utils/dataProvider/profile';
 
 function EditPassword(props) {
   const userInfo = useSelector((state) => state.userInfo);
@@ -20,64 +21,52 @@ function EditPassword(props) {
     newpassconf: "",
   });
 
+  const controller = useMemo(() => new AbortController(), []);
+
   const formHandler = (e) => {
-    return setForm((form) => {
-      return {
-        ...form,
-        [e.target.name]: e.target.value,
-      };
-    });
+    return setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
-  const submitFormHandler = (e) => {
+  const submitFormHandler = async (e) => {
     e.preventDefault();
-    const error = {
-      oldpass: "",
-      newpass: "",
-      newpassconf: "",
-    };
-    setErr(error);
-    if (form.oldpass.length < 1) {
-      error.oldpass = "Required";
-    }
-    if (form.newpass.length < 1) {
-      error.newpass = "Required";
-    }
-    if (form.newpassconf.length < 1) {
-      error.newpassconf = "Required";
-    }
-    if (form.newpass.length < 8)
-      error.newpass = "New password length minimum is 8";
+    const error = { oldpass: "", newpass: "", newpassconf: "" };
+
+    if (form.oldpass.length < 1) error.oldpass = "Required";
+    if (form.newpass.length < 1) error.newpass = "Required";
+    if (form.newpassconf.length < 1) error.newpassconf = "Required";
+    if (form.newpass.length < 8) error.newpass = "New password length minimum is 8";
     if (!isEqual(form.newpass, form.newpassconf))
       error.newpassconf = "Password and confirm password does not match";
-    setErr(error);
 
-    if (
-      error.oldpass === "" &&
-      error.newpass === "" &&
-      error.newpassconf === ""
-    ) {
-      e.target.disabled = true;
-      toast.promise(
-        updatePassword(form.oldpass, form.newpass, userInfo.token).then(
-          (res) => {
-            return res;
-          }
-        ),
-        {
-          loading: "Please wait",
-          success: () => {
-            e.target.disabled = false;
-            props.onClose();
-            return "Edit password successful";
-          },
-          error: (err) => {
-            e.target.disabled = false;
-            return err.response.data.msg;
-          },
-        }
-      );
-    }
+    setErr(error);
+    if (error.oldpass || error.newpass || error.newpassconf) return;
+
+    const btn = e.currentTarget; // button Confirm
+    btn.disabled = true;
+
+    toast.promise(
+      // GỌI API mới: /apiv1/profile/password
+      changePassword(
+        userInfo.token,
+        { current_password: form.oldpass, new_password: form.newpass },
+        controller
+      ).then((res) => res),
+      {
+        loading: "Please wait",
+        success: () => {
+          btn.disabled = false;
+          props.onClose?.();
+          return "Edit password successful";
+        },
+        error: (err) => {
+          btn.disabled = false;
+          return err?.response?.data?.message || "Failed to change password";
+        },
+      }
+    );
   };
 
   return (
@@ -98,6 +87,7 @@ function EditPassword(props) {
             placeholder="Type your old password"
             value={form.oldpass}
             onChange={formHandler}
+            autoComplete="current-password"
           />
           <p className="mt-2 text-sm text-red-600">
             <span className="font-medium">{err.oldpass}</span>
@@ -118,6 +108,7 @@ function EditPassword(props) {
             placeholder="Type new password what you want"
             value={form.newpass}
             onChange={formHandler}
+            autoComplete="new-password"
           />
           <p className="mt-2 text-sm text-red-600 ">
             <span className="font-medium">{err.newpass}</span>
@@ -138,6 +129,7 @@ function EditPassword(props) {
             placeholder="Type again for confirmation"
             value={form.newpassconf}
             onChange={formHandler}
+            autoComplete="new-password"
           />
           <p className="mt-2 text-sm text-red-600 ">
             <span className="font-medium">{err.newpassconf}</span>
