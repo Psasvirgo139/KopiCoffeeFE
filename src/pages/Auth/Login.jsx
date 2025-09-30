@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; 
 
 import jwtDecode from "jwt-decode";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import icon from "../../assets/jokopi.svg";
 import { profileAction } from "../../redux/slices/profile.slice";
@@ -28,9 +29,28 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
 
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const token = searchParams.get("token");
+    const role = searchParams.get("role");
+    if (token) {
+      dispatch(uinfoAct.assignToken(token));
+      if (role) dispatch(uinfoAct.assignData({ role }));
+      dispatch(
+        profileAction.getProfileThunk({
+          controller,
+          token,
+        })
+      );
+
+      toast.success("Login with Google successful!");
+      navigate("/", { replace: true });
+    }
+  }, []);
+
   function loginHandler(e) {
-    e.preventDefault(); // preventing default submit
-    toast.dismiss(); // dismiss all toast
+    e.preventDefault();
+    toast.dismiss();
     const valid = { email: "", password: "" };
 
     if (!form.email) valid.email = "Input your email address";
@@ -41,13 +61,11 @@ const Login = () => {
       password: valid.password,
     });
 
-    if (valid.email == "" && valid.password == "" && !isLoading) {
+    if (valid.email === "" && valid.password === "" && !isLoading) {
       setIsLoading(true);
       toast.promise(
         login(form.email, form.password, form.rememberMe, controller).then(
           (res) => {
-            // console.log(res.data);
-            // console.log(res.data.data.token);
             dispatch(uinfoAct.assignToken(res.data.data.token));
             const { role } = jwtDecode(res.data.data.token);
             dispatch(uinfoAct.assignData({ role }));
@@ -70,7 +88,7 @@ const Login = () => {
             toast.success("Welcome to Kopi!\nYou can order for now!", {
               icon: "👋",
               duration: Infinity,
-            }); // add toast welcome
+            });
             return (
               <>
                 Login successful!
@@ -89,22 +107,20 @@ const Login = () => {
   }
 
   function onChangeForm(e) {
-    return setForm((form) => {
-      return {
-        ...form,
-        [e.target.name]: e.target.value,
-      };
-    });
+    return setForm((form) => ({
+      ...form,
+      [e.target.name]: e.target.value,
+    }));
   }
 
   function onCheck(e) {
-    return setForm((form) => {
-      return {
-        ...form,
-        [e.target.name]: !form[e.target.name],
-      };
-    });
+    return setForm((form) => ({
+      ...form,
+      [e.target.name]: !form[e.target.name],
+    }));
   }
+  const backend = process.env.REACT_APP_BACKEND_HOST; 
+  const googleRedirect = `${backend}/oauth2/authorization/google?prompt=select_account`; 
 
   return (
     <>
@@ -134,15 +150,15 @@ const Login = () => {
               name="email"
               id="email"
               className={
-                `border-gray-400 border-2 rounded-2xl p-3 w-full mt-2` +
-                (error.email != "" ? " border-red-500" : "")
+                "border-gray-400 border-2 rounded-2xl p-3 w-full mt-2" +
+                (error.email !== "" ? " border-red-500" : "")
               }
               placeholder="Enter your email address"
               value={form.email}
               onChange={onChangeForm}
             />
             <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1 h-4">
-              {error.email != "" ? error.email : ""}
+              {error.email !== "" ? error.email : ""}
             </span>
           </div>
           <div>
@@ -158,15 +174,15 @@ const Login = () => {
               name="password"
               id="password"
               className={
-                `border-gray-400 border-2 rounded-2xl p-3 w-full mt-2` +
-                (error.password != "" ? " border-red-500" : "")
+                "border-gray-400 border-2 rounded-2xl p-3 w-full mt-2" +
+                (error.password !== "" ? " border-red-500" : "")
               }
               placeholder="Enter your password"
               value={form.password}
               onChange={onChangeForm}
             />
             <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1 h-4">
-              {error.password != "" ? error.password : ""}
+              {error.password !== "" ? error.password : ""}
             </span>
           </div>
           <div className="flex items-center justify-between">
@@ -204,7 +220,7 @@ const Login = () => {
               (isLoading
                 ? "cursor-not-allowed bg-secondary-200"
                 : "cursor-pointer bg-secondary") +
-              " w-full text-tertiary  focus:ring-4 focus:outline-none focus:ring-primary-300 font-bold rounded-2xl text-base md:text-lg p-3 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 shadow-xl inline-flex items-center justify-center transition ease-in-out duration-150 hover:bg-secondary-200"
+              " w-full text-tertiary focus:ring-4 focus:outline-none focus:ring-primary-300 font-bold rounded-2xl text-base md:text-lg p-3 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 shadow-xl inline-flex items-center justify-center transition ease-in-out duration-150 hover:bg-secondary-200"
             }
             onClick={loginHandler}
           >
@@ -235,17 +251,19 @@ const Login = () => {
             Login
           </button>
           <button
-            type="submit"
+            type="button"
+            onClick={() => (window.location.href = googleRedirect)} 
             className="w-full text-tertiary bg-white focus:ring-4 focus:outline-none focus:ring-primary-300 font-bold rounded-2xl text-base md:text-lg p-3 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 shadow-xl inline-flex justify-center items-center"
           >
             <img
               src="https://i.pinimg.com/1200x/60/41/99/604199df880fb029291ddd7c382e828b.jpg"
               alt=""
               width="23px"
-              className="w  -5 h-5 mr-2"
+              className="w-5 h-5 mr-2" 
             />
-            <span>Login with Google</span>
+            <span>Login with google</span>
           </button>
+
           <div className="inline-flex items-center justify-center w-full">
             <hr className="w-full h-px my-6 bg-gray-200 border-0 dark:bg-gray-700" />
             <span className="absolute px-3 font-medium text-gray-900 -translate-x-1/2 bg-white left-1/2 w-56">
