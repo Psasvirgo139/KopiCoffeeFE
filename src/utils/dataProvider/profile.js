@@ -1,54 +1,58 @@
 import api from "./base";
 
+// GET /apiv1/profile
 export const getProfile = (token, controller) => {
-  return api.get("/apiv1/userPanel/profile", {
+  return api.get("/apiv1/profile", {
     headers: { Authorization: `Bearer ${token}` },
-    signal: controller.signal,
+    signal: controller?.signal,
   });
 };
 
+// PATCH /apiv1/profile (multipart/form-data)
 export const editProfile = (
   {
-    image = "",
-    display_name = "",
-    address = "",
-    birthdate = "",
-    gender = "",
-    email = "",
-    phone_number = "",
-    first_name = "",
-    last_name = "",
+    image,
+    display_name,
+    address,
+    birthdate,
+    gender,
+    email,
+    phone_number,
+    first_name,
+    last_name,
   },
   token,
   controller
 ) => {
   const body = new FormData();
-  // append
-  // console.log(image);
-  body.append("image", image);
-  body.append("display_name", display_name);
-  body.append("address", address);
-  body.append("birthdate", JSON.stringify(birthdate));
-  body.append("gender", gender);
-  body.append("email", email);
-  body.append("phone_number", phone_number);
-  body.append("first_name", first_name);
-  body.append("last_name", last_name);
 
-  // const bodyObj = {
-  //   image,
-  //   display_name,
-  //   address,
-  //   birthdate,
-  //   gender,
-  //   email,
-  //   phone_number,
-  // };
-  return api.patch("/apiv1/userPanel/profile", body, {
+  if (image) body.append("image", image);
+  if (display_name !== undefined) body.append("display_name", display_name);
+  if (address !== undefined) body.append("address", address);
+  if (birthdate !== undefined) body.append("birthdate", birthdate); // yyyy-mm-dd
+  if (gender !== undefined) body.append("gender", gender);
+  if (email !== undefined) body.append("email", email);
+  if (phone_number !== undefined) body.append("phone_number", phone_number);
+  if (first_name !== undefined) body.append("first_name", first_name);
+  if (last_name !== undefined) body.append("last_name", last_name);
+
+  return api.patch("/apiv1/profile", body, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "multipart/form-data",
     },
-    signal: controller.signal,
+    signal: controller?.signal,
   });
+};
+
+// PUT /apiv1/profile/password
+export const changePassword = (token, { current_password, new_password }, controller) => {
+  return api.put(
+    "/apiv1/profile/password",
+    { current_password, new_password },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller?.signal,
+    }
+  );
 };
