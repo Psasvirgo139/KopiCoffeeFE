@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-
+import { useLocation } from "react-router-dom";
 import jwtDecode from "jwt-decode";
 import { isEqual } from "lodash";
 import toast from "react-hot-toast";
@@ -16,6 +16,8 @@ import useDocumentTitle from "../../utils/documentTitle";
 import EditPassword from "./EditPassword";
 
 function Profile() {
+  const dispatch = useDispatch();
+  const location = useLocation();
   const userInfo = useSelector((state) => state.userInfo);
   const profile = useSelector((state) => state.profile);
 
@@ -55,8 +57,6 @@ function Profile() {
 
   const controller = useMemo(() => new AbortController(), []);
 
-  const dispatch = useDispatch();
-
   const handleChoosePhoto = () => {
     setIsUploaderOpen(true);
   };
@@ -70,18 +70,6 @@ function Profile() {
 
   useDocumentTitle("Profile");
   useEffect(() => {
-    // setIsLoading(true);
-    // fetchProfile(userInfo.token)
-    //   .then((result) => {
-    //     setIsLoading(false);
-    //     const data = result.data.data[0];
-    //     setData(data);
-    //     setForm(data);
-    //   })
-    //   .catch((err) => {
-    //     toast.error("Failed to fetch data");
-    //   });
-    // console.log(profile.data);
     const updatedObject = { ...profile.data };
 
     for (const [key, value] of Object.entries(updatedObject)) {
@@ -92,6 +80,17 @@ function Profile() {
     setData(updatedObject);
     setForm(updatedObject);
   }, [profile]);
+
+  // Bật edit mode nếu vừa điều hướng từ login với mật khẩu tạm
+  useEffect(() => {
+    if (location.state?.forceChange) {
+      try {
+        setEditMode(true);
+      } catch (_) {
+        // giữ nguyên cấu trúc, tránh phá vỡ nếu editMode bị thay đổi ở nơi khác
+      }
+    }
+  }, [location.state]);
 
   const formHandler = (e) => {
     if (editMode) {
@@ -203,6 +202,17 @@ function Profile() {
   return (
     <>
       <Header />
+
+      {/* CHỈ hiển thị khi bị ép đổi mật khẩu */}
+      {location.state?.forceChange && (
+        <div
+          className="w-full bg-red-50 text-red-800 border border-red-300 px-4 py-3"
+          role="alert"
+        >
+          <b>Lưu ý:</b> Bạn đang dùng <b>mật khẩu tạm</b>. Vui lòng đổi mật khẩu trước khi sử dụng.
+        </div>
+      )}
+
       {isLoading ? (
         <Loading />
       ) : (

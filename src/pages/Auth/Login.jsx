@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-
 import jwtDecode from "jwt-decode";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
@@ -28,6 +27,9 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
 
+  // Ép mọi biến thể cờ về boolean
+  const toBool = (v) => v === true || v === "true" || v === 1 || v === "1";
+
   function loginHandler(e) {
     e.preventDefault(); // preventing default submit
     toast.dismiss(); // dismiss all toast
@@ -41,23 +43,44 @@ const Login = () => {
       password: valid.password,
     });
 
-    if (valid.email == "" && valid.password == "" && !isLoading) {
+    if (valid.email === "" && valid.password === "" && !isLoading) {
       setIsLoading(true);
       toast.promise(
         login(form.email, form.password, form.rememberMe, controller).then(
           (res) => {
-            // console.log(res.data);
-            // console.log(res.data.data.token);
-            dispatch(uinfoAct.assignToken(res.data.data.token));
-            const { role } = jwtDecode(res.data.data.token);
+            // Lấy token + flag (nếu BE trả trong body)
+            const { token, forceChangePassword } = res.data?.data || {};
+
+            // Lưu token + role như cũ
+            dispatch(uinfoAct.assignToken(token));
+            const claims = token ? jwtDecode(token) : {};
+            const { role } = claims || {};
             dispatch(uinfoAct.assignData({ role }));
+
+            // Load profile như cũ
             dispatch(
               profileAction.getProfileThunk({
                 controller,
-                token: res.data.data.token,
+                token,
               })
             );
-            return res.data.data.token;
+
+            // Hợp nhất flag từ body & các claim thường gặp trong JWT
+            const rawFlag =
+              forceChangePassword ??
+              claims.forceChangePassword ??
+              claims.mustChangePassword ??
+              claims.needChangePassword ??
+              claims.isTempPassword ??
+              claims.isPasswordTemporary ??
+              claims.passwordExpired ??
+              claims.pwd_temp ??
+              claims.must_change_password;
+
+            const mustChange = toBool(rawFlag);
+
+            // Trả payload cho callback success của toast.promise
+            return { token, mustChange };
           }
         ),
         {
@@ -65,7 +88,36 @@ const Login = () => {
             e.target.disabled = true;
             return "Please wait a moment";
           },
-          success: () => {
+          success: (payload) => {
+            const mustChange = !!payload?.mustChange;
+
+            if (mustChange) {
+              // Điều hướng thẳng qua trang hồ sơ để buộc đổi mật khẩu
+              navigate("/profile", {
+                replace: true,
+                state: { forceChange: true },
+              });
+
+              // Thông báo bắt buộc đổi mật khẩu
+              toast(
+                () => (
+                  <>
+                    Bạn đang đăng nhập bằng <b>mật khẩu tạm</b>. Vui lòng đổi
+                    mật khẩu trước khi sử dụng.
+                  </>
+                ),
+                { duration: 6000 }
+              );
+
+              return (
+                <>
+                  Login successful!
+                  <br /> Redirecting you to Profile…
+                </>
+              );
+            }
+
+            // Hành vi cũ
             navigate("/products");
             toast.success("Welcome to Kopi!\nYou can order for now!", {
               icon: "👋",
@@ -135,14 +187,14 @@ const Login = () => {
               id="email"
               className={
                 `border-gray-400 border-2 rounded-2xl p-3 w-full mt-2` +
-                (error.email != "" ? " border-red-500" : "")
+                (error.email !== "" ? " border-red-500" : "")
               }
               placeholder="Enter your email address"
               value={form.email}
               onChange={onChangeForm}
             />
             <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1 h-4">
-              {error.email != "" ? error.email : ""}
+              {error.email !== "" ? error.email : ""}
             </span>
           </div>
           <div>
@@ -159,14 +211,14 @@ const Login = () => {
               id="password"
               className={
                 `border-gray-400 border-2 rounded-2xl p-3 w-full mt-2` +
-                (error.password != "" ? " border-red-500" : "")
+                (error.password !== "" ? " border-red-500" : "")
               }
               placeholder="Enter your password"
               value={form.password}
               onChange={onChangeForm}
             />
             <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1 h-4">
-              {error.password != "" ? error.password : ""}
+              {error.password !== "" ? error.password : ""}
             </span>
           </div>
           <div className="flex items-center justify-between">
