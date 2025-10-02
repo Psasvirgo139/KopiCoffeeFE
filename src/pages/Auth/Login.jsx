@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; 
+import React, { useState, useEffect } from "react";
 
 import jwtDecode from "jwt-decode";
 import toast from "react-hot-toast";
@@ -11,6 +11,14 @@ import { profileAction } from "../../redux/slices/profile.slice";
 import { uinfoAct } from "../../redux/slices/userInfo.slice";
 import { login } from "../../utils/dataProvider/auth";
 import useDocumentTitle from "../../utils/documentTitle";
+
+const normalizeRoleToId = (role) => {
+  if (role == null) return 1;
+  const r = String(role).trim().toUpperCase();
+  if (r === "3" || r.includes("ADMIN")) return 3;
+  if (r === "2" || r.includes("STAFF") || r.includes("EMPLOYEE")) return 2;
+  return 1;
+};
 
 const Login = () => {
   const navigate = useNavigate();
@@ -35,7 +43,8 @@ const Login = () => {
     const role = searchParams.get("role");
     if (token) {
       dispatch(uinfoAct.assignToken(token));
-      if (role) dispatch(uinfoAct.assignData({ role }));
+      if (role)
+        dispatch(uinfoAct.assignData({ role: normalizeRoleToId(role) }));
       dispatch(
         profileAction.getProfileThunk({
           controller,
@@ -68,7 +77,7 @@ const Login = () => {
           (res) => {
             dispatch(uinfoAct.assignToken(res.data.data.token));
             const { role } = jwtDecode(res.data.data.token);
-            dispatch(uinfoAct.assignData({ role }));
+            dispatch(uinfoAct.assignData({ role: normalizeRoleToId(role) }));
             dispatch(
               profileAction.getProfileThunk({
                 controller,
@@ -119,8 +128,8 @@ const Login = () => {
       [e.target.name]: !form[e.target.name],
     }));
   }
-  const backend = process.env.REACT_APP_BACKEND_HOST; 
-  const googleRedirect = `${backend}/oauth2/authorization/google?prompt=select_account`; 
+  const backend = process.env.REACT_APP_BACKEND_HOST;
+  const googleRedirect = `${backend}/oauth2/authorization/google?prompt=select_account`;
 
   return (
     <>
@@ -252,14 +261,14 @@ const Login = () => {
           </button>
           <button
             type="button"
-            onClick={() => (window.location.href = googleRedirect)} 
+            onClick={() => (window.location.href = googleRedirect)}
             className="w-full text-tertiary bg-white focus:ring-4 focus:outline-none focus:ring-primary-300 font-bold rounded-2xl text-base md:text-lg p-3 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 shadow-xl inline-flex justify-center items-center"
           >
             <img
               src="https://i.pinimg.com/1200x/60/41/99/604199df880fb029291ddd7c382e828b.jpg"
               alt=""
               width="23px"
-              className="w-5 h-5 mr-2" 
+              className="w-5 h-5 mr-2"
             />
             <span>Login with google</span>
           </button>
