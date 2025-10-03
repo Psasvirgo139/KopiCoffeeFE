@@ -32,17 +32,15 @@ const Login = () => {
   const [searchParams] = useSearchParams();
   useEffect(() => {
     const token = searchParams.get("token");
-    const role = searchParams.get("role");
     if (token) {
       dispatch(uinfoAct.assignToken(token));
-      if (role) dispatch(uinfoAct.assignData({ role }));
-      dispatch(
-        profileAction.getProfileThunk({
-          controller,
-          token,
-        })
-      );
-
+      try {
+        const { role } = jwtDecode(token); // role là role_id (1,2,3)
+        dispatch(uinfoAct.assignData({ role }));
+      } catch (err) {
+        console.error("JWT decode error:", err);
+      }
+      dispatch(profileAction.getProfileThunk({ controller, token }));
       toast.success("Login with Google successful!");
       navigate("/", { replace: true });
     }
