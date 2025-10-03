@@ -22,6 +22,8 @@ import Profile from "./pages/Profile";
 import EditPromo from "./pages/Promo/EditPromo";
 import NewPromo from "./pages/Promo/NewPromo";
 import ScrollToTop from "./utils/scrollToTop";
+import ChangePassword from "./pages/Auth/ChangePassword";
+
 import {
   CheckAuth,
   CheckIsAdmin,
@@ -48,6 +50,8 @@ const Routers = () => {
             element={<ProductDetail />}
           />
           <Route path="cart" element={<Cart />} />
+          {/* ADD: public change-password to avoid being blocked by CheckNoAuth */}
+          <Route path="auth/change-password" element={<ChangePassword />} />
 
           {/* Route which must not logged in */}
           <Route
@@ -63,6 +67,7 @@ const Routers = () => {
             <Route path="register" element={<Register />} />
             <Route path="forgotpass" element={<ForgotPass />} />
             <Route path="resetpass" element={<ResetPass />} />
+            <Route path="change-password" element={<ChangePassword />} />
           </Route>
 
           {/* Route which must logged in */}
