@@ -1,4 +1,4 @@
-import api from './base';
+import api from "./base";
 
 export const createTransaction = (
   {
@@ -21,7 +21,7 @@ export const createTransaction = (
     notes,
   };
   return api.post(`/apiv1/transactions`, body, {
-    signal: controller.signal,
+    signal: controller?.signal,
     headers: { Authorization: `Bearer ${token}` },
   });
 };
@@ -37,7 +37,7 @@ export const getTransactions = (
       page,
     },
     headers: { Authorization: `Bearer ${token}` },
-    signal: controller.signal,
+    signal: controller?.signal,
   });
 };
 
@@ -46,7 +46,6 @@ export const setTransactionDone = (ids = [], token, controller) => {
   if (typeof ids === "object") {
     convertedIds = ids.join(",");
   }
-  console.log(convertedIds);
   return api.patch(
     "/apiv1/transactions/changeStatus",
     {
@@ -54,7 +53,7 @@ export const setTransactionDone = (ids = [], token, controller) => {
     },
     {
       headers: { Authorization: `Bearer ${token}` },
-      signal: controller.signal,
+      signal: controller?.signal,
     }
   );
 };
@@ -70,13 +69,13 @@ export const getTransactionHistory = (
       limit,
     },
     headers: { Authorization: `Bearer ${token}` },
-    signal: controller.signal,
+    signal: controller?.signal,
   });
 };
 
 export const getTransactionDetail = (transactionId, token, controller) => {
   return api.get(`/apiv1/transactions/${transactionId}`, {
     headers: { Authorization: `Bearer ${token}` },
-    signal: controller.signal,
+    signal: controller?.signal,
   });
 };
