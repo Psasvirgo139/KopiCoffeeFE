@@ -55,9 +55,11 @@ const cartSlice = createSlice({
             item.product_id === action.payload.product_id &&
             item.size_id === action.payload.size_id
           ) {
+            const stockQty = Number(item.stockQty ?? Infinity);
+            const nextQty = item.qty + 1;
             return {
               ...item,
-              qty: item.qty + 1,
+              qty: Number.isFinite(stockQty) ? Math.min(nextQty, stockQty) : nextQty,
               subtotal: item.subtotal + item.price,
             };
           }
@@ -79,10 +81,10 @@ const cartSlice = createSlice({
             return {
               ...item,
               qty: item.qty - 1,
-              subtotal: item.subtotal + item.price,
+              subtotal: item.subtotal - item.price,
             };
           }
-          return item;
+           return item;
         }),
       };
     },
@@ -105,6 +107,20 @@ const cartSlice = createSlice({
         ...prevState,
         ...action.payload,
       };
+    },
+    updateQty: (state, action) => {
+      const { product_id, size_id, qty } = action.payload;
+      const item = state.list.find(
+        (i) => i.product_id === product_id && i.size_id === size_id
+      );
+      const parsedQty = Number(qty);
+      if (item && Number.isFinite(parsedQty) && parsedQty >= 1) {
+        const stockQty = Number(item.stockQty ?? Infinity);
+        item.qty = Number.isFinite(stockQty) ? Math.min(parsedQty, stockQty) : parsedQty;
+        if (typeof item.price === "number") {
+          item.subtotal = item.price * item.qty;
+        }
+      }
     },
   },
 });

@@ -91,14 +91,14 @@ function ProductDetail(props) {
     );
   };
 
-  function onChangeForm(e) {
-    return setForm((form) => {
-      return {
-        ...form,
-        [e.target.name]: e.target.value,
-      };
-    });
-  }
+// --- GIỮ LẠI onChangeForm để dùng cho các radio/time ---
+function onChangeForm(e) {
+  const { name, value } = e.target;
+  setForm((form) => ({
+    ...form,
+    [name]: value,
+  }));
+}
 
   const countIncrement = () => {
     return setForm((form) => {
@@ -332,15 +332,28 @@ function ProductDetail(props) {
                     className=" bg-white h-full w-20 rounded-l cursor-pointer outline-none border-gray-400 border-2 border-r-0"
                   >
                     <span className="m-auto text-xl">−</span>
-                  </button>
+                  </button>          
                   <input
-                    type="number"
-                    className="outline-none focus:outline-none text-center w-full bg-white text-md  md:text-basecursor-default flex items-center border-gray-400 border-2"
-                    name="custom-input-number"
-                    value={form.count}
-                    onChange={onChangeForm}
-                    min="1"
-                  ></input>
+ type="number"
+      name="count"
+      value={form.count}
+      min="1"
+      max="99999"
+      onChange={(e) => {
+        const val = e.target.value;
+        // Cho phép xóa tạm thời hoặc nhập nhiều chữ số
+        if (val === "") {
+          setForm((form) => ({ ...form, count: "" }));
+        } else if (/^\d+$/.test(val) && Number(val) >= 1) {
+          setForm((form) => ({ ...form, count: Number(val) }));
+        }
+      }}
+      onKeyDown={(e) => {
+        if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+  }}
+  className="outline-none focus:outline-none text-center w-full bg-white text-md md:text-base cursor-default flex items-center border-gray-400 border-2"
+/>
+
                   <button
                     onClick={countIncrement}
                     className="bg-white h-full w-20 rounded-r cursor-pointer border-gray-400 border-2 border-l-0"

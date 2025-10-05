@@ -22,6 +22,9 @@ import { createTransaction } from '../../utils/dataProvider/transaction';
 import useDocumentTitle from '../../utils/documentTitle';
 import { n_f } from '../../utils/helpers';
 
+import qrCardImg from '../../assets/images/qr-card.png';
+import qrBankImg from '../../assets/images/qr-bank.png';
+
 function Cart() {
   const userInfo = useSelector((state) => state.userInfo);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,6 +47,12 @@ function Cart() {
     notes: "",
     phone_number: "",
   });
+
+    const [paymentModal, setPaymentModal] = useState({
+    isOpen: false,
+    method: null,
+  });
+
   useDocumentTitle("My Cart");
 
   function onChangeForm(e) {
@@ -92,41 +101,74 @@ function Cart() {
 
   const disabled = form.payment === "" || form.delivery_address === "";
   const controller = useMemo(() => new AbortController());
-  const payHandler = () => {
-    if (disabled) return;
-    if (userInfo.token === "") {
-      toast.error("Login to continue transaction");
-      navigate("/auth/login");
-      return;
-    }
-    if (editMode) return toast.error("You have unsaved changes");
-    if (cart.length < 1)
-      return toast.error("Add at least 1 product to your cart");
-    setIsLoading(true);
-    createTransaction(
-      {
-        payment_id: form.payment,
-        delivery_id: 1,
-        address: form.delivery_address,
-        notes: form.notes,
-      },
-      cart,
-      userInfo.token,
-      controller
-    )
-      .then(() => {
-        toast.success("Success create transaction");
-        dispatch(cartActions.resetCart());
-        navigate("/history");
-      })
-      .catch((err) => {
-        console.log(err);
-        toast.error("An error ocurred, please check your internet connection");
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
+  
+  // const payHandler = () => {
+  //   if (disabled) return;
+  //   if (userInfo.token === "") {
+  //     toast.error("Login to continue transaction");
+  //     navigate("/auth/login");
+  //     return;
+  //   }
+  //   if (editMode) return toast.error("You have unsaved changes");
+  //   if (cart.length < 1)
+  //     return toast.error("Add at least 1 product to your cart");
+  //   setIsLoading(true);
+  //   createTransaction(
+  //     {
+  //       payment_id: form.payment,
+  //       delivery_id: 1,
+  //       address: form.delivery_address,
+  //       notes: form.notes,
+  //     },
+  //     cart,
+  //     userInfo.token,
+  //     controller
+  //   )
+  //      .then(() => {
+  //       dispatch(cartActions.resetCart());
+  //       // Logic hiển thị QR modal cho Card hoặc Bank, toast cho COD
+  //       if (form.payment === "1") {
+  //         setPaymentModal({ isOpen: true, method: "card" });
+  //       } else if (form.payment === "2") {
+  //         setPaymentModal({ isOpen: true, method: "bank" });
+  //       } else if (form.payment === "3") {
+  //         toast.success("Đơn hàng đặt thành công, hãy chú ý giao hàng");
+  //       }
+  //     })
+  //     .catch((err) => {
+  //       console.log(err);
+  //       toast.error("An error ocurred, please check your internet connection");
+  //     })
+  //     .finally(() => {
+  //       setIsLoading(false);
+  //     });
+  // };
+
+  // Giả lập tạo transaction thành công
+  const payHandler = async () => {
+  try {
+    // Mock response
+    const response = {
+      status: "success",
+      transaction_id: "TX123456",
+      amount: 150000,
+      payment_method: "Card",
+    };
+
+    // Hiển thị modal QR hoặc thông báo thành công
+    setPaymentModal({
+      isOpen: true,
+      method: response.payment_method,
+    });
+
+    console.log("Transaction created:", response);
+  } catch (error) {
+    console.error(error);
+    alert("An error occurred, please check your internet connection");
+  }
+};
+
+
   const closeRemoveModal = () => {
     setRemove({ product_id: "", size_id: "" });
   };
@@ -134,7 +176,7 @@ function Cart() {
     <>
       <Modal
         isOpen={remove.product_id !== "" && remove.size_id !== ""}
-        onClose={() => setRemove({ product_id: "", size_id: "" })}
+        onClose={closeRemoveModal}
         className="flex flex-col gap-y-5"
       >
         Are you sure to delete this item form your cart?
@@ -158,6 +200,22 @@ function Cart() {
           </div>
         </div>
       </Modal>
+
+      <Modal
+        isOpen={paymentModal.isOpen}
+        onClose={() => setPaymentModal({ isOpen: false, method: null })}
+        className="flex flex-col items-center justify-center gap-3"
+      >
+        <img
+          src={paymentModal.method === "card" ? qrCardImg : qrBankImg}
+          alt="QR Code"
+          className="w-64 h-64"
+        />
+        <p className="text-center font-bold text-lg">
+          Scan QR to pay with {paymentModal.method === "card" ? "Card" : "Bank"}
+        </p>
+      </Modal>
+      
       <Header />
 
       <main className="bg-cart bg-cover bg-center">
@@ -204,40 +262,77 @@ function Cart() {
                         </aside>
                         <aside className="flex-[2_2_0%]">
                           <p className="font-semibold">{list.name}</p>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => {
-                                if (list.qty - 1 < 1)
-                                  return setRemove({
-                                    product_id: list.product_id,
-                                    size_id: list.size_id,
-                                  });
-                                dispatch(
-                                  cartActions.decrementQty({
-                                    product_id: list.product_id,
-                                    size_id: list.size_id,
-                                  })
-                                );
-                              }}
-                              className="rounded-full bg-tertiary text-white font-bold w-6 h-6 items-center justify-center duration-200 hover:bg-primary-focus"
-                            >
-                              -
-                            </button>
-                            <p>x {list.qty}</p>
-                            <button
-                              onClick={() =>
-                                dispatch(
-                                  cartActions.incrementQty({
-                                    product_id: list.product_id,
-                                    size_id: list.size_id,
-                                  })
-                                )
-                              }
-                              className="rounded-full bg-tertiary text-white font-bold w-6 h-6 items-center justify-center duration-200 hover:bg-primary-focus"
-                            >
-                              +
-                            </button>
-                          </div>
+                          <div className="flex gap-2 items-center">
+  <button
+    onClick={() => {
+      if (list.qty - 1 < 1)
+        return setRemove({
+          product_id: list.product_id,
+          size_id: list.size_id,
+        });
+      dispatch(
+        cartActions.decrementQty({
+          product_id: list.product_id,
+          size_id: list.size_id,
+        })
+      );
+    }}
+    className="rounded-full bg-tertiary text-white font-bold w-6 h-6 flex items-center justify-center hover:bg-primary-focus"
+  >
+    -
+  </button>
+
+  <input
+    type="number"
+    value={list.qty}
+    min="1"
+    onChange={(e) => {
+      const newQty = parseInt(e.target.value, 10);
+      if (!Number.isFinite(newQty)) return;
+      const safeQty = newQty < 1 ? 1 : newQty;
+      const stockQty = Number(list.stockQty ?? Infinity);
+      if (Number.isFinite(stockQty) && safeQty > stockQty) {
+        toast.error(`Sản phẩm không đủ, chỉ còn ${stockQty} sản phẩm.`);
+        dispatch(
+          cartActions.updateQty({
+            product_id: list.product_id,
+            size_id: list.size_id,
+            qty: stockQty,
+          })
+        );
+        return;
+      }
+      dispatch(
+        cartActions.updateQty({
+          product_id: list.product_id,
+          size_id: list.size_id,
+          qty: safeQty,
+        })
+      );
+    }}
+    onKeyDown={(e) => {
+      if (["e", "E", "+", "-", "."].includes(e.key)) {
+        e.preventDefault();
+      }
+    }}
+    className="w-14 text-center border rounded"
+  />
+
+  <button
+    onClick={() =>
+      dispatch(
+        cartActions.incrementQty({
+          product_id: list.product_id,
+          size_id: list.size_id,
+        })
+      )
+    }
+    className="rounded-full bg-tertiary text-white font-bold w-6 h-6 flex items-center justify-center hover:bg-primary-focus"
+  >
+    +
+  </button>
+</div>
+
                           <p>{sizeName}</p>
                         </aside>
                         <aside className="flex-1">
@@ -329,7 +424,7 @@ function Cart() {
                 <input
                   value={form.phone_number}
                   onChange={onChangeForm}
-                  disabled
+                  disabled={!editMode}
                   className="outline-none"
                   name="phone_number"
                   placeholder="phone number..."
