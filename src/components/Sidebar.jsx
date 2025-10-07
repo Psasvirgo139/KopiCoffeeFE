@@ -164,7 +164,7 @@ function Sidebar({ onClose }) {
               </div>
             )}
             <p className="my-4 text-xs text-center text-gray-400">
-              <span>Copyright © 2023</span>
+              <span>Copyright © 2025</span>
             </p>
           </div>
         </div>
