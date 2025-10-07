@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 
-import jwtDecode from "jwt-decode";
 import { isEqual } from "lodash";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,154 +15,93 @@ import useDocumentTitle from "../../utils/documentTitle";
 import EditPassword from "./EditPassword";
 
 function Profile() {
+  const dispatch = useDispatch();
   const userInfo = useSelector((state) => state.userInfo);
-  const profile = useSelector((state) => state.profile);
+  const profileState = useSelector((state) => state.profile);
 
-  const uinfo = userInfo.token ? jwtDecode(userInfo.token) : {};
   const [data, setData] = useState({
-    address: "",
-    birthdate: "",
-    created_at: "",
-    display_name: "",
-    email: "",
-    first_name: "",
-    gender: 1,
-    img: "",
-    last_name: "",
-    phone_number: "",
     user_id: "",
+    email: "",
+    phone_number: "",
+    display_name: "",
+    address: "",
+    created_at: "",
+    img: "",
   });
   const [form, setForm] = useState({
-    address: "",
-    birthdate: "",
-    created_at: "",
-    display_name: "",
-    email: "",
-    first_name: "",
-    gender: 1,
-    img: "",
-    last_name: "",
-    phone_number: "",
     user_id: "",
+    email: "",
+    phone_number: "",
+    display_name: "",
+    address: "",
+    created_at: "",
+    img: "",
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [editMode, setEditMode] = useState(false);
 
+  const [editMode, setEditMode] = useState(false);
   const [editPassModal, setEditPassModal] = useState(false);
   const [isProcess, setProcess] = useState(false);
-  const [isUploaderOpen, setIsUploaderOpen] = useState(false);
 
   const controller = useMemo(() => new AbortController(), []);
-
-  const dispatch = useDispatch();
-
-  const handleChoosePhoto = () => {
-    setIsUploaderOpen(true);
-  };
-
-  const closeEpassModal = () => {
-    setEditPassModal(false);
-  };
-  const switchEpassModal = () => {
-    setEditPassModal(!editPassModal);
-  };
-
   useDocumentTitle("Profile");
-  useEffect(() => {
-    // setIsLoading(true);
-    // fetchProfile(userInfo.token)
-    //   .then((result) => {
-    //     setIsLoading(false);
-    //     const data = result.data.data[0];
-    //     setData(data);
-    //     setForm(data);
-    //   })
-    //   .catch((err) => {
-    //     toast.error("Failed to fetch data");
-    //   });
-    // console.log(profile.data);
-    const updatedObject = { ...profile.data };
 
-    for (const [key, value] of Object.entries(updatedObject)) {
-      if (value === null || value === "null") {
-        updatedObject[key] = "";
-      }
+  useEffect(() => {
+    if (!userInfo?.token) return;
+    dispatch(profileAction.getProfileThunk({ token: userInfo.token, controller }));
+  }, [dispatch, userInfo?.token, controller]);
+
+  useEffect(() => {
+    const server = profileState?.data || {};
+    const updated = { ...server };
+    for (const [k, v] of Object.entries(updated)) {
+      if (v === null || v === "null") updated[k] = "";
     }
-    setData(updatedObject);
-    setForm(updatedObject);
-  }, [profile]);
+    const normalized = {
+      user_id: updated.user_id ?? "",
+      email: updated.email ?? "",
+      phone_number: updated.phone_number ?? "",
+      display_name: updated.display_name ?? updated.full_name ?? "",
+      address: updated.address ?? "",
+      created_at: updated.created_at ?? "",
+      img: updated.img ?? "",
+    };
+    setData(normalized);
+    setForm(normalized);
+  }, [profileState?.data]);
 
   const formHandler = (e) => {
-    if (editMode) {
-      return setForm((form) => {
-        return {
-          ...form,
-          [e.target.name]: e.target.value,
-        };
-      });
-    }
+    if (!editMode) return;
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const Loading = (props) => {
-    return (
-      <main className="h-[80vh] flex items-center justify-center">
-        <div>
-          <img src={loadingImage} alt="Loading..." />
-        </div>
-      </main>
-    );
-  };
+  const Loading = () => (
+    <main className="h-[80vh] flex items-center justify-center">
+      <div>
+        <img src={loadingImage} alt="Loading..." />
+      </div>
+    </main>
+  );
 
-  const [selectedFile, setSelectedFile] = useState();
-  const [preview, setPreview] = useState();
-
-  // create a preview as a side effect, whenever selected file is changed
-  useEffect(() => {
-    if (!selectedFile) {
-      setPreview(undefined);
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(selectedFile);
-    setPreview(objectUrl);
-
-    // free memory when ever this component is unmounted
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [selectedFile]);
-
-  const onSelectFile = (e) => {
-    if (!e.target.files || e.target.files.length === 0) {
-      setSelectedFile(undefined);
-      return;
-    }
-
-    // I've kept this example simple by using the first image instead of multiple
-    setSelectedFile(e.target.files[0]);
-  };
-
-  const handleClearClick = () => {
-    setSelectedFile(null);
-  };
+  const switchEpassModal = () => setEditPassModal((v) => !v);
+  const closeEpassModal = () => setEditPassModal(false);
 
   const saveHandler = () => {
-    let changes = {};
-
-    for (let key in form) {
-      if (form[key] !== data[key]) {
-        changes[key] = form[key];
+    let hasChange = false;
+    const payload = {};
+    ["email", "phone_number", "display_name", "address"].forEach((k) => {
+      if (form[k] !== data[k]) {
+        payload[k] = form[k];
+        hasChange = true;
       }
-    }
+    });
+    if (!hasChange) return;
+
     setProcess(true);
-    if (selectedFile) {
-      form.image = selectedFile;
-    }
     toast.promise(
-      editProfile(form, userInfo.token, controller)
-        .then((res) => {
-          res.data;
-          dispatch(
-            profileAction.getProfileThunk({ token: userInfo.token, controller })
-          );
+      editProfile(payload, userInfo.token, controller)
+        .then(() => {
+          dispatch(profileAction.getProfileThunk({ token: userInfo.token, controller }));
         })
         .finally(() => setProcess(false)),
       {
@@ -180,25 +118,24 @@ function Profile() {
         Do you want to save the change?
       </p>
       <button
-        className="bg-tertiary border-2  secondary py-4 w-[75%] rounded-2xl mb-3 text-white font-semibold text-xl shadow-lg disabled:cursor-not-allowed disabled:bg-gray-400"
+        className="bg-tertiary border-2 secondary py-4 w-[75%] rounded-2xl mb-3 text-white font-semibold text-xl shadow-lg disabled:cursor-not-allowed disabled:bg-gray-400"
         id="saveChange"
         onClick={saveHandler}
-        disabled={(isEqual(form, data) && !selectedFile) || isProcess}
+        disabled={isEqual(form, data) || isProcess}
       >
         Save Change
       </button>
       <button
-        className="bg-secondary border-2  secondary py-4 w-[75%] rounded-2xl mb-3 text-tertiary font-semibold text-xl shadow-lg  disabled:cursor-not-allowed disabled:bg-gray-400 disabled:text-white"
+        className="bg-secondary border-2 secondary py-4 w-[75%] rounded-2xl mb-3 text-tertiary font-semibold text-xl shadow-lg disabled:cursor-not-allowed disabled:bg-gray-400 disabled:text-white"
         onClick={() => setForm({ ...data })}
         disabled={isEqual(form, data) || isProcess}
       >
         Cancel
       </button>
-      <button className="mt-10 bg-white border-2  secondary py-4 w-[75%] rounded-2xl mb-8 text-tertiary font-semibold shadow-lg">
-        Log out
-      </button>
     </div>
   );
+
+  const isLoading = profileState?.isLoading;
 
   return (
     <>
@@ -213,51 +150,31 @@ function Profile() {
               <section className="text-white text-2xl font-extrabold">
                 User Profile
               </section>
+
               <section className="flex flex-col lg:flex-row bg-white rounded-2xl">
+                {/* Left column */}
                 <section className="flex-1 flex flex-col items-center p-10">
                   <img
-                    src={
-                      selectedFile
-                        ? preview
-                        : data.img
-                        ? data.img
-                        : placeholderImage
-                    }
+                    src={data.img ? data.img : placeholderImage}
                     alt=""
                     className="w-44 aspect-square object-cover rounded-full mb-3"
                   />
-                  <p className="font-semibold text-lg">{data.display_name}</p>
-                  <p className="mb-5">{data.email}</p>
-                  <input
-                    className="hidden"
-                    type="file"
-                    onChange={onSelectFile}
-                    accept="image/png, image/jpeg, image/webp"
-                    id="imageUp"
-                  />
-                  <label
-                    htmlFor="imageUp"
-                    className="bg-secondary py-3 w-[75%] rounded-2xl mb-3 text-tertiary font-semibold shadow-lg text-center cursor-pointer"
-                  >
-                    Choose photo
-                  </label>
+                  <p className="font-semibold text-lg">{form.display_name || "User"}</p>
+                  <p className="mb-8">{form.email}</p>
+
                   <button
-                    className="bg-tertiary disabled:bg-gray-400 secondary py-3 w-[75%] rounded-2xl mb-8 text-white font-semibold shadow-lg"
-                    onClick={handleClearClick}
-                    disabled={selectedFile ? false : true}
-                  >
-                    Remove photo
-                  </button>
-                  <button
-                    className="bg-white border-2  secondary py-4 w-[75%] rounded-2xl mb-8 text-tertiary font-semibold shadow-lg"
+                    className="bg-white border-2 secondary py-4 w-[75%] rounded-2xl mb-8 text-tertiary font-semibold shadow-lg"
                     onClick={switchEpassModal}
                   >
                     Edit Password
                   </button>
+
                   <section className="hidden lg:block">
                     <ActionList />
                   </section>
                 </section>
+
+                {/* Right column */}
                 <section className="flex-[2_2_0%] p-4 md:p-10 lg:pl-0">
                   <form className="bg-white drop-shadow-2xl rounded-xl border-b-[6px] border-solid border-[#6a4029] px-5 py-3 relative">
                     <button
@@ -267,11 +184,12 @@ function Profile() {
                       onClick={(e) => {
                         e.preventDefault();
                         setForm(data);
-                        return setEditMode(!editMode);
+                        setEditMode((v) => !v);
                       }}
                     >
                       <img src={iconPen} alt="" />
                     </button>
+
                     <p className="text-primary text-xl font-bold">Contacts</p>
                     <div className="grid lg:grid-cols-[55%_35%] gap-x-5 gap-y-8 py-5">
                       <div className="flex flex-col">
@@ -289,7 +207,7 @@ function Profile() {
                         />
                       </div>
                       <div className="flex flex-col">
-                        <label htmlFor="email" className="text-[#9f9f9f]">
+                        <label htmlFor="phone" className="text-[#9f9f9f]">
                           Mobile number
                         </label>
                         <input
@@ -302,8 +220,9 @@ function Profile() {
                           disabled={!editMode}
                         />
                       </div>
-                      <div className="flex flex-col">
-                        <label htmlFor="email" className="text-[#9f9f9f]">
+
+                      <div className="flex flex-col lg:col-span-2">
+                        <label htmlFor="address" className="text-[#9f9f9f]">
                           Delivery Address
                         </label>
                         <input
@@ -317,10 +236,11 @@ function Profile() {
                         />
                       </div>
                     </div>
+
                     <p className="text-primary text-xl font-bold">Details</p>
-                    <div className="grid lg:grid-cols-[55%_35%] gap-x-5 gap-y-8 py-5">
+                    <div className="grid lg:grid-cols-1 gap-y-8 py-5">
                       <div className="input-profile">
-                        <label htmlFor="email" className="text-[#9f9f9f]">
+                        <label htmlFor="display_name" className="text-[#9f9f9f]">
                           Display name
                         </label>
                         <input
@@ -333,96 +253,10 @@ function Profile() {
                           disabled={!editMode}
                         />
                       </div>
-                      <div className="input-profile">
-                        <label htmlFor="email" className="text-[#9f9f9f]">
-                          Birthdate
-                        </label>
-                        <input
-                          type="date"
-                          value={form.birthdate?.slice(0, 10)}
-                          id="birthdate"
-                          name="birthdate"
-                          disabled={!editMode}
-                          onChange={formHandler}
-                          className="focus:outline-none border-b-[1px] border-black w-full"
-                        />
-                      </div>
-                      <div className="input-profile">
-                        <label htmlFor="email" className="text-[#9f9f9f]">
-                          First name
-                        </label>
-                        <input
-                          type="text"
-                          value={form.first_name}
-                          name="first_name"
-                          id="firstName"
-                          disabled={!editMode}
-                          onChange={formHandler}
-                          className="focus:outline-none border-b-[1px] border-black w-full"
-                        />
-                      </div>
-                      <div className="input-profile hidden lg:block"></div>
-                      <div className="input-profile">
-                        <label htmlFor="email" className="text-[#9f9f9f]">
-                          Last name
-                        </label>
-                        <input
-                          type="text"
-                          value={form.last_name}
-                          name="last_name"
-                          id="lastName"
-                          disabled={!editMode}
-                          onChange={formHandler}
-                          className="focus:outline-none border-b-[1px] border-black w-full"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-around items-center">
-                      <div className="male flex items-center gap-2">
-                        <input
-                          type="radio"
-                          id="genderMale"
-                          name="gender"
-                          value="1"
-                          className="hidden peer"
-                          checked={String(form.gender) === "1"}
-                          disabled={!editMode}
-                          onChange={formHandler}
-                          onClick={() => setForm({ ...form, gender: "1" })}
-                          required
-                        />
-                        <label
-                          htmlFor="genderMale"
-                          className="inline-flex items-center justify-between p-2 text-gray-500 bg-[#BABABA59] rounded-full cursor-pointer peer-checked:text-white peer-checked:bg-secondary peer-checked:font-bold hover:text-gray-600 hover:bg-gray-100 w-2 h-2 border-2 border-tertiary"
-                        >
-                          <div className="block"></div>
-                        </label>
-                        <label htmlFor="genderMale">Male</label>
-                      </div>
-                      <div className="female flex items-center gap-2">
-                        <input
-                          type="radio"
-                          id="genderFemale"
-                          name="gender"
-                          value="2"
-                          className="hidden peer"
-                          checked={String(form.gender) === "2"}
-                          disabled={!editMode}
-                          onClick={() => setForm({ ...form, gender: "1" })}
-                          onChange={formHandler}
-                          required
-                        />
-                        <label
-                          htmlFor="genderFemale"
-                          className="inline-flex items-center justify-between p-2 text-gray-500 bg-[#BABABA59] rounded-full cursor-pointer peer-checked:text-white peer-checked:bg-secondary peer-checked:font-bold hover:text-gray-600 hover:bg-gray-100 w-2 h-2 border-2 border-tertiary"
-                        >
-                          <div className="block"></div>
-                        </label>
-                        <label htmlFor="genderFemale">Female</label>
-                      </div>
                     </div>
                   </form>
                 </section>
+
                 <section className="block lg:hidden mt-8">
                   <ActionList />
                 </section>
@@ -435,4 +269,5 @@ function Profile() {
     </>
   );
 }
+
 export default Profile;
