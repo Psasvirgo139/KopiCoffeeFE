@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import { now } from "lodash";
 import toast from "react-hot-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import icon from "../../assets/jokopi.svg";
 import { forgotPass } from "../../utils/dataProvider/auth";
@@ -10,6 +10,7 @@ import useDocumentTitle from "../../utils/documentTitle";
 
 const ForgotPass = () => {
   useDocumentTitle("Forgot Password");
+  const navigate = useNavigate();
 
   const controller = React.useMemo(() => new AbortController(), []);
   const [isLoading, setIsLoading] = useState(false);
@@ -125,13 +126,13 @@ const ForgotPass = () => {
         </form>
         {resend >= now() ? (
           <section className="text-center mt-10 space-y-2">
-            <p>Click here if you didn’t receive any link in 2 minutes</p>
             <p className="font-bold">{displaycd}</p>
             <button
-              type="submit"
-              className="w-full text-white bg-tertiary focus:ring-4 focus:outline-none focus:ring-primary-300 font-bold rounded-2xl text-lg p-3 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 shadow-xl"
+              type="button"
+              className="w-full text-white bg-tertiary focus:ring-4 focus:outline-none focus:ring-primary-300 font-bold rounded-2xl text-lg p-3 text-center shadow-xl"
+              onClick={() => navigate("/auth/login", { replace: true })}
             >
-              Resend Link
+              Login
             </button>
           </section>
         ) : (

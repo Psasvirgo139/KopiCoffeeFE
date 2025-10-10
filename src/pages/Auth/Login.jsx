@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; 
+import React, { useState, useEffect } from "react";
 
 import jwtDecode from "jwt-decode";
 import toast from "react-hot-toast";
@@ -66,16 +66,18 @@ const Login = () => {
       toast.promise(
         login(form.email, form.password, form.rememberMe, controller).then(
           (res) => {
-            dispatch(uinfoAct.assignToken(res.data.data.token));
-            const { role } = jwtDecode(res.data.data.token);
-            dispatch(uinfoAct.assignData({ role }));
-            dispatch(
-              profileAction.getProfileThunk({
-                controller,
-                token: res.data.data.token,
-              })
-            );
-            return res.data.data.token;
+            // LƯU Ý: return nguyên payload để success() nhận được
+            const payload = res?.data?.data || res?.data || {};
+            const token = payload.token;
+            if (token) {
+              dispatch(uinfoAct.assignToken(token));
+              try {
+                const { role } = jwtDecode(token);
+                dispatch(uinfoAct.assignData({ role }));
+              } catch {}
+              dispatch(profileAction.getProfileThunk({ controller, token }));
+            }
+            return payload; // <-- để success(data) có thể đọc forceChangePassword
           }
         ),
         {
@@ -83,18 +85,36 @@ const Login = () => {
             e.target.disabled = true;
             return "Please wait a moment";
           },
-          success: () => {
+          success: (data) => {
+            // dọn mọi toast lỗi còn treo từ interceptor (nếu có)
+            toast.dismiss();
+            // bật lại nút & reset loading
+            setIsLoading(false);
+            e.target.disabled = false;
+
+            const payload = data || {};
+            const mustChange = payload.forceChangePassword === true;
+            const token = payload.token;
+
+            // lưu cờ cho wrapper nếu cần
+            window.sessionStorage.setItem("mustChange", mustChange ? "1" : "0");
+
+            if (mustChange) {
+              // ép đổi mật khẩu: điều hướng sang change-password
+              navigate("/auth/change-password", { replace: true });
+              toast.success(
+                "You are using a temporary password. Please change it now."
+              );
+              return "Login successful! Redirecting to Change Password";
+            }
+
+            // Luồng cũ nếu không phải mật khẩu tạm
             navigate("/products");
             toast.success("Welcome to Kopi!\nYou can order for now!", {
               icon: "👋",
               duration: Infinity,
             });
-            return (
-              <>
-                Login successful!
-                <br /> Redirecting you
-              </>
-            );
+            return "Login successful! Redirecting you";
           },
           error: () => {
             setIsLoading(false);
@@ -119,8 +139,8 @@ const Login = () => {
       [e.target.name]: !form[e.target.name],
     }));
   }
-  const backend = process.env.REACT_APP_BACKEND_HOST; 
-  const googleRedirect = `${backend}/oauth2/authorization/google?prompt=select_account`; 
+  const backend = process.env.REACT_APP_BACKEND_HOST;
+  const googleRedirect = `${backend}/oauth2/authorization/google?prompt=select_account`;
 
   return (
     <>
@@ -252,14 +272,14 @@ const Login = () => {
           </button>
           <button
             type="button"
-            onClick={() => (window.location.href = googleRedirect)} 
+            onClick={() => (window.location.href = googleRedirect)}
             className="w-full text-tertiary bg-white focus:ring-4 focus:outline-none focus:ring-primary-300 font-bold rounded-2xl text-base md:text-lg p-3 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 shadow-xl inline-flex justify-center items-center"
           >
             <img
               src="https://i.pinimg.com/1200x/60/41/99/604199df880fb029291ddd7c382e828b.jpg"
               alt=""
               width="23px"
-              className="w-5 h-5 mr-2" 
+              className="w-5 h-5 mr-2"
             />
             <span>Login with google</span>
           </button>
