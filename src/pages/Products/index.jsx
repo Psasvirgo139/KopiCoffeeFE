@@ -175,25 +175,25 @@ function Products(props) {
                     <p className="text-sm">{promo.desc}</p>
                   </div>
 
-                  {Number(userInfo.role) > 1 && (
+                  {Number(userInfo.role) === 1 && (
                     <NavLink
                       to={`/promo/edit/${promo.id}`}
-                      className="bg-tertiary absolute bottom-0 right-0 w-7 h-7 rounded-full flex items-center justify-center hover:bg-primary-focus"
+                      className="flex items-center gap-2 text-primary"
                     >
-                      <img src={penIcon} className="w-4 h-4" />
+                      Edit Promo
                     </NavLink>
                   )}
                 </div>
               ))
             )}
           </div>
-          {Number(props.userInfo.role) > 1 && (
+          {Number(props.userInfo.role) === 1 && (
             <div className="mt-auto flex w-full">
               <button
-                onClick={() => navigate("/promo/new")}
-                className="btn btn-block btn-secondary text-tertiary font-bold normal-case"
+                onClick={() => navigate(`/promo/new`)}
+                className="btn btn-primary text-white w-full"
               >
-                Add new promo
+                Create new promo
               </button>
             </div>
           )}
