@@ -97,6 +97,14 @@ const ChangePassword = () => {
         >
           Change Password
         </button>
+
+        <button
+          type="button"
+          onClick={() => navigate("/auth/login")}
+          className="w-full border-2 border-gray-400 rounded-2xl text-lg p-3 text-center"
+        >
+          Back to Login
+        </button>
       </form>
     </section>
   );

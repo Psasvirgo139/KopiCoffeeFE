@@ -1,5 +1,4 @@
 import React from "react";
-
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import AdminDashboard from "./pages/Admin";
@@ -31,8 +30,6 @@ import {
   TokenHandler,
 } from "./utils/wrappers/protectedRoute";
 
-// const AllRouter = createBrowserRouter(createRoutesFromElements());
-
 const Routers = () => {
   return (
     <BrowserRouter>
@@ -50,10 +47,10 @@ const Routers = () => {
             element={<ProductDetail />}
           />
           <Route path="cart" element={<Cart />} />
-          {/* ADD: public change-password to avoid being blocked by CheckNoAuth */}
+          {/* Public change-password to avoid being blocked by CheckNoAuth */}
           <Route path="auth/change-password" element={<ChangePassword />} />
 
-          {/* Route which must not logged in */}
+          {/* Route must NOT be logged in */}
           <Route
             path="auth"
             element={
@@ -67,17 +64,17 @@ const Routers = () => {
             <Route path="register" element={<Register />} />
             <Route path="forgotpass" element={<ForgotPass />} />
             <Route path="resetpass" element={<ResetPass />} />
-            <Route path="change-password" element={<ChangePassword />} />
+            {/* removed duplicate change-password route */}
           </Route>
 
-          {/* Route which must logged in */}
+          {/* Route must be logged in */}
           <Route element={<CheckAuth />}>
             <Route path="profile" element={<Profile title="User Profile" />} />
             <Route path="history" element={<History />} />
             <Route path="history/:id" element={<HistoryDetail />} />
           </Route>
 
-          {/* Route which only admin */}
+          {/* Admin only */}
           <Route element={<CheckIsAdmin />}>
             <Route path="admin" element={<AdminDashboard />} />
             <Route path="products/new" element={<NewProduct />} />
