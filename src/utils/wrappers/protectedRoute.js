@@ -37,7 +37,8 @@ export const CheckIsAdmin = ({ children }) => {
     profile: state.profile,
   }));
 
-  if (userInfo.token === "" || Number(userInfo.role) < 2) {
+  // Admin in DB has role_id = 1
+  if (userInfo.token === "" || Number(userInfo.role) !== 1) {
     return <Navigate to="/" replace={true} />;
   }
   return <Outlet />;

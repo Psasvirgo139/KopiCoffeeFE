@@ -2,30 +2,31 @@ import api from "./base";
 
 export const createPromoEntry = (
   {
-    image = "",
     name = "",
-    product_id = "",
     desc = "",
-    discount = "",
     coupon_code = "",
+    discount_type = "",
+    discount_value = "",
+    min_order_amount = "",
+    total_usage_limit = "",
     start_date = "",
     end_date = "",
   },
   token,
   controller
 ) => {
-  const bodyForm = new FormData();
-  bodyForm.append("image", image);
-  bodyForm.append("name", name);
-  bodyForm.append("desc", desc);
-  bodyForm.append("discount", discount);
-  bodyForm.append("product_id", product_id);
-  bodyForm.append("coupon_code", coupon_code);
-  bodyForm.append("start_date", JSON.stringify(start_date));
-  bodyForm.append("end_date", JSON.stringify(end_date));
-
-  form.coupon_code = form.coupon_code.toUpperCase();
-  return api.post("/apiv1/promo", form, {
+  const payload = {
+    name,
+    desc,
+    coupon_code,
+    discount_type,
+    discount_value,
+    min_order_amount,
+    total_usage_limit,
+    start_date,
+    end_date,
+  };
+  return api.post("/apiv1/promo", payload, {
     signal: controller.signal,
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -50,11 +51,10 @@ export const getPromos = (
 export const editPromoEntry = (
   promoId,
   {
-    image = "",
     name = "",
-    product_id = "",
     desc = "",
-    discount = "",
+    discount_type = "",
+    discount_value = "",
     coupon_code = "",
     start_date = "",
     end_date = "",
@@ -62,17 +62,16 @@ export const editPromoEntry = (
   token,
   controller
 ) => {
-  const bodyForm = new FormData();
-  bodyForm.append("image", image);
-  bodyForm.append("name", name);
-  bodyForm.append("desc", desc);
-  bodyForm.append("discount", discount);
-  bodyForm.append("product_id", product_id);
-  bodyForm.append("coupon_code", coupon_code);
-  bodyForm.append("start_date", JSON.stringify(start_date));
-  bodyForm.append("end_date", JSON.stringify(end_date));
-
-  return api.patch(`/apiv1/promo/${promoId}`, bodyForm, {
+  const payload = {
+    name,
+    desc,
+    discount_type,
+    discount_value,
+    coupon_code,
+    start_date,
+    end_date,
+  };
+  return api.patch(`/apiv1/promo/${promoId}`, payload, {
     signal: controller.signal,
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -88,5 +87,33 @@ export const deletePromoEntry = (promoId, token, controller) => {
       Authorization: `Bearer ${token}`,
     },
     signal: controller.signal,
+  });
+};
+
+export const createPromoEvent = (
+  {
+    name = "",
+    desc = "",
+    discount_type = "",
+    discount_value = "",
+    start_date = "",
+    end_date = "",
+    product_ids = [],
+  },
+  token,
+  controller
+) => {
+  const payload = {
+    name,
+    desc,
+    discount_type,
+    discount_value,
+    start_date,
+    end_date,
+    product_ids,
+  };
+  return api.post("/apiv1/promo/events", payload, {
+    signal: controller.signal,
+    headers: { Authorization: `Bearer ${token}` },
   });
 };
