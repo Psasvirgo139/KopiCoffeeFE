@@ -85,3 +85,15 @@ export function logoutUser(token) {
   const url = `${host}/apiv1/auth/logout`;
   return axios.delete(url, config);
 }
+export function forceChangePassword(token, { new_password }, controller) {
+  const url = `${process.env.REACT_APP_BACKEND_HOST}/apiv1/auth/force-change-password`;
+
+  return axios.post(
+    url,
+    { new_password },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller?.signal,
+    }
+  );
+}
