@@ -20,6 +20,7 @@ import ProductDetail from "./pages/Products/ProductDetail";
 import Profile from "./pages/Profile";
 import EditPromo from "./pages/Promo/EditPromo";
 import NewPromo from "./pages/Promo/NewPromo";
+import PromoList from "./pages/Promo";
 import ScrollToTop from "./utils/scrollToTop";
 import ChangePassword from "./pages/Auth/ChangePassword";
 
@@ -80,6 +81,7 @@ const Routers = () => {
             <Route path="products/new" element={<NewProduct />} />
             <Route path="manage-order" element={<ManageOrder />} />
             <Route path="products/edit/:productId" element={<EditProduct />} />
+            <Route path="promo" element={<PromoList />} />
             <Route path="promo/new" element={<NewPromo />} />
             <Route path="promo/edit/:promoId" element={<EditPromo />} />
           </Route>

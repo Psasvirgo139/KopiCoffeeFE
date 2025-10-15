@@ -33,15 +33,20 @@ export const createPromoEntry = (
 };
 
 export const getPromos = (
-  { page = 1, limit = 4, available = "true", searchByName = "" },
+  { page = 1, limit = 4, searchByName = "", status, available },
   controller
 ) => {
   const params = {
     page,
     limit,
-    available,
     searchByName,
   };
+  if (available !== undefined){
+    params.available = available;
+  }
+  if (status){
+    params.status = status;
+  }
   return api.get("/apiv1/promo", {
     params,
     signal: controller.signal,
