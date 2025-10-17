@@ -34,6 +34,8 @@ const Login = () => {
     const token = searchParams.get("token");
     const role = searchParams.get("role");
     if (token) {
+      // persist token for axios interceptor
+      try { localStorage.setItem("kopi_token", token); } catch {}
       dispatch(uinfoAct.assignToken(token));
       if (role) dispatch(uinfoAct.assignData({ role }));
       dispatch(
@@ -70,6 +72,8 @@ const Login = () => {
             const payload = res?.data?.data || res?.data || {};
             const token = payload.token;
             if (token) {
+              // persist token for axios interceptor
+              try { localStorage.setItem("kopi_token", token); } catch {}
               dispatch(uinfoAct.assignToken(token));
               try {
                 const { role } = jwtDecode(token);

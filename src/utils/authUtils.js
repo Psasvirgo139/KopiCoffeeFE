@@ -16,6 +16,7 @@ export function isAuthenticated() {
     const currentTime = Date.now() / 1000;
 
     if (decoded.exp < currentTime) {
+      try { localStorage.removeItem("kopi_token"); } catch {}
       store.dispatch(uinfoAct.dismissToken());
       return false;
     }

@@ -22,6 +22,7 @@ function Logout() {
     setLoading(true);
     logoutUser(userInfo.token)
       .then((result) => {
+        try { localStorage.removeItem("kopi_token"); } catch {}
         dispatch(uinfoAct.dismissToken());
         dispatch(contextAct.closeLogout());
         profileAction.reset();

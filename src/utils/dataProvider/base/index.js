@@ -14,7 +14,10 @@ const api = axios.create({
 
 // Interceptor: đính kèm Bearer token nếu có (phục vụ khi bạn login xong)
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("kopi_token");
+  let token = null;
+  try {
+    token = localStorage.getItem("kopi_token");
+  } catch {}
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
