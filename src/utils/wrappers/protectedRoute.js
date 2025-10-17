@@ -58,9 +58,18 @@ export const TokenHandler = () => {
       const currentTime = Date.now() / 1000;
 
       if (decoded.exp < currentTime) {
+        try { localStorage.removeItem("kopi_token"); } catch {}
         dispatch(uinfoAct.dismissToken());
         profileAction.reset();
         toast.error("Your token is expired, please log in back");
+      } else {
+        // keep axios interceptor token in sync on app load / refresh
+        try {
+          const existing = localStorage.getItem("kopi_token");
+          if (existing !== userInfo.token) {
+            localStorage.setItem("kopi_token", userInfo.token);
+          }
+        } catch {}
       }
 
       if (profile.isFulfilled) {
