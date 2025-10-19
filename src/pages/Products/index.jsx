@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import _ from "lodash";
 import Skeleton from "react-loading-skeleton";
-import { connect, useSelector } from "react-redux";
+import { connect, useSelector, useDispatch } from "react-redux";
 import {
   NavLink,
   Route,
@@ -20,9 +20,16 @@ import illustrationsPromo from "../../assets/illustrations/mobile-search-undraw.
 import images from "../../assets/images/person-with-a-coffee.webp";
 import Footer from "../../components/Footer";
 import Header from "../../components/Header";
+import Modal from "../../components/Modal";
 import { getPromos } from "../../utils/dataProvider/promo";
 import useDocumentTitle from "../../utils/documentTitle";
 import GetAllProducts from "./GetAllProducts";
+import productPlaceholder from "../../assets/images/placeholder-image.webp";
+import { n_f } from "../../utils/helpers";
+import { cartActions } from "../../redux/slices/cart.slice";
+import { createTransaction } from "../../utils/dataProvider/transaction";
+import { getUserData } from "../../utils/authUtils";
+import { toast } from "react-hot-toast";
 
 const promos = [
   {
@@ -58,6 +65,12 @@ function Products(props) {
   const { userInfo } = useSelector((state) => ({
     userInfo: state.userInfo,
   }));
+  const cartRedux = useSelector((state) => state.cart);
+  const cart = cartRedux.list;
+  const dispatch = useDispatch();
+  const [remove, setRemove] = useState({ product_id: "", size_id: "" });
+  const closeRemoveModal = () => setRemove({ product_id: "", size_id: "" });
+  const [paidNow, setPaidNow] = useState(false);
 
   const toggleDdmenu = () => {
     setDdmenu(!ddMenu);
@@ -107,6 +120,29 @@ function Products(props) {
     }
   }, [search]);
 
+  const confirmOrder = async () => {
+    if (cart.length < 1) return;
+    if (Number(userInfo.role) === 2) {
+      try {
+        const body = { payment_id: 1, delivery_id: 1, status_id: 3, address: "", notes: "", customer_id: null, paid: paidNow };
+        await createTransaction(body, cart, userInfo.token, controller);
+        toast.success("Order saved");
+        // If confirming from a draft, remove that draft; else start a fresh cart
+        if (cartRedux.activeCartId) {
+          dispatch(cartActions.deleteCart(cartRedux.activeCartId));
+        } else {
+          dispatch(cartActions.createNewCartAndActivate());
+        }
+        // Reset paid checkbox for new order
+        setPaidNow(false);
+      } catch (e) {
+        toast.error("Failed to save order");
+      }
+      return;
+    }
+    navigate(`/cart`);
+  };
+
   const fetchPromo = async () => {
     try {
       setPromoLoad(true);
@@ -127,75 +163,215 @@ function Products(props) {
   useDocumentTitle(props.title);
   return (
     <>
+      <Modal
+        isOpen={remove.product_id !== "" && remove.size_id !== ""}
+        onClose={closeRemoveModal}
+        className="flex flex-col gap-y-5"
+      >
+        Are you sure to delete this item from your cart?
+        <div className="mx-auto space-x-3">
+          <button
+            onClick={() => {
+              dispatch(
+                cartActions.removeFromCart({
+                  product_id: remove.product_id,
+                  size_id: remove.size_id,
+                })
+              );
+              closeRemoveModal();
+            }}
+            className="btn btn-primary text-white"
+          >
+            Yes
+          </button>
+          <div onClick={closeRemoveModal} className="btn btn-error">
+            No
+          </div>
+        </div>
+      </Modal>
       <Header />
 
       <main className="flex flex-col-reverse md:flex-row global-px">
         <section className="flex-1 flex flex-col items-center gap-5 py-5 md:border-r-2 border-solid md:pr-6">
-          <h2 className="font-bold text-2xl">Promo Today</h2>
-          <p className="text-center">
-            Coupons will be updated every weeks.
-            <br />
-            Check them out!
-          </p>
-          <div className="flex flex-col justify-center gap-5">
-            {promoLoad ? (
-              <Skeleton
-                height={125}
-                count={4}
-                containerClassName="flex-1 w-[350px] md:w-auto lg:w-[346px]"
-                style={{ marginBottom: "1rem", minWidth: 250 }}
-              />
-            ) : promo.length < 1 ? (
-              <div className="flex flex-col text-center">
-                <img src={illustrationsPromo} width={200} />
-                <p className="text-tertiary font-semibold">No promo today</p>
-                <p className="text-black font-medium text-sm">
-                  Dont worry, check tommorow
-                </p>
-              </div>
-            ) : (
-              promo.map((promo, idx) => (
-                <div
-                  className="flex flex-row items-center bg-slate-300  rounded-xl gap-2 px-4 py-3 relative"
-                  key={idx}
-                >
-                  <div className="flex-1 flex justify-center py-1">
-                    {/* <img src={promo.img || images} alt="" width="75px" /> */}
-                    <div className="avatar">
-                      <div className="w-24 rounded-xl">
-                        <img
-                          src={promo.img || images}
-                          className="mix-blend-multiply contrast-100"
-                        />
-                      </div>
-                    </div>
+          {Number(userInfo.role) === 1 ? (
+            <>
+              <h2 className="font-bold text-2xl">Promo Today</h2>
+              <p className="text-center">
+                Coupons will be updated every weeks.
+                <br />
+                Check them out!
+              </p>
+              <div className="flex flex-col justify-center gap-5">
+                {promoLoad ? (
+                  <Skeleton
+                    height={125}
+                    count={4}
+                    containerClassName="flex-1 w-[350px] md:w-auto lg:w-[346px]"
+                    style={{ marginBottom: "1rem", minWidth: 250 }}
+                  />
+                ) : promo.length < 1 ? (
+                  <div className="flex flex-col text-center">
+                    <img src={illustrationsPromo} width={200} />
+                    <p className="text-tertiary font-semibold">No promo today</p>
+                    <p className="text-black font-medium text-sm">Dont worry, check tommorow</p>
                   </div>
-                  <div className="flex-[2_2_0%]">
-                    <p className="font-bold">{promo.name}</p>
-                    <p className="text-sm">{promo.desc}</p>
-                  </div>
-
-                  {Number(userInfo.role) === 1 && (
-                    <NavLink
-                      to={`/promo/edit/${promo.id}`}
-                      className="flex items-center gap-2 text-primary"
+                ) : (
+                  promo.map((promo, idx) => (
+                    <div
+                      className="flex flex-row items-center bg-slate-300  rounded-xl gap-2 px-4 py-3 relative"
+                      key={idx}
                     >
-                      Edit Promo
-                    </NavLink>
+                      <div className="flex-1 flex justify-center py-1">
+                        <div className="avatar">
+                          <div className="w-24 rounded-xl">
+                            <img src={promo.img || images} className="mix-blend-multiply contrast-100" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex-[2_2_0%]">
+                        <p className="font-bold">{promo.name}</p>
+                        <p className="text-sm">{promo.desc}</p>
+                      </div>
+                      <NavLink to={`/promo/edit/${promo.id}`} className="flex items-center gap-2 text-primary">
+                        Edit Promo
+                      </NavLink>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="mt-auto flex w-full">
+                <button onClick={() => navigate(`/promo/new`)} className="btn btn-primary text-white w-full">
+                  Create new promo
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="font-bold text-2xl">Order Summary</h2>
+              <section className="flex w-full flex-col gap-4 my-2">
+                {cart.length < 1 ? (
+                  <div className="text-center text-tertiary">Your cart is empty</div>
+                ) : (
+                  cart.map((list, idx) => {
+                    let sizeName;
+                    switch (list.size_id) {
+                      case 2:
+                        sizeName = "Large";
+                        break;
+                      case 3:
+                        sizeName = "Xtra Large";
+                        break;
+                      default:
+                        sizeName = "Regular";
+                        break;
+                    }
+                    return (
+                      <div className="flex flex-row gap-3 w-full items-center" key={idx}>
+                        <aside className="w-20 h-20">
+                          <img
+                            src={_.isEmpty(list.img) ? productPlaceholder : list.img}
+                            alt={list.name}
+                            className="aspect-square h-20 w-20 object-cover rounded-xl"
+                          />
+                        </aside>
+                        <aside className="flex-1">
+                          <p className="font-semibold">{list.name}</p>
+                          <p className="text-sm">{sizeName}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <button
+                              onClick={() => {
+                                if (list.qty - 1 < 1)
+                                  return setRemove({
+                                    product_id: list.product_id,
+                                    size_id: list.size_id,
+                                  });
+                                dispatch(
+                                  cartActions.decrementQty({
+                                    product_id: list.product_id,
+                                    size_id: list.size_id,
+                                  })
+                                );
+                              }}
+                              className="rounded-full bg-tertiary text-white font-bold w-6 h-6 items-center justify-center duration-200 hover:bg-primary-focus"
+                            >
+                              -
+                            </button>
+                            <p>x {list.qty}</p>
+                            <button
+                              onClick={() =>
+                                dispatch(
+                                  cartActions.incrementQty({
+                                    product_id: list.product_id,
+                                    size_id: list.size_id,
+                                  })
+                                )
+                              }
+                              className="rounded-full bg-tertiary text-white font-bold w-6 h-6 items-center justify-center duration-200 hover:bg-primary-focus"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </aside>
+                        <aside className="min-w-[120px] text-right font-medium flex flex-col items-end">
+                          <button
+                            onClick={() =>
+                              setRemove({
+                                product_id: list.product_id,
+                                size_id: list.size_id,
+                              })
+                            }
+                            className="rounded-full h-6 w-6 bg-tertiary text-white font-bold text-xs text-center flex mb-1"
+                          >
+                            <p className="m-auto">X</p>
+                          </button>
+                          <p>
+                            VND {n_f(Number(list.price) * Number(list.qty))}
+                          </p>
+                        </aside>
+                      </div>
+                    );
+                  })
+                )}
+              </section>
+              <hr className="w-full" />
+              <section className="flex flex-col w-full">
+                {Number(userInfo.role) === 2 && (
+                  <label className="flex items-center gap-2 mb-2 select-none cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="accent-tertiary w-4 h-4"
+                      checked={paidNow}
+                      onChange={(e) => setPaidNow(e.target.checked)}
+                    />
+                    <span>Order is paid</span>
+                  </label>
+                )}
+                <div className="flex flex-row uppercase font-bold my-4">
+                  <p className="flex-[2_2_0%]">Total</p>
+                  <p className="flex-1 text-right">
+                    VND {n_f(cart.reduce((acc, cur) => acc + cur.price * cur.qty, 0))}
+                  </p>
+                </div>
+              </section>
+              <div className="mt-auto flex w-full">
+                <div className="grid grid-cols-1 gap-3 w-full">
+                  <button onClick={confirmOrder} className="btn btn-primary text-white w-full">
+                    Confirm Order
+                  </button>
+                  {Number(userInfo.role) === 2 && (
+                    <button
+                      onClick={() => {
+                        if (cart.length < 1) return;
+                        dispatch(cartActions.saveActiveCartAsDraft());
+                      }}
+                      className="btn btn-secondary text-tertiary w-full"
+                    >
+                      Save Order
+                    </button>
                   )}
                 </div>
-              ))
-            )}
-          </div>
-          {Number(props.userInfo.role) === 1 && (
-            <div className="mt-auto flex w-full">
-              <button
-                onClick={() => navigate(`/promo/new`)}
-                className="btn btn-primary text-white w-full"
-              >
-                Create new promo
-              </button>
-            </div>
+              </div>
+            </>
           )}
         </section>
         <section className="flex-[2_2_0%] flex flex-col md:pl-16 py-5">
@@ -353,7 +529,7 @@ function Products(props) {
           <section className="my-6 text-tertiary">
             *the price has been cutted by discount appears
           </section>
-          {Number(props.userInfo.role) > 1 && (
+          {Number(props.userInfo.role) === 1 && (
             <div className="mt-auto flex w-full">
               <button
                 onClick={() => navigate("/products/new")}

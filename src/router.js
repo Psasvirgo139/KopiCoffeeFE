@@ -27,9 +27,13 @@ import ChangePassword from "./pages/Auth/ChangePassword";
 import {
   CheckAuth,
   CheckIsAdmin,
+  CheckIsEmployee,
   CheckNoAuth,
   TokenHandler,
 } from "./utils/wrappers/protectedRoute";
+import OrderDrafts from "./pages/Order";
+import TableOrder from "./pages/TableOrder";
+import ShippingOrder from "./pages/ShippingOrder";
 
 const Routers = () => {
   return (
@@ -73,6 +77,12 @@ const Routers = () => {
             <Route path="profile" element={<Profile title="User Profile" />} />
             <Route path="history" element={<History />} />
             <Route path="history/:id" element={<HistoryDetail />} />
+            {/* Employee only */}
+            <Route element={<CheckIsEmployee />}>
+              <Route path="draft-order" element={<OrderDrafts />} />
+              <Route path="table-order" element={<TableOrder />} />
+              <Route path="shipping-order" element={<ShippingOrder />} />
+            </Route>
           </Route>
 
           {/* Admin only */}

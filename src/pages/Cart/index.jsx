@@ -137,7 +137,7 @@ function Cart() {
         onClose={() => setRemove({ product_id: "", size_id: "" })}
         className="flex flex-col gap-y-5"
       >
-        Are you sure to delete this item form your cart?
+        Are you sure to delete this item from your cart?
         <div className="mx-auto space-x-3">
           <button
             onClick={() => {
