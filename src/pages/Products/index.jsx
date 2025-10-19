@@ -27,6 +27,9 @@ import GetAllProducts from "./GetAllProducts";
 import productPlaceholder from "../../assets/images/placeholder-image.webp";
 import { n_f } from "../../utils/helpers";
 import { cartActions } from "../../redux/slices/cart.slice";
+import { createTransaction } from "../../utils/dataProvider/transaction";
+import { getUserData } from "../../utils/authUtils";
+import { toast } from "react-hot-toast";
 
 const promos = [
   {
@@ -115,6 +118,27 @@ function Products(props) {
       navigateDeleteParams({ q: null });
     }
   }, [search]);
+
+  const confirmOrder = async () => {
+    if (cart.length < 1) return;
+    if (Number(userInfo.role) === 2) {
+      try {
+        const body = { payment_id: 1, delivery_id: 1, status_id: 3, address: "", notes: "", customer_id: null };
+        await createTransaction(body, cart, userInfo.token, controller);
+        toast.success("Order saved");
+        // If confirming from a draft, remove that draft; else start a fresh cart
+        if (cartRedux.activeCartId) {
+          dispatch(cartActions.deleteCart(cartRedux.activeCartId));
+        } else {
+          dispatch(cartActions.createNewCartAndActivate());
+        }
+      } catch (e) {
+        toast.error("Failed to save order");
+      }
+      return;
+    }
+    navigate(`/cart`);
+  };
 
   const fetchPromo = async () => {
     try {
@@ -330,9 +354,22 @@ function Products(props) {
                 </div>
               </section>
               <div className="mt-auto flex w-full">
-                <button onClick={() => navigate(`/cart`)} className="btn btn-primary text-white w-full">
-                  Confirm Order
-                </button>
+                <div className="grid grid-cols-1 gap-3 w-full">
+                  <button onClick={confirmOrder} className="btn btn-primary text-white w-full">
+                    Confirm Order
+                  </button>
+                  {Number(userInfo.role) === 2 && (
+                    <button
+                      onClick={() => {
+                        if (cart.length < 1) return;
+                        dispatch(cartActions.saveActiveCartAsDraft());
+                      }}
+                      className="btn btn-secondary text-tertiary w-full"
+                    >
+                      Save Order
+                    </button>
+                  )}
+                </div>
               </div>
             </>
           )}
