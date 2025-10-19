@@ -116,7 +116,7 @@ function Sidebar({ onClose }) {
                   History
                 </NavLink>
               </li>
-              {Number(userInfo.role) > 1 && (
+              {Number(userInfo.role) === 1 && (
                 <>
                   <li className="mb-1">
                     <NavLink
