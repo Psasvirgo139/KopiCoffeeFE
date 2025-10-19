@@ -70,6 +70,7 @@ function Products(props) {
   const dispatch = useDispatch();
   const [remove, setRemove] = useState({ product_id: "", size_id: "" });
   const closeRemoveModal = () => setRemove({ product_id: "", size_id: "" });
+  const [paidNow, setPaidNow] = useState(false);
 
   const toggleDdmenu = () => {
     setDdmenu(!ddMenu);
@@ -123,7 +124,7 @@ function Products(props) {
     if (cart.length < 1) return;
     if (Number(userInfo.role) === 2) {
       try {
-        const body = { payment_id: 1, delivery_id: 1, status_id: 3, address: "", notes: "", customer_id: null };
+        const body = { payment_id: 1, delivery_id: 1, status_id: 3, address: "", notes: "", customer_id: null, paid: paidNow };
         await createTransaction(body, cart, userInfo.token, controller);
         toast.success("Order saved");
         // If confirming from a draft, remove that draft; else start a fresh cart
@@ -132,6 +133,8 @@ function Products(props) {
         } else {
           dispatch(cartActions.createNewCartAndActivate());
         }
+        // Reset paid checkbox for new order
+        setPaidNow(false);
       } catch (e) {
         toast.error("Failed to save order");
       }
@@ -332,24 +335,21 @@ function Products(props) {
               </section>
               <hr className="w-full" />
               <section className="flex flex-col w-full">
-                <div className="flex flex-row uppercase">
-                  <p className="flex-[2_2_0%]">Subtotal</p>
-                  <p className="flex-1 text-right">
-                    VND {n_f(cart.reduce((acc, cur) => acc + cur.price * cur.qty, 0))}
-                  </p>
-                </div>
-                <div className="flex flex-row uppercase">
-                  <p className="flex-[2_2_0%]">Tax & Fees</p>
-                  <p className="flex-1 text-right">VND 20.000</p>
-                </div>
-                <div className="flex flex-row uppercase">
-                  <p className="flex-[2_2_0%]">Shipping</p>
-                  <p className="flex-1 text-right">VND 10.000</p>
-                </div>
+                {Number(userInfo.role) === 2 && (
+                  <label className="flex items-center gap-2 mb-2 select-none cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="accent-tertiary w-4 h-4"
+                      checked={paidNow}
+                      onChange={(e) => setPaidNow(e.target.checked)}
+                    />
+                    <span>Order is paid</span>
+                  </label>
+                )}
                 <div className="flex flex-row uppercase font-bold my-4">
                   <p className="flex-[2_2_0%]">Total</p>
                   <p className="flex-1 text-right">
-                    VND {n_f(cart.reduce((acc, cur) => acc + cur.price * cur.qty, 0) + 30000)}
+                    VND {n_f(cart.reduce((acc, cur) => acc + cur.price * cur.qty, 0))}
                   </p>
                 </div>
               </section>

@@ -221,46 +221,103 @@ class Header extends Component {
               </button>
             </div>
             <nav className="py-6 hidden lg:flex flex-row gap-8 justify-center">
-              <li className="list-none" key="Home Page">
-                <NavLink
-                  to="/"
-                  className={({ isActive }) =>
-                    isActive ? "font-bold text-[#6A4029]" : ""
-                  }
-                >
-                  Home
-                </NavLink>
-              </li>
-              <li className="list-none" key="Product">
-                <NavLink
-                  to="/products"
-                  className={({ isActive }) =>
-                    isActive ? "font-bold text-[#6A4029]" : ""
-                  }
-                >
-                  Products
-                </NavLink>
-              </li>
-              <li className="list-none" key="Cart">
-                <NavLink
-                  to="/cart"
-                  className={({ isActive }) =>
-                    isActive ? "font-bold text-[#6A4029]" : ""
-                  }
-                >
-                  Your Cart
-                </NavLink>
-              </li>
-              <li className="list-none" key="History">
-                <NavLink
-                  to="/history"
-                  className={({ isActive }) =>
-                    isActive ? "font-bold text-[#6A4029]" : ""
-                  }
-                >
-                  History
-                </NavLink>
-              </li>
+              {Number(this.props.userInfo.role) === 2 ? (
+                <>
+                  <li className="list-none" key="Home Page">
+                    <NavLink
+                      to="/"
+                      className={({ isActive }) =>
+                        isActive ? "font-bold text-[#6A4029]" : ""
+                      }
+                    >
+                      Home
+                    </NavLink>
+                  </li>
+                  <li className="list-none" key="Product">
+                    <NavLink
+                      to="/products"
+                      className={({ isActive }) =>
+                        isActive ? "font-bold text-[#6A4029]" : ""
+                      }
+                    >
+                      Products
+                    </NavLink>
+                  </li>
+                  <li className="list-none" key="DraftOrder">
+                    <NavLink
+                      to="/draft-order"
+                      className={({ isActive }) =>
+                        isActive ? "font-bold text-[#6A4029]" : ""
+                      }
+                    >
+                      Draft Order
+                    </NavLink>
+                  </li>
+                  <li className="list-none" key="TableOrder">
+                    <NavLink
+                      to="/table-order"
+                      className={({ isActive }) =>
+                        isActive ? "font-bold text-[#6A4029]" : ""
+                      }
+                    >
+                      Table Order
+                    </NavLink>
+                  </li>
+                  <li className="list-none" key="ShippingOrder">
+                    <NavLink
+                      to="/shipping-order"
+                      className={({ isActive }) =>
+                        isActive ? "font-bold text-[#6A4029]" : ""
+                      }
+                    >
+                      Shipping Order
+                    </NavLink>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="list-none" key="Home Page">
+                    <NavLink
+                      to="/"
+                      className={({ isActive }) =>
+                        isActive ? "font-bold text-[#6A4029]" : ""
+                      }
+                    >
+                      Home
+                    </NavLink>
+                  </li>
+                  <li className="list-none" key="Product">
+                    <NavLink
+                      to="/products"
+                      className={({ isActive }) =>
+                        isActive ? "font-bold text-[#6A4029]" : ""
+                      }
+                    >
+                      Products
+                    </NavLink>
+                  </li>
+                  <li className="list-none" key="Cart">
+                    <NavLink
+                      to="/cart"
+                      className={({ isActive }) =>
+                        isActive ? "font-bold text-[#6A4029]" : ""
+                      }
+                    >
+                      Your Cart
+                    </NavLink>
+                  </li>
+                  <li className="list-none" key="History">
+                    <NavLink
+                      to="/history"
+                      className={({ isActive }) =>
+                        isActive ? "font-bold text-[#6A4029]" : ""
+                      }
+                    >
+                      History
+                    </NavLink>
+                  </li>
+                </>
+              )}
             </nav>
             {isAuthenticated() ? (
               <div className="flex-row gap-10 hidden lg:flex select-none py-4 items-center">
@@ -428,12 +485,6 @@ class Header extends Component {
                               to="/admin"
                             >
                               Admin Dashboard
-                            </NavLink>
-                            <NavLink
-                              className="block px-4 py-2 hover:bg-gray-100  duration-200"
-                              to="/manage-order"
-                            >
-                              Manage Order
                             </NavLink>
                             <NavLink
                               className="block px-4 py-2 hover:bg-gray-100  duration-200"
