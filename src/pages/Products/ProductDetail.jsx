@@ -119,10 +119,8 @@ function ProductDetail(props) {
     }
   };
   const checkoutHandler = () => {
-    if (cart.length < 1) {
-      return toast.error("Add atleast 1 size to cart");
-    }
-    navigate("/cart");
+    // Navigate back to products menu without constraints
+    navigate("/products");
     // toast.promise(
     //   addCart(detail.id, cart, userInfo.token).then((res) => {
     //     return res;
@@ -187,134 +185,12 @@ function ProductDetail(props) {
       <main className="global-px py-10">
         <nav className="flex flex-row list-none gap-1">
           <li className="after:content-['>'] after:font-semibold text-primary">
-            <NavLink to="/products">Favorite & Promo </NavLink>
+            <NavLink to="/products">Menu </NavLink>
           </li>
           <li className="text-tertiary font-semibold">{p.name}</li>
         </nav>
-        <section className="flex my-10 gap-16 flex-col md:flex-row">
-          <aside className="flex-1 flex flex-col items-center justify-between gap-10">
-            <img
-              src={p.img ? p.img : productPlaceholder}
-              alt={p.name}
-              className="aspect-square object-cover rounded-full w-64"
-            />
-            <section className="p-4 px-8 w-full shadow-primary rounded-xl flex flex-col gap-8">
-              <p className="font-bold text-left text-xl">Delivery and Time</p>
-              <div className="select-none">
-                <ul className="flex flex-row gap-2 font-bold">
-                  <li>
-                    <input
-                      type="radio"
-                      id="dinein"
-                      name="delivery"
-                      value="1"
-                      className="hidden peer"
-                      checked={form.delivery === "1"}
-                      onChange={onChangeForm}
-                      required
-                    />
-                    <label
-                      htmlFor="dinein"
-                      className="inline-flex items-center justify-between p-2 text-gray-500 bg-[#BABABA59] rounded-lg cursor-pointer peer-checked:text-white peer-checked:bg-tertiary peer-checked:font-bold hover:text-gray-600 hover:bg-gray-100"
-                    >
-                      <div className="block">Dine in</div>
-                    </label>
-                  </li>
-                  <li>
-                    <input
-                      type="radio"
-                      id="doordelivery"
-                      name="delivery"
-                      value="2"
-                      className="hidden peer"
-                      checked={form.delivery === "2"}
-                      onChange={onChangeForm}
-                      required
-                    />
-                    <label
-                      htmlFor="doordelivery"
-                      className="inline-flex items-center justify-between p-2 text-gray-500 bg-[#BABABA59] rounded-lg cursor-pointer peer-checked:text-white peer-checked:bg-tertiary peer-checked:font-bold hover:text-gray-600 hover:bg-gray-100"
-                    >
-                      <div className="block">Door delivery</div>
-                    </label>
-                  </li>
-                  <li>
-                    <input
-                      type="radio"
-                      id="pickup"
-                      name="delivery"
-                      value="3"
-                      className="hidden peer"
-                      checked={form.delivery === "3"}
-                      onChange={onChangeForm}
-                      required
-                    />
-                    <label
-                      htmlFor="pickup"
-                      className="inline-flex items-center justify-between p-2 text-gray-500 bg-[#BABABA59] rounded-lg cursor-pointer peer-checked:text-white peer-checked:bg-tertiary peer-checked:font-bold hover:text-gray-600 hover:bg-gray-100"
-                    >
-                      <div className="block">Pick up</div>
-                    </label>
-                  </li>
-                </ul>
-              </div>
-              <div className="grid grid-cols-[20%_80%] items-center gap-y-8 mb-4">
-                <p>Now</p>
-                <div className="select-none">
-                  <ul className="flex flex-row gap-2 font-bold">
-                    <li>
-                      <input
-                        type="radio"
-                        id="now-true"
-                        name="now"
-                        value="1"
-                        checked={form.now === "1"}
-                        onChange={onChangeForm}
-                        className="hidden peer"
-                        required
-                      />
-                      <label
-                        htmlFor="now-true"
-                        className="inline-flex items-center justify-between p-2 px-7 text-gray-500 bg-[#BABABA59] rounded-lg cursor-pointer peer-checked:text-white peer-checked:bg-tertiary peer-checked:font-bold hover:text-gray-600 hover:bg-gray-100"
-                      >
-                        <div className="block">Yes</div>
-                      </label>
-                    </li>
-                    <li>
-                      <input
-                        type="radio"
-                        id="now-false"
-                        name="now"
-                        value="0"
-                        className="hidden peer"
-                        checked={form.now === "0"}
-                        onChange={onChangeForm}
-                        required
-                      />
-                      <label
-                        htmlFor="now-false"
-                        className="inline-flex items-center justify-between p-2 px-7 text-gray-500 bg-[#BABABA59] rounded-lg cursor-pointer peer-checked:text-white peer-checked:bg-tertiary peer-checked:font-bold hover:text-gray-600 hover:bg-gray-100"
-                      >
-                        <div className="block">No</div>
-                      </label>
-                    </li>
-                  </ul>
-                </div>
-                <p>Set time</p>
-                <div>
-                  <input
-                    type="time"
-                    name="time"
-                    id="reservationtime"
-                    value={form.time}
-                    onChange={onChangeForm}
-                    className="bg-[#BABABA59] py-2 px-8 rounded-lg text-primary font-bold"
-                  />
-                </div>
-              </div>
-            </section>
-          </aside>
-          <aside className="flex-1 flex flex-col gap-5 justify-between">
+        <section className="my-10">
+          <div className="max-w-3xl mx-auto flex flex-col gap-5">
             <p className="font-black text-5xl uppercase w-full text-center mb-4">
               {p.name}
             </p>
@@ -324,6 +200,66 @@ function ProductDetail(props) {
             <p className="text-tertiary text-lg mb-8">
               Delivery only on <b>Monday to friday</b> at <b>1 - 7 pm</b>
             </p>
+            {/* Inline size selector (moved from below) */}
+            <div className="font-bold mb-4">
+              <p className="mb-2">Size</p>
+              <div className="flex justify-center md:justify-start gap-4 list-none">
+                <li>
+                  <input
+                    type="radio"
+                    id="size-r"
+                    name="size"
+                    value="1"
+                    className="hidden peer"
+                    checked={form.size === "1"}
+                    onChange={onChangeForm}
+                    required
+                  />
+                  <label
+                    htmlFor="size-r"
+                    className="inline-block bg-gray-400 rounded-full peer-checked:bg-secondary peer-checked:font-bold cursor-pointer"
+                  >
+                    <p className=" p-2 w-12 h-12 text-center ">R</p>
+                  </label>
+                </li>
+                <li>
+                  <input
+                    type="radio"
+                    id="size-l"
+                    name="size"
+                    value="2"
+                    className="hidden peer"
+                    checked={form.size === "2"}
+                    onChange={onChangeForm}
+                    required
+                  />
+                  <label
+                    htmlFor="size-l"
+                    className="inline-block bg-gray-400 rounded-full peer-checked:bg-secondary peer-checked:font-bold cursor-pointer"
+                  >
+                    <p className=" p-2 w-12 h-12 text-center ">L</p>
+                  </label>
+                </li>
+                <li>
+                  <input
+                    type="radio"
+                    id="size-xl"
+                    name="size"
+                    value="3"
+                    className="hidden peer"
+                    checked={form.size === "3"}
+                    onChange={onChangeForm}
+                    required
+                  />
+                  <label
+                    htmlFor="size-xl"
+                    className="inline-block bg-gray-400 rounded-full peer-checked:bg-secondary peer-checked:font-bold cursor-pointer"
+                  >
+                    <p className="p-2 w-12 h-12 text-center ">XL</p>
+                  </label>
+                </li>
+              </div>
+            </div>
             <div className="flex justify-between items-center">
               <div className="custom-number-input h-10 w-32">
                 <div className="flex flex-row h-10 w-full rounded-lg relative bg-transparent mt-1v text-tertiary font-bold">
@@ -365,69 +301,18 @@ function ProductDetail(props) {
             >
               Ask a Staff
             </button>
-          </aside>
+          </div>
         </section>
         <section className="flex flex-col md:flex-row gap-8">
+          {/* Removed Choose a size aside (moved above the quantity) */}
+          {/*
           <aside className="flex-1 font-bold rounded-xl shadow-primary px-5 py-8 text-center space-y-4 text-xl">
             <p>Choose a size</p>
             <div className="flex justify-center gap-4 list-none">
-              <li>
-                <input
-                  type="radio"
-                  id="regular-size"
-                  name="size"
-                  value="1"
-                  className="hidden peer"
-                  checked={form.size === "1"}
-                  onChange={onChangeForm}
-                  required
-                />
-                <label
-                  htmlFor="regular-size"
-                  className="inline-block bg-gray-400 rounded-full peer-checked:bg-secondary peer-checked:font-bold cursor-pointer"
-                >
-                  <p className=" p-2 w-12 h-12 text-center ">R</p>
-                </label>
-              </li>
-              <li>
-                {" "}
-                <input
-                  type="radio"
-                  id="large-size"
-                  name="size"
-                  value="2"
-                  className="hidden peer"
-                  checked={form.size === "2"}
-                  onChange={onChangeForm}
-                  required
-                />
-                <label
-                  htmlFor="large-size"
-                  className="inline-block bg-gray-400 rounded-full peer-checked:bg-secondary peer-checked:font-bold cursor-pointer"
-                >
-                  <p className=" p-2 w-12 h-12 text-center ">L</p>
-                </label>
-              </li>
-              <li>
-                <input
-                  type="radio"
-                  id="xlargeSize"
-                  name="size"
-                  value="3"
-                  className="hidden peer"
-                  checked={form.size === "3"}
-                  onChange={onChangeForm}
-                  required
-                />
-                <label
-                  htmlFor="xlargeSize"
-                  className="inline-block bg-gray-400 rounded-full peer-checked:bg-secondary peer-checked:font-bold cursor-pointer"
-                >
-                  <p className="p-2 w-12 h-12 text-center ">XL</p>
-                </label>
-              </li>
+              ... size radios ...
             </div>
           </aside>
+          */}
           <aside className="flex-[3_3_0] rounded-xl shadow-primary flex items-center px-6 md:px-14 py-8 gap-4 flex-wrap lg:flex-nowrap">
             <div className="">
               <img
@@ -478,7 +363,7 @@ function ProductDetail(props) {
               </div>
             </div>
             <div className="flex-1 font-bold text-lg w-full content-end md:hidden">
-              <p className="text-right">Checkout</p>
+              <p className="text-right">Back to menu</p>
             </div>
             <div className="flex-1">
               <button

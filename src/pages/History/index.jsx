@@ -150,7 +150,7 @@ function History() {
                       {/* <p>IDR {n_f(item.subtotal)}</p> */}
                     </div>
                     <div className="">
-                      <p className="">IDR {n_f(item.subtotal)}</p>
+                      <p className="">{n_f(item.subtotal)} VND</p>
                     </div>
                   </div>
                 ))}
@@ -160,7 +160,7 @@ function History() {
               <p className="font-bold mb-2">Detail Information</p>
               <div className="flex justify-between">
                 <p className="font-semibold">Grand Total</p>
-                <p>IDR {n_f(dataDetail.grand_total)}</p>
+                <p>{n_f(dataDetail.grand_total)} VND</p>
               </div>
               <div className="flex justify-between">
                 <p className="font-semibold">Payment Method</p>
@@ -242,7 +242,7 @@ function History() {
                         )}
                       </div>
                       <p className="text-tertiary">
-                        IDR {n_f(item.grand_total)}
+                        {n_f(item.grand_total)} VND
                       </p>
                       <p className="text-tertiary">{item.status_name}</p>
                     </div>

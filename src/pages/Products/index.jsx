@@ -387,7 +387,7 @@ function Products(props) {
                 to="/products"
                 end
               >
-                Favorite & Promo
+                Menu
               </NavLink>
             </li>
             <li>

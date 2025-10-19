@@ -74,6 +74,12 @@ export const TokenHandler = () => {
         profileAction.reset();
         toast.error("Your token is expired, please log in back");
       } else {
+        // keep role in Redux synced with JWT claims
+        if (decoded && typeof decoded.role !== "undefined" && decoded.role !== userInfo.role) {
+          try {
+            dispatch(uinfoAct.assignData({ role: decoded.role }));
+          } catch {}
+        }
         // keep axios interceptor token in sync on app load / refresh
         try {
           const existing = localStorage.getItem("kopi_token");
@@ -84,7 +90,7 @@ export const TokenHandler = () => {
       }
 
       if (profile.isFulfilled) {
-        profileAction.getProfileThunk(userInfo.token, controller);
+        profileAction.getProfileThunk({ token: userInfo.token, controller });
       }
     }
   }, [userInfo.token]);
