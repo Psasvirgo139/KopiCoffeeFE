@@ -243,16 +243,7 @@ class Header extends Component {
                       Products
                     </NavLink>
                   </li>
-                  <li className="list-none" key="DraftOrder">
-                    <NavLink
-                      to="/draft-order"
-                      className={({ isActive }) =>
-                        isActive ? "font-bold text-[#6A4029]" : ""
-                      }
-                    >
-                      Draft Order
-                    </NavLink>
-                  </li>
+                  {/* Draft Order moved into avatar dropdown for staff */}
                   <li className="list-none" key="TableOrder">
                     <NavLink
                       to="/table-order"
@@ -525,6 +516,22 @@ class Header extends Component {
                               to="/promo"
                             >
                               Manage Promo
+                            </NavLink>
+                          </div>
+                        )}
+                        {Number(this.props.userInfo.role) === 2 && (
+                          <div className="py-1">
+                            <NavLink
+                              className="block px-4 py-2 hover:bg-gray-100  duration-200"
+                              to="/draft-order"
+                            >
+                              Draft Order
+                            </NavLink>
+                            <NavLink
+                              className="block px-4 py-2 hover:bg-gray-100  duration-200"
+                              to="/manage-order"
+                            >
+                              Manage Orders
                             </NavLink>
                           </div>
                         )}

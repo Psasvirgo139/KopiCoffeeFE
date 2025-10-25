@@ -36,6 +36,7 @@ import {
 import OrderDrafts from "./pages/Order";
 import TableOrder from "./pages/TableOrder";
 import ShippingOrder from "./pages/ShippingOrder";
+import GuestTableOrder from "./pages/GuestTableOrder";
 
 const Routers = () => {
   return (
@@ -46,6 +47,7 @@ const Routers = () => {
           {/* Public Route */}
           <Route path="*" element={<NotFound />} />
           <Route index element={<Mainpage />} />
+          <Route path="guest/table/:qrToken" element={<GuestTableOrder />} />
           <Route path="products/*" element={<Products title="Products" />}>
             <Route path="category/:id" element={""} />
           </Route>
@@ -84,6 +86,7 @@ const Routers = () => {
               <Route path="draft-order" element={<OrderDrafts />} />
               <Route path="table-order" element={<TableOrder />} />
               <Route path="shipping-order" element={<ShippingOrder />} />
+              <Route path="manage-order" element={<ManageOrder />} />
             </Route>
           </Route>
 
@@ -93,7 +96,6 @@ const Routers = () => {
             <Route path="employees" element={<Employees />} />
             <Route path="customers" element={<Customers />} />
             <Route path="products/new" element={<NewProduct />} />
-            <Route path="manage-order" element={<ManageOrder />} />
             <Route path="products/edit/:productId" element={<EditProduct />} />
             <Route path="promo" element={<PromoList />} />
             <Route path="promo/new" element={<NewPromo />} />
