@@ -21,6 +21,8 @@ import Profile from "./pages/Profile";
 import EditPromo from "./pages/Promo/EditPromo";
 import NewPromo from "./pages/Promo/NewPromo";
 import PromoList from "./pages/Promo";
+import Employees from "./pages/Employees";
+import Customers from "./pages/Customers";
 import ScrollToTop from "./utils/scrollToTop";
 import ChangePassword from "./pages/Auth/ChangePassword";
 
@@ -88,6 +90,8 @@ const Routers = () => {
           {/* Admin only */}
           <Route element={<CheckIsAdmin />}>
             <Route path="admin" element={<AdminDashboard />} />
+            <Route path="employees" element={<Employees />} />
+            <Route path="customers" element={<Customers />} />
             <Route path="products/new" element={<NewProduct />} />
             <Route path="manage-order" element={<ManageOrder />} />
             <Route path="products/edit/:productId" element={<EditProduct />} />
