@@ -14,10 +14,10 @@ function TableOrder() {
 
   useEffect(() => {
     setLoading(true);
-    getTransactions({ status: "PENDING", page: 1, limit: 50 }, userInfo.token, controller)
+    getTransactions({ status: "PENDING", page: 1, limit: 50, type: "TABLE" }, userInfo.token, controller)
       .then((res) => {
         const data = res.data?.data || [];
-        setItems(data.filter((o) => !o.address));
+        setItems(data);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -37,7 +37,7 @@ function TableOrder() {
           <div className="flex flex-col gap-3">
             {items.map((o) => (
               <div key={o.id} className="border rounded p-3">
-                <div className="font-semibold">Order #{o.id}</div>
+                <div className="font-semibold">Order #{o.id} {o.table_number ? `(Table ${o.table_number})` : ""}</div>
                 <div className="text-sm">Total: {o.total}</div>
                 <ul className="list-disc ml-5">
                   {o.products?.map((p, idx) => (

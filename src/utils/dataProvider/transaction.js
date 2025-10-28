@@ -31,18 +31,30 @@ export const createTransaction = (
 };
 
 export const getTransactions = (
-  { status = "PENDING", page = 1, limit = 20 },
+  { status = "PENDING", page = 1, limit = 20, type = "ALL" },
   token,
   controller
 ) => {
   return api.get("/apiv1/transactions", {
     params: {
       status,
+      type,
       page,
       limit,
     },
     headers: { Authorization: `Bearer ${token}` },
     signal: controller?.signal,
+  });
+};
+
+export const createGuestTableOrder = (
+  { qr_token = undefined, table_number = undefined, products = [], notes = "", payment_id = 1, paid = false },
+  controller
+) => {
+  const body = { qr_token, table_number, products, notes, payment_id, paid };
+  return api.post(`/apiv1/guest/table-orders`, body, {
+    signal: controller?.signal,
+    // no Authorization header on purpose
   });
 };
 

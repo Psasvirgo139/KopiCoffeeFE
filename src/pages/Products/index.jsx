@@ -6,14 +6,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import _ from "lodash";
 import Skeleton from "react-loading-skeleton";
 import { connect, useSelector, useDispatch } from "react-redux";
-import {
-  NavLink,
-  Route,
-  Routes,
-  useLocation,
-  useNavigate,
-  useSearchParams,
-} from "react-router-dom";
+import { NavLink, Route, Routes, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 import penIcon from "../../assets/icons/icon-pen.svg";
 import illustrationsPromo from "../../assets/illustrations/mobile-search-undraw.png";
@@ -22,6 +15,7 @@ import Footer from "../../components/Footer";
 import Header from "../../components/Header";
 import Modal from "../../components/Modal";
 import { getPromos } from "../../utils/dataProvider/promo";
+import { getCategories } from "../../utils/dataProvider/categories";
 import useDocumentTitle from "../../utils/documentTitle";
 import GetAllProducts from "./GetAllProducts";
 import productPlaceholder from "../../assets/images/placeholder-image.webp";
@@ -69,6 +63,7 @@ function Products(props) {
   const cart = cartRedux.list;
   const dispatch = useDispatch();
   const [remove, setRemove] = useState({ product_id: "", size_id: "" });
+  const [categories, setCategories] = useState([]);
   const closeRemoveModal = () => setRemove({ product_id: "", size_id: "" });
   const [paidNow, setPaidNow] = useState(false);
 
@@ -158,6 +153,14 @@ function Products(props) {
 
   useEffect(() => {
     fetchPromo();
+  }, []);
+
+  useEffect(() => {
+    const c = new AbortController();
+    getCategories(c)
+      .then((res) => setCategories((res.data?.data || []).sort((a,b) => (a.display_order ?? 0) - (b.display_order ?? 0))))
+      .catch(() => setCategories([]));
+    return () => c.abort();
   }, []);
 
   useDocumentTitle(props.title);
@@ -377,71 +380,17 @@ function Products(props) {
         <section className="flex-[2_2_0%] flex flex-col md:pl-16 py-5">
           <nav className="list-none flex flex-row md:justify-between justify-evenly flex-wrap gap-5 mb-10 ">
             <li>
-              <NavLink
-                className={({ isActive }) =>
-                  isActive
-                    ? "font-semibold text-tertiary border-b-2 border-tertiary pb-1 drop-shadow-lg"
-                    : "" +
-                      " hover:drop-shadow-lg hover:border-b-2 border-tertiary pb-1"
-                }
-                to="/products"
-                end
-              >
+              <NavLink className={({ isActive }) => (isActive ? "font-semibold text-tertiary border-b-2 border-tertiary pb-1 drop-shadow-lg" : "" + " hover:drop-shadow-lg hover:border-b-2 border-tertiary pb-1")} to="/products" end>
                 Menu
               </NavLink>
             </li>
-            <li>
-              <NavLink
-                className={({ isActive }) =>
-                  isActive
-                    ? "font-semibold text-tertiary border-b-2 border-tertiary pb-1 drop-shadow-lg"
-                    : "" +
-                      " hover:drop-shadow-lg hover:border-b-2 border-tertiary pb-1"
-                }
-                to="category/1"
-              >
-                Coffee
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                className={({ isActive }) =>
-                  isActive
-                    ? "font-semibold text-tertiary border-b-2 border-tertiary pb-1 drop-shadow-lg"
-                    : "" +
-                      " hover:drop-shadow-lg hover:border-b-2 border-tertiary pb-1"
-                }
-                to="category/2"
-              >
-                Non Coffee
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                className={({ isActive }) =>
-                  isActive
-                    ? "font-semibold text-tertiary border-b-2 border-tertiary pb-1 drop-shadow-lg"
-                    : "" +
-                      " hover:drop-shadow-lg hover:border-b-2 border-tertiary pb-1"
-                }
-                to="category/3"
-              >
-                Foods
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                className={({ isActive }) =>
-                  isActive
-                    ? "font-semibold text-tertiary border-b-2 border-tertiary pb-1 drop-shadow-lg"
-                    : "" +
-                      " hover:drop-shadow-lg hover:border-b-2 border-tertiary pb-1"
-                }
-                to="category/4"
-              >
-                Add-on
-              </NavLink>
-            </li>
+            {categories.map((c) => (
+              <li key={c.id}>
+                <NavLink className={({ isActive }) => (isActive ? "font-semibold text-tertiary border-b-2 border-tertiary pb-1 drop-shadow-lg" : "" + " hover:drop-shadow-lg hover:border-b-2 border-tertiary pb-1")} to={`category/${c.id}`}>
+                  {c.name}
+                </NavLink>
+              </li>
+            ))}
             <li className="relative">
               <button
                 onClick={toggleDdmenu}
