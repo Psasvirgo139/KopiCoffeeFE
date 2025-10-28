@@ -273,6 +273,16 @@ class Header extends Component {
                       Shipping Order
                     </NavLink>
                   </li>
+                  <li className="list-none" key="TableSchedules">
+                    <NavLink
+                      to="/table-schedules"
+                      className={({ isActive }) =>
+                        isActive ? "font-bold text-[#6A4029]" : ""
+                      }
+                    >
+                      Schedules
+                    </NavLink>
+                  </li>
                 </>
               ) : (
                 <>
@@ -485,6 +495,24 @@ class Header extends Component {
                               to="/admin"
                             >
                               Admin Dashboard
+                            </NavLink>
+                            <NavLink
+                              className="block px-4 py-2 hover:bg-gray-100  duration-200"
+                              to="/schedule"
+                            >
+                              Manage Schedules
+                            </NavLink>
+                            <NavLink
+                              className="block px-4 py-2 hover:bg-gray-100  duration-200"
+                              to="/employees"
+                            >
+                              Manage Staffs
+                            </NavLink>
+                            <NavLink
+                              className="block px-4 py-2 hover:bg-gray-100  duration-200"
+                              to="/customers"
+                            >
+                              Manage Users
                             </NavLink>
                             <NavLink
                               className="block px-4 py-2 hover:bg-gray-100  duration-200"
