@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
 import {
@@ -48,6 +48,14 @@ const AdminDashboard = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [exportLoading, setExportLoading] = useState(false);
+  // Y-axis ticks mỗi 400k
+const STEP_400K = 400_000;
+const yTicks = useMemo(() => {
+  const max = Math.max(0, ...chartData.map(x => Number(x.totalRevenue || 0)));
+  const top = Math.max(STEP_400K, Math.ceil(max / STEP_400K) * STEP_400K);
+  return Array.from({ length: top / STEP_400K + 1 }, (_, i) => i * STEP_400K);
+}, [chartData]);
+
 
   const fetchData = useCallback(async () => {
   if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
@@ -327,59 +335,70 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Revenue Chart */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Revenue Overview</h2>
-            <button
-              onClick={handleExport}
-              disabled={exportLoading}
-              className={`btn btn-secondary ${exportLoading ? 'loading' : ''}`}
-            >
-              {exportLoading ? 'Exporting...' : 'Export to Excel'}
-            </button>
-          </div>
 
-          {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={400}>
-              {chartType === 'line' ? (
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="label" />
-                  <YAxis tickFormatter={(value) => `₫${n_f(value)}`} />
-                  <Tooltip
-                    formatter={(value) => `₫${n_f(value)}`}
-                    labelStyle={{ color: '#000' }}
-                  />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="totalRevenue"
-                    stroke="#6A4029"
-                    strokeWidth={2}
-                    name="Revenue"
-                  />
-                </LineChart>
-              ) : (
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="label" />
-                  <YAxis tickFormatter={(value) => `₫${n_f(value)}`} />
-                  <Tooltip
-                    formatter={(value) => `₫${n_f(value)}`}
-                    labelStyle={{ color: '#000' }}
-                  />
-                  <Legend />
-                  <Bar dataKey="totalRevenue" fill="#6A4029" name="Revenue" />
-                </BarChart>
-              )}
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-96">
-              <p className="text-gray-500">No data available for the selected period</p>
-            </div>
-          )}
-        </div>
+{/* Revenue Chart */}
+<div className="bg-white rounded-lg shadow p-6 mb-8 overflow-visible">
+  <div className="flex items-center justify-between mb-6 relative z-10">
+    <h2 className="text-2xl font-bold">Revenue Overview</h2>
+    <button
+      onClick={handleExport}
+      disabled={exportLoading}
+      className={`btn btn-secondary ${exportLoading ? 'loading' : ''}`}
+    >
+      {exportLoading ? 'Exporting...' : 'Export to Excel'}
+    </button>
+  </div>
+  <div className="relative z-0 h-[420px]">
+    <ResponsiveContainer width="100%" height="100%">
+      {chartType === 'line' ? (
+        <LineChart
+          data={chartData}
+          margin={{ top: 24, right: 72, bottom: 12, left: 72 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="label" padding={{ left: 8, right: 8 }} />
+          <YAxis
+            width={96}
+            tickMargin={10}
+            allowDecimals={false}
+            domain={[0, yTicks[yTicks.length - 1]]}
+            ticks={yTicks}
+            tickFormatter={(v) => `₫${n_f(v)}`}
+          />
+          <Tooltip formatter={(v) => `₫${n_f(v)}`} labelStyle={{ color: '#000' }} />
+          <Legend />
+          <Line
+            type="monotone"
+            dataKey="totalRevenue"
+            stroke="#6A4029"
+            strokeWidth={2}
+            dot={{ r: 3 }}
+            name="Revenue"
+          />
+        </LineChart>
+      ) : (
+        <BarChart
+          data={chartData}
+          margin={{ top: 24, right: 72, bottom: 12, left: 72 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="label" padding={{ left: 8, right: 8 }} />
+          <YAxis
+            width={96}
+            tickMargin={10}
+            allowDecimals={false}
+            domain={[0, yTicks[yTicks.length - 1]]}
+            ticks={yTicks}
+            tickFormatter={(v) => `₫${n_f(v)}`}
+          />
+          <Tooltip formatter={(v) => `₫${n_f(v)}`} labelStyle={{ color: '#000' }} />
+          <Legend />
+          <Bar dataKey="totalRevenue" fill="#6A4029" name="Revenue" />
+        </BarChart>
+      )}
+    </ResponsiveContainer>
+  </div>
+</div>
 
         {/* Statistics Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
