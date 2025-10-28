@@ -22,6 +22,7 @@
     "react-router-dom": "^6.9.0",
     "react-scripts": "5.0.1",
     "react-tailwindcss-datepicker": "^1.6.1",
+    "recharts": "^3.3.0",
     "redux": "^4.2.1",
     "redux-persist": "^6.0.0",
     "victory": "^36.6.10",
