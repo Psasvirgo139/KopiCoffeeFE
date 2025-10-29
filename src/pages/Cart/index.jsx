@@ -242,7 +242,7 @@ function Cart() {
                         </aside>
                         <aside className="flex-1">
                           <p className="text-right">
-                            VND {n_f(Number(list.price) * Number(list.qty))}
+                             {n_f(Number(list.price) * Number(list.qty))} VND
                           </p>
                         </aside>
                         <button
@@ -265,30 +265,30 @@ function Cart() {
                   <div className="flex flex-row uppercase lg:text-lg">
                     <p className="flex-[2_2_0%]">Subtotal</p>
                     <p className="flex-1 lg:flex-none text-right">
-                      VND{" "}
+                      {" "}
                       {n_f(
                         cart.reduce((acc, cur) => acc + cur.price * cur.qty, 0)
-                      )}
+                      )} VND
                     </p>
                   </div>
                   <div className="flex flex-row uppercase lg:text-lg">
                     <p className="flex-[2_2_0%]">Tax & Fees</p>
-                    <p className="flex-1 lg:flex-none text-right">VND 20.000</p>
+                    <p className="flex-1 lg:flex-none text-right">20.000 VND</p>
                   </div>
                   <div className="flex flex-row uppercase lg:text-lg">
                     <p className="flex-[2_2_0%]">Shipping</p>
-                    <p className="flex-1 lg:flex-none text-right">VND 10.000</p>
+                    <p className="flex-1 lg:flex-none text-right">10.000 VND</p>
                   </div>
                   <div className="flex flex-row uppercase  lg:text-xl font-bold my-10">
                     <p className="flex-[2_2_0%]">Total</p>
                     <p className="flex-initial lg:flex-none">
-                      VND{" "}
+                      {" "}
                       {n_f(
                         cart.reduce(
                           (acc, cur) => acc + cur.price * cur.qty,
                           0
                         ) + 30000
-                      )}
+                      )} VND
                     </p>
                   </div>
                 </section>
