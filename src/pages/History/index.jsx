@@ -3,6 +3,7 @@ import React, {
   useMemo,
   useState,
 } from 'react';
+import Datepicker from "react-tailwindcss-datepicker";
 
 import axios from 'axios';
 import { useSelector } from 'react-redux';
@@ -38,6 +39,8 @@ function History() {
     next: null,
   });
   const [list, setList] = useState([]);
+  const [filter, setFilter] = useState("ALL"); // ALL | PENDING | COMPLETED
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null });
   const [detail, setDetail] = useState("");
   const initialValue = {
     isLoading: true,
@@ -108,6 +111,33 @@ function History() {
         setList([]);
       });
   }, [page]);
+
+  const filteredSorted = useMemo(() => {
+    let items = Array.isArray(list) ? [...list] : [];
+    // status filter
+    if (filter === "PENDING") {
+      items = items.filter((it) => !["CANCELLED", "REJECTED", "COMPLETED"].includes(String(it.status_name || it.status || "").toUpperCase()));
+    } else if (filter === "COMPLETED") {
+      items = items.filter((it) => ["CANCELLED", "REJECTED", "COMPLETED"].includes(String(it.status_name || it.status || "").toUpperCase()));
+    }
+    // date range filter
+    if (dateRange.startDate && dateRange.endDate) {
+      const start = new Date(dateRange.startDate);
+      const end = new Date(dateRange.endDate);
+      items = items.filter((it) => {
+        const d = it.created_at ? new Date(it.created_at) : (it.transaction_time ? new Date(it.transaction_time) : null);
+        if (!d) return false;
+        return d >= start && d <= end;
+      });
+    }
+    // sort desc by created_at then fallback transaction_time
+    items.sort((a, b) => {
+      const da = a.created_at ? new Date(a.created_at).getTime() : (a.transaction_time ? new Date(a.transaction_time).getTime() : 0);
+      const db = b.created_at ? new Date(b.created_at).getTime() : (b.transaction_time ? new Date(b.transaction_time).getTime() : 0);
+      return db - da;
+    });
+    return items;
+  }, [list, filter, dateRange]);
 
   return (
     <>
@@ -213,8 +243,25 @@ function History() {
           </nav> */}
           {!isLoading ? (
             <>
+              <section className="bg-white/70 rounded-xl p-3 mb-4 text-black flex flex-col md:flex-row gap-3 items-start md:items-center">
+                <div className="flex gap-2 items-center">
+                  <button className={`btn btn-sm ${filter === "ALL" ? "btn-primary text-white" : ""}`} onClick={() => setFilter("ALL")}>All</button>
+                  <button className={`btn btn-sm ${filter === "PENDING" ? "btn-primary text-white" : ""}`} onClick={() => setFilter("PENDING")}>Pending orders</button>
+                  <button className={`btn btn-sm ${filter === "COMPLETED" ? "btn-primary text-white" : ""}`} onClick={() => setFilter("COMPLETED")}>Completed orders</button>
+                </div>
+                <div className="flex-1" />
+                <div className="min-w-[260px] w-full md:w-auto">
+                  <Datepicker
+                    value={dateRange}
+                    popoverDirection="down"
+                    separator="to"
+                    inputClassName={"bg-white border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none w-full"}
+                    onChange={(val) => setDateRange({ startDate: val?.startDate, endDate: val?.endDate })}
+                  />
+                </div>
+              </section>
               <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 text-black py-7">
-                {list.map((item, key) => (
+                {filteredSorted.map((item, key) => (
                   <div
                     className="history-card  flex flex-row px-4 py-5 bg-white hover:bg-gray-200 cursor-pointer duration-200 rounded-2xl gap-5 relative group"
                     onClick={() => setDetail(item.id)}
