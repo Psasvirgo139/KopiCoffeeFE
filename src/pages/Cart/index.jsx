@@ -21,6 +21,7 @@ import { cartActions } from '../../redux/slices/cart.slice';
 import { createTransaction } from '../../utils/dataProvider/transaction';
 import useDocumentTitle from '../../utils/documentTitle';
 import { n_f } from '../../utils/helpers';
+import MapAddressModal from './MapAddressModal';
 
 function Cart() {
   const userInfo = useSelector((state) => state.userInfo);
@@ -37,6 +38,7 @@ function Cart() {
   const navigate = useNavigate();
   const cart = cartRedux.list;
   const [result, setResult] = useState("");
+  const [showMapModal, setShowMapModal] = useState(false);
 
   const [form, setForm] = useState({
     payment: "",
@@ -303,6 +305,14 @@ function Cart() {
                 >
                   {editMode ? "save" : "edit"}
                 </button>
+                {editMode && (
+                  <button
+                    onClick={() => setShowMapModal(true)}
+                    className="absolute text-lg right-16 bottom-0 top-1 hover:underline"
+                  >
+                    use map
+                  </button>
+                )}
               </section>
               <section className="bg-white rounded-xl  p-5 lg:p-7 space-y-2">
                 <div className="flex gap-1">
@@ -472,6 +482,14 @@ function Cart() {
         </div>
       </main>
       <Footer />
+      <MapAddressModal
+        isOpen={showMapModal}
+        onClose={() => setShowMapModal(false)}
+        onPick={(picked) => {
+          setForm((prev) => ({ ...prev, delivery_address: picked.address }));
+          setEditMode(false);
+        }}
+      />
     </>
   );
 }

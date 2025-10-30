@@ -11,7 +11,7 @@ const Modal = ({ isOpen, onClose, children, className }) => {
         >
           <div className="global-px ">
             <div
-              className={`bg-white p-4 rounded-lg shadow-lg ${className}`}
+              className={`bg-white p-4 rounded-lg shadow-lg mx-auto ${className}`}
               onClick={(e) => {
                 e.stopPropagation();
               }}

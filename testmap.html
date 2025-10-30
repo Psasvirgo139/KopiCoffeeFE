@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Test Map</title>
+        <script src='https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js'></script>
+        <link href='https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css' rel='stylesheet' />
+        <script src="script.js"></script>
+    </head>
+
+    <body>
+        <div id='map' style='width: 400px; height: 300px;'></div>
+    </body>
+
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1Ijoiam9obmJpZGF0IiwiYSI6ImNtZDJocDE2cTBheWYybHBxNDZxeDZ5YmkifQ.8HhkYUtlOo5UrZpguhMPrw';
+        const map = new mapboxgl.Map({
+            container: 'map', // container ID
+            style: 'mapbox://styles/johnbidat/cmhd7enbl003n01r465hv4xux', // style URL
+            center: [108.2237436, 16.0648953], // starting position [lng, lat]
+            zoom: 16, // starting zoom
+            hash: true
+        });
+
+        data = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [108.2237436, 16.0648953]
+                    },
+                    "properties": {
+                        name: "Kopi Coffee"
+                    }
+                }
+            ]
+        }
+
+        map.on('load', (e)=>{
+            map.addSource('KopiCoffee-src', {
+                type: 'geojson',
+                data: data
+            })
+            map.addLayer({
+                id: 'KopiCoffee-location',
+                type: 'circle',
+                source: 'KopiCoffee-src',
+                paint: {
+                    'circle-radius': 6,
+                    'circle-color': '#007cbf'
+                }
+            })
+            map.addLayer({
+                id: 'KopiCoffee-name',
+                type: 'symbol',
+                source: 'KopiCoffee-src',
+                layout: {
+                    'text-field': '{name}',
+                    'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Regular'],
+                    'text-size': 8,
+                    'text-offset': [0, 2]
+                },
+                paint: {
+                    'text-color': '#0000ff'
+                }
+            })
+        });
+    </script>
+</html>

@@ -56,3 +56,15 @@ export const changePassword = (token, { current_password, new_password }, contro
     }
   );
 };
+
+// POST /apiv1/profile/address
+export const saveDefaultAddress = (token, { address_line, ward, district, city, latitude, longitude }, controller) => {
+  return api.post(
+    "/apiv1/profile/address",
+    { address_line, ward, district, city, latitude, longitude },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller?.signal,
+    }
+  );
+};

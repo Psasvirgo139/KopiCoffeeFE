@@ -36,6 +36,7 @@ import {
 import OrderDrafts from "./pages/Order";
 import TableOrder from "./pages/TableOrder";
 import ShippingOrder from "./pages/ShippingOrder";
+import ShippingTrack from "./pages/ShippingTrack";
 import GuestTableOrder from "./pages/GuestTableOrder";
 
 const Routers = () => {
@@ -81,6 +82,7 @@ const Routers = () => {
             <Route path="profile" element={<Profile title="User Profile" />} />
             <Route path="history" element={<History />} />
             <Route path="history/:id" element={<HistoryDetail />} />
+            <Route path="shipping/:orderId" element={<ShippingTrack />} />
             {/* Employee only */}
             <Route element={<CheckIsEmployee />}>
               <Route path="draft-order" element={<OrderDrafts />} />
