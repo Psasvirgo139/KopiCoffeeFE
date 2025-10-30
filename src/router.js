@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import AdminDashboard from "./pages/Admin";
+import AiSuggest from "./pages/Admin/AiSuggest";
 import ManageOrder from "./pages/Admin/ManageOrder";
 import Auth from "./pages/Auth";
 import ForgotPass from "./pages/Auth/ForgotPass";
@@ -21,8 +22,6 @@ import Profile from "./pages/Profile";
 import EditPromo from "./pages/Promo/EditPromo";
 import NewPromo from "./pages/Promo/NewPromo";
 import PromoList from "./pages/Promo";
-import Employees from "./pages/Employees";
-import Customers from "./pages/Customers";
 import ScrollToTop from "./utils/scrollToTop";
 import ChangePassword from "./pages/Auth/ChangePassword";
 
@@ -36,6 +35,7 @@ import {
 import OrderDrafts from "./pages/Order";
 import TableOrder from "./pages/TableOrder";
 import ShippingOrder from "./pages/ShippingOrder";
+//import GuestTableOrder from "./pages/GuestTableOrder";
 
 const Routers = () => {
   return (
@@ -90,10 +90,8 @@ const Routers = () => {
           {/* Admin only */}
           <Route element={<CheckIsAdmin />}>
             <Route path="admin" element={<AdminDashboard />} />
-            <Route path="employees" element={<Employees />} />
-            <Route path="customers" element={<Customers />} />
+            <Route path="admin/ai-suggest" element={<AiSuggest />} />
             <Route path="products/new" element={<NewProduct />} />
-            <Route path="manage-order" element={<ManageOrder />} />
             <Route path="products/edit/:productId" element={<EditProduct />} />
             <Route path="promo" element={<PromoList />} />
             <Route path="promo/new" element={<NewPromo />} />
