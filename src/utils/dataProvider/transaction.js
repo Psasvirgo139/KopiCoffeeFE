@@ -30,6 +30,15 @@ export const createTransaction = (
   });
 };
 
+// Validate order stock before proceeding (returns promise)
+export const validateOrder = (products = [], token, controller) => {
+  const body = { products };
+  return api.post(`/apiv1/orders/validate`, body, {
+    signal: controller?.signal,
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+};
+
 export const getTransactions = (
   { status = "PENDING", page = 1, limit = 20, type = "ALL" },
   token,

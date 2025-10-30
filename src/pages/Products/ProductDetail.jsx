@@ -25,6 +25,12 @@ import { getProductbyId } from '../../utils/dataProvider/products';
 import useDocumentTitle from '../../utils/documentTitle';
 
 function ProductDetail(props) {
+  // Helper to read stock from various possible backend field names
+  const getAvailableStock = (obj) => {
+    const v = obj?.stock ?? obj?.quantity ?? obj?.qty ?? obj?.available ?? obj?.stock_quantity ?? obj?.inventory;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : undefined;
+  };
   const [form, setForm] = useState({
     delivery: 0,
     count: 1,
@@ -148,6 +154,22 @@ function ProductDetail(props) {
     if (newItem.count < 1) {
       toast.error("Invalid count");
       return;
+    }
+
+    // Validate stock before adding to cart
+    const stock = getAvailableStock(detail);
+    if (typeof stock === "number") {
+      let cartQtyForThisProduct = 0;
+      cartRedux.list.forEach((item) => {
+        if (item.product_id === detail.id && item.size_id === newItem.size) {
+          cartQtyForThisProduct += Number(item.qty || 0);
+        }
+      });
+      const totalWillBe = cartQtyForThisProduct + newItem.count;
+      if (totalWillBe > stock) {
+        toast.error("Not enough stock");
+        return;
+      }
     }
 
     dispatch(
@@ -285,9 +307,12 @@ function ProductDetail(props) {
                   </button>
                 </div>
               </div>
-              <p className="font-bold text-xl">
-                VND {p.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
-              </p>
+              <div className="text-right">
+                <p className="font-bold text-xl">
+                  VND {p.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
+                </p>
+                <p className="text-sm text-tertiary mt-1">Stock: {(() => { const s = getAvailableStock(p); return typeof s === "number" ? s : "-"; })()}</p>
+              </div>
             </div>
             <button
               className="mt-4 block bg-tertiary text-white font-bold text-lg py-4 rounded-xl"
