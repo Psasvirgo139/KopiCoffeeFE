@@ -37,3 +37,15 @@ export const claimOrder = (orderId, token, controller) => {
 };
 
 
+export const estimateShipping = (token, { address_id = undefined, address = undefined }, controller) => {
+  const params = {};
+  if (typeof address_id !== "undefined") params.address_id = address_id;
+  if (typeof address !== "undefined") params.address = address;
+  return api.get(`/apiv1/shipping/estimate`, {
+    params,
+    headers: { Authorization: `Bearer ${token}` },
+    signal: controller?.signal,
+  });
+};
+
+
