@@ -5,7 +5,17 @@ import React, {
 
 import { Link } from 'react-router-dom';
 
-
+import ngockhoiImage from '../assets/images/ourteam/ngockhoi.png';
+import quanghuyImage from '../assets/images/ourteam/quanghuy.png';
+import tiendatImage from '../assets/images/ourteam/tiendat.png';
+import vanducImage from '../assets/images/ourteam/vanduc.png';
+import nhatduyImage from '../assets/images/ourteam/nhatduy.png';
+import bg1Image from '../assets/images/bg1.jpg';
+import bg2Image from '../assets/images/bg2.jpg';
+import bg3Image from '../assets/images/bg3.jpg';
+import almondcoffeeImage from '../assets/products/almondcoffee.jpg';
+import coconutcoffeeImage from '../assets/products/coconutcoffee.jpg';
+import tiramisucoffeeImage from '../assets/products/tiramisucoffee.jpg';
 // components
 import Footer from '../components/Footer';
 import Header from '../components/Header';
@@ -14,18 +24,18 @@ class Mainpage extends Component {
   state = {
 
     bgImages: [
-      "https://scontent.fdad3-5.fna.fbcdn.net/v/t39.30808-6/480791536_598007873229142_8654667733752084531_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=b6MtT3hgNAcQ7kNvwGz7-iG&_nc_oc=AdkSoQKisg_BnrBGfa9F2fia3-AIWXuXbBaoDVK76fCovQ6AHhlhMsIIwHbRTHOytvQ&_nc_zt=23&_nc_ht=scontent.fdad3-5.fna&_nc_gid=6UcfCUbIz9fKbnH9nTmIMQ&oh=00_Afc9Q-hK8rYkWp-cbzhDV-Amr7jIpqx9TRi0FBGGd8vgUQ&oe=69015C71", // coffee
-      "https://scontent.fdad3-5.fna.fbcdn.net/v/t39.30808-6/473621965_556225474083020_6052115158892626931_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=86c6b0&_nc_ohc=PCJcPfbzOAIQ7kNvwGb4-cR&_nc_oc=AdlcPFrNI1KN-lqVGPFg3NG1rqK8LboQIUeUlZ7y9FEQTkRAzcanlK-9qgTF2lo82I8&_nc_zt=23&_nc_ht=scontent.fdad3-5.fna&_nc_gid=Y3T56BQa6705TpoDX4-VlA&oh=00_AffR0qSwGmWRngTxLLw-IUmEfu_AoowyNbk-tnhBTHFeqw&oe=690183F7", // breakfast
-      "https://scontent.fdad3-5.fna.fbcdn.net/v/t39.30808-6/469085766_528699346835633_4604862292613346027_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=RWtUSJ-YkOkQ7kNvwEiAKE8&_nc_oc=AdmjuUgbs0s2AsQYJgBt0JaYjqzDZqysgGTi064RDt7va6ywKeOsR9XCM9RcPu9wt7Y&_nc_zt=23&_nc_ht=scontent.fdad3-5.fna&_nc_gid=zdc0Thinrl3QewUq_LRbLg&oh=00_AfdER46blQ8-vVWQkHYZgOamOQMG6UoDxboGSohGzjyEyg&oe=690170CD", // cafe interior
+      bg1Image,
+      bg2Image,
+      bg3Image,
     ],
     currentBg: 0,
 
     teamImages: [
-  { img: "https://scontent.fsgn2-7.fna.fbcdn.net/v/t39.30808-6/571166920_2009528193198972_8986191140646971264_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=127cfc&_nc_ohc=QZNh7R_Y8ssQ7kNvwFaWNFh&_nc_oc=AdkDZLtO58aWB8tA0XZVMxrKSKvJSv9IP0go3OMLSEKSlFEBAx3LdgWjnWTkdJC2Dog&_nc_zt=23&_nc_ht=scontent.fsgn2-7.fna&_nc_gid=_vDwq8lCXtYoKog7KS4iag&oh=00_AfcY_H-Ht4LUV8zQag0QyREOMSB6_09BOQIR16dItHbxnw&oe=690118A4", name: "Quang Huy"},
-  { img: "https://scontent.fsgn2-4.fna.fbcdn.net/v/t39.30808-6/568685239_2009528083198983_3683367515249980103_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=127cfc&_nc_ohc=yv0C283G6DkQ7kNvwGu3il8&_nc_oc=Adl6DSxJ1PLTZwfMCWOAq665S2ZrQCRXU59K4_cklASnqS59vURpmiW8wSm5AD6EXy8&_nc_zt=23&_nc_ht=scontent.fsgn2-4.fna&_nc_gid=Ds-IGNEp0CrPiyM74V9uug&oh=00_AfcPUndiTNtsoFxi1WQ5rU6yFkcxf3SdKugDhCSog2OU8A&oe=6900F97B", name: "Ngoc Khoi"},
-  { img: "https://scontent.fsgn2-4.fna.fbcdn.net/v/t39.30808-6/571995038_2009528079865650_2757432688694329848_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=127cfc&_nc_ohc=lbElhKMT5vkQ7kNvwEpTWKb&_nc_oc=Admp2Ky2VG90Mqo5PBSoI6YmvVkNJxZyltzQzKA9Qgme4N4T9q4Ou5tvjgABaoCYFBA&_nc_zt=23&_nc_ht=scontent.fsgn2-4.fna&_nc_gid=Oos5geW9QYGDjrCescQlcQ&oh=00_Afd-2W3vrDI-kA8lqh7SNnLDuIwVUzTeJCvrJpMakAsE2Q&oe=690126F4", name: "Tien Dat"},
-  { img: "https://scontent.fsgn2-4.fna.fbcdn.net/v/t39.30808-6/572263375_2009528076532317_4777371741674840162_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=127cfc&_nc_ohc=2vFSu0t84JoQ7kNvwGNv6ke&_nc_oc=Adlfb80kPizFeon42S8U-8gJBvjRxg_sydkEfKC_xiQiXI-YWgyF3LsWGGy5PxV0Ewg&_nc_zt=23&_nc_ht=scontent.fsgn2-4.fna&_nc_gid=4ulzPCAJOBdMZCoxeUxi8g&oh=00_Affl0EG2mTRz1IMWjqfNjwtk2AsN8WsPwPvk_cxc2Gc3SQ&oe=69010885", name: "Nhat Duy"},
-  { img: "https://scontent.fsgn2-6.fna.fbcdn.net/v/t39.30808-6/571799536_2009528196532305_1987734247714763611_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_ohc=34d-MMNwCNsQ7kNvwEKdPQ0&_nc_oc=AdmcW0HyZhM4SnRvpD_oAYLfElI_S_ngceQsLAZkAxZjbrRSLxX1KgAXtiV8Z2WSNuA&_nc_zt=23&_nc_ht=scontent.fsgn2-6.fna&_nc_gid=fTLj4xn7DvYEK5AxQTCTyQ&oh=00_Afc_VNmuwzNlMyOB-7nT1-2ZKkJH1M0EbQMN1aTF3Zs3iQ&oe=6901155C", name: "Van Duc"},
+  { img: quanghuyImage, name: "Quang Huy"},
+  { img: ngockhoiImage, name: "Ngoc Khoi"},
+  { img: tiendatImage, name: "Tien Dat"},
+  { img: nhatduyImage, name: "Nhat Duy"},
+  { img: vanducImage, name: "Van Duc"},
 ],
 
 };
@@ -95,7 +105,7 @@ componentWillUnmount() {
     {/* Ảnh giữa */}
     <div className="flex justify-center">
       <img
-        src="https://scontent.fdad3-5.fna.fbcdn.net/v/t39.30808-6/481112476_597986719897924_4997183883181250185_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=127cfc&_nc_ohc=GvHRVB3FXBQQ7kNvwFaWFll&_nc_oc=AdmSCPNlf6DK4i2k-SB8amC9_K1ADp6ExSkeJYlWziB1s24Inj1hkMLR-n1EnxCixcY&_nc_zt=23&_nc_ht=scontent.fdad3-5.fna&_nc_gid=ui9PHMjdWLMOspIX7L4oNQ&oh=00_Affs2RQphjWBSci3YBeqCwyp-FLfSvGnyRzNxSc6vsakFA&oe=69016A7D"
+        src= {tiramisucoffeeImage}
         alt="Coffee Cup"
         className="w-64 md:w-72 drop-shadow-2xl rounded-2xl hover:scale-105 transition-transform duration-300"
       />
@@ -134,14 +144,14 @@ componentWillUnmount() {
     <div className="group relative rounded-2xl overflow-hidden shadow-md transition-all duration-500 ease-in-out cursor-pointer w-full md:w-[45vw] max-w-[600px] bg-[#FAF7F2]">
       <div className="overflow-hidden rounded-2xl">
         <img
-          src="https://scontent.fdad3-4.fna.fbcdn.net/v/t39.30808-6/481210328_604195959277000_2146736397082022161_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=127cfc&_nc_ohc=BSh8ie7z-KIQ7kNvwE66ol8&_nc_oc=AdmG5nWQWVvwfhCzQYt_3SU8A_mMu53dH0hD3QwFbZCfoOn_cuFiOWXQzL2aaKiGOuY&_nc_zt=23&_nc_ht=scontent.fdad3-4.fna&_nc_gid=XWjMEum3cN4bz_JUlXV-oQ&oh=00_AfePGS9S1hJoVU_fRym_fkS1jhg-dJvzvRIELBmJ4xwg3Q&oe=690191EE"
-          alt="Nước ngon thượng vị"
+          src={almondcoffeeImage}
+          alt="Almond Coffee"
            className="w-full h-[550px] object-contain rounded-2xl transform transition-transform duration-700 group-hover:scale-105"
         />
       </div>
       <div className="absolute bottom-0 left-0 w-full py-6 text-center bg-white group-hover:bg-[#A12B2B] transition-all duration-500">
         <h3 className="font-semibold text-lg tracking-wide text-quartenary group-hover:text-white transition-colors duration-500">
-          CÀ PHÊ HẠNH NHÂN
+          ALMOND COFFEE
         </h3>
       </div>
     </div>
@@ -150,14 +160,14 @@ componentWillUnmount() {
     <div className="group relative rounded-2xl overflow-hidden shadow-md transition-all duration-500 ease-in-out cursor-pointer w-full md:w-[45vw] max-w-[600px] bg-[#FFF8ED]">
       <div className="overflow-hidden rounded-2xl">
         <img
-          src="https://scontent.fdad3-1.fna.fbcdn.net/v/t39.30808-6/490374021_636719132691349_4168899042463776652_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_ohc=jZjDm2XEJB4Q7kNvwFPKVwQ&_nc_oc=AdmPjjWDZgtNuZBWX3LXj-uHCSU30Vv20NTYhmKW_DStJ-FHjFgkUphg6i42YJxMDV0&_nc_zt=23&_nc_ht=scontent.fdad3-1.fna&_nc_gid=mP0G5x4cg3tlE8wn8t8sQw&oh=00_AfdDcvpzBdEfEKyR-7fLMsJ3Ea6kviVTEQAPelEtL_b1Pg&oe=690179ED"
-          alt="Bánh ngon no đầy"
+          src={coconutcoffeeImage}
+          alt="Coconut Coffee"
            className="w-full h-[550px] object-contain rounded-2xl transform transition-transform duration-700 group-hover:scale-105"
         />
       </div>
       <div className="absolute bottom-0 left-0 w-full py-6 text-center bg-white group-hover:bg-[#A12B2B] transition-all duration-500">
         <h3 className="font-semibold text-lg tracking-wide text-quartenary group-hover:text-white transition-colors duration-500">
-          CÀ PHÊ CỐT DỪA
+          COCONUT COFFEE
         </h3>
       </div>
     </div>

@@ -321,11 +321,11 @@ function ProductDetail(props) {
                 </p>
                 <p className="text-sm text-tertiary mt-1">Stock: {(() => { const s = getAvailableStock(p); return typeof s === "number" ? s : "-"; })()}</p>
               </div>
-              //Merge without knowing what does it do, why is it here, what error may occur
+              {/* //Merge without knowing what does it do, why is it here, what error may occur */}
               <p className="font-bold text-xl text-tertiary">
                 {(p.price * form.count).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} VND
               </p>
-              //Merge without knowing 
+              {/* //Merge without knowing  */}
             </div>
             <button
               className="mt-4 block bg-tertiary text-white font-bold text-lg py-4 rounded-xl"
