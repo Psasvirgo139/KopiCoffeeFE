@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import AdminDashboard from "./pages/Admin";
+import AiSuggest from "./pages/Admin/AiSuggest";
 import ManageOrder from "./pages/Admin/ManageOrder";
 import Auth from "./pages/Auth";
 import ForgotPass from "./pages/Auth/ForgotPass";
@@ -95,6 +96,7 @@ const Routers = () => {
             <Route path="admin" element={<AdminDashboard />} />
             <Route path="employees" element={<Employees />} />
             <Route path="customers" element={<Customers />} />
+            <Route path="admin/ai-suggest" element={<AiSuggest />} />
             <Route path="products/new" element={<NewProduct />} />
             <Route path="products/edit/:productId" element={<EditProduct />} />
             <Route path="promo" element={<PromoList />} />
