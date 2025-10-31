@@ -21,7 +21,7 @@ import GetAllProducts from "./GetAllProducts";
 import productPlaceholder from "../../assets/images/placeholder-image.webp";
 import { n_f } from "../../utils/helpers";
 import { cartActions } from "../../redux/slices/cart.slice";
-import { createTransaction } from "../../utils/dataProvider/transaction";
+import { createTransaction, validateOrder } from "../../utils/dataProvider/transaction";
 import { getUserData } from "../../utils/authUtils";
 import { toast } from "react-hot-toast";
 
@@ -135,7 +135,22 @@ function Products(props) {
       }
       return;
     }
-    navigate(`/cart`);
+    // Validate stock before moving to cart
+    try {
+      const aggregated = Object.values(
+        cart.reduce((acc, cur) => {
+          const pid = cur.product_id;
+          if (!acc[pid]) acc[pid] = { product_id: pid, qty: 0 };
+          acc[pid].qty += Number(cur.qty || 0);
+          return acc;
+        }, {})
+      );
+      await validateOrder(aggregated, userInfo.token, controller);
+      navigate(`/cart`);
+    } catch (e) {
+      const msg = e?.response?.data?.message || "Sản phẩm không đủ số lượng";
+      toast.error(msg);
+    }
   };
 
   const fetchPromo = async () => {
