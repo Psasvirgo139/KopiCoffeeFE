@@ -9,6 +9,7 @@ import Footer from "../../components/Footer";
 import Header from "../../components/Header";
 import Modal from "../../components/Modal";
 import { createProductEntry } from "../../utils/dataProvider/products";
+import { getCategories } from "../../utils/dataProvider/categories";
 import useDocumentTitle from "../../utils/documentTitle";
 
 export const NewProduct = (props) => {
@@ -36,6 +37,8 @@ export const NewProduct = (props) => {
   const navigate = useNavigate();
   const [preview, setPreview] = useState("");
   const [cancel, setCancel] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const controller = useMemo(() => new AbortController(), []);
 
   // create a preview as a side effect, whenever selected file is changed
   useEffect(() => {
@@ -71,7 +74,6 @@ export const NewProduct = (props) => {
   };
 
   const [isLoading, setLoading] = useState("");
-  const controller = useMemo(() => new AbortController(), []);
   const formChangeHandler = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -101,6 +103,14 @@ export const NewProduct = (props) => {
       })
       .finally(() => setLoading(false));
   };
+  useEffect(() => {
+    getCategories(controller)
+      .then((res) => {
+        const data = res.data?.data || [];
+        setCategories(data.sort((a,b) => (a.display_order ?? 0) - (b.display_order ?? 0)));
+      })
+      .catch(() => setCategories([]));
+  }, []);
   return (
     <>
       <Modal isOpen={cancel} onClose={() => setCancel(!cancel)}>
@@ -240,10 +250,9 @@ export const NewProduct = (props) => {
               <option disabled value="">
                 Select related category
               </option>
-              <option value="1">Coffee</option>
-              <option value="2">Non-Coffee</option>
-              <option value="3">Food</option>
-              <option value="4">Add-ons</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
             </select>
             <button
               type="submit"

@@ -68,3 +68,36 @@ export const saveDefaultAddress = (token, { address_line, ward, district, city, 
     }
   );
 };
+
+// GET /apiv1/profile/addresses
+export const listAddresses = (token, controller) => {
+  return api.get("/apiv1/profile/addresses", {
+    headers: { Authorization: `Bearer ${token}` },
+    signal: controller?.signal,
+  });
+};
+
+// POST /apiv1/profile/addresses
+export const createAddress = (
+  token,
+  { address_line, ward, district, city, latitude, longitude, set_default = false },
+  controller
+) => {
+  return api.post(
+    "/apiv1/profile/addresses",
+    { address_line, ward, district, city, latitude, longitude, set_default },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller?.signal,
+    }
+  );
+};
+
+// PUT /apiv1/profile/addresses/{userAddressId}/default
+export const setDefaultAddress = (token, userAddressId, controller) => {
+  return api.put(
+    `/apiv1/profile/addresses/${userAddressId}/default`,
+    {},
+    { headers: { Authorization: `Bearer ${token}` }, signal: controller?.signal }
+  );
+};

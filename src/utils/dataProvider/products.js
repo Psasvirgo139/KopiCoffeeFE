@@ -33,9 +33,9 @@ export const createProductEntry = (
   if (image instanceof File) {
     bodyForm.append("image", image);
   }
-  // ✅ Nếu là string URL (ảnh đã có sẵn)
+  // ✅ Nếu là string URL (ảnh đã có sẵn) → BE nhận ở field 'img'
   else if (typeof image === "string" && image.trim() !== "") {
-    bodyForm.append("image", image);
+    bodyForm.append("img", image);
   }
   bodyForm.append("name", name);
   bodyForm.append("category_id", category_id);

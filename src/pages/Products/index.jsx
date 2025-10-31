@@ -116,6 +116,10 @@ function Products(props) {
   }, [search]);
 
   const confirmOrder = async () => {
+    if (!userInfo?.token || userInfo.token === "") {
+      navigate("/auth/login");
+      return;
+    }
     if (cart.length < 1) return;
     if (Number(userInfo.role) === 2) {
       try {
@@ -210,7 +214,7 @@ function Products(props) {
       <Header />
 
       <main className="flex flex-col-reverse md:flex-row global-px">
-        <section className="flex-1 flex flex-col items-center gap-5 py-5 md:border-r-2 border-solid md:pr-6">
+        <section className="flex-1 flex flex-col items-stretch gap-5 py-5 md:border-r-2 border-solid md:pr-6 md:min-w-[340px]">
           {Number(userInfo.role) === 1 ? (
             <>
               <h2 className="font-bold text-2xl">Promo Today</h2>
@@ -283,8 +287,8 @@ function Products(props) {
                         sizeName = "Regular";
                         break;
                     }
-                    return (
-                      <div className="flex flex-row gap-3 w-full items-center" key={idx}>
+                  return (
+                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:items-center" key={idx}>
                         <aside className="w-20 h-20">
                           <img
                             src={_.isEmpty(list.img) ? productPlaceholder : list.img}
@@ -330,7 +334,7 @@ function Products(props) {
                             </button>
                           </div>
                         </aside>
-                        <aside className="min-w-[120px] text-right font-medium flex flex-col items-end">
+                        <aside className="sm:min-w-[120px] sm:text-right font-medium flex flex-col sm:items-end items-start w-full sm:w-auto">
                           <button
                             onClick={() =>
                               setRemove({
@@ -364,9 +368,9 @@ function Products(props) {
                     <span>Order is paid</span>
                   </label>
                 )}
-                <div className="flex flex-row uppercase font-bold my-4">
-                  <p className="flex-[2_2_0%]">Total</p>
-                  <p className="flex-1 text-right">
+                <div className="flex flex-col sm:flex-row uppercase font-bold my-4 gap-2">
+                  <p className="sm:flex-[2_2_0%]">Total</p>
+                  <p className="sm:flex-1 sm:text-right">
                      {n_f(cart.reduce((acc, cur) => acc + cur.price * cur.qty, 0))} VND
                   </p>
                 </div>

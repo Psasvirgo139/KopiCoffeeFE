@@ -157,7 +157,7 @@ function GetAllProducts(props) {
       <div className="p-4 flex flex-col justify-between flex-grow">
         <div>
           <Link to={`/products/detail/${product.id}`}>
-            <h3 className="font-bold text-lg text-gray-900 line-clamp-2 h-12 hover:text-orange-500 transition-colors">
+            <h3 className="font-bold text-lg text-gray-900 line-clamp-2 break-words min-h-[3.5rem] hover:text-orange-500 transition-colors">
               {product.name}
             </h3>
           </Link>

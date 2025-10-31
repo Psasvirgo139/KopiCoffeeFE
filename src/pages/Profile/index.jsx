@@ -10,7 +10,7 @@ import placeholderImage from "../../assets/images/placeholder-profile.jpg";
 import Footer from "../../components/Footer";
 import Header from "../../components/Header";
 import { profileAction } from "../../redux/slices/profile.slice";
-import { editProfile } from "../../utils/dataProvider/profile";
+import { editProfile, listAddresses, createAddress, setDefaultAddress } from "../../utils/dataProvider/profile";
 import useDocumentTitle from "../../utils/documentTitle";
 import EditPassword from "./EditPassword";
 
@@ -41,6 +41,9 @@ function Profile() {
   const [editMode, setEditMode] = useState(false);
   const [editPassModal, setEditPassModal] = useState(false);
   const [isProcess, setProcess] = useState(false);
+  const [addresses, setAddresses] = useState([]);
+  const [selectedUserAddressId, setSelectedUserAddressId] = useState(null);
+  const [newProfileAddressText, setNewProfileAddressText] = useState("");
 
   const controller = useMemo(() => new AbortController(), []);
   useDocumentTitle("Profile");
@@ -48,6 +51,15 @@ function Profile() {
   useEffect(() => {
     if (!userInfo?.token) return;
     dispatch(profileAction.getProfileThunk({ token: userInfo.token, controller }));
+    // fetch addresses for dropdown
+    listAddresses(userInfo.token, controller)
+      .then((res) => {
+        const data = res.data?.data || [];
+        setAddresses(data);
+        const def = data.find((a) => a.is_default);
+        if (def) setSelectedUserAddressId(def.user_address_id);
+      })
+      .catch(() => setAddresses([]));
   }, [dispatch, userInfo?.token, controller]);
 
   useEffect(() => {
@@ -89,7 +101,7 @@ function Profile() {
   const saveHandler = () => {
     let hasChange = false;
     const payload = {};
-    ["email", "phone_number", "display_name", "address"].forEach((k) => {
+    ["email", "phone_number", "display_name"].forEach((k) => {
       if (form[k] !== data[k]) {
         payload[k] = form[k];
         hasChange = true;
@@ -225,15 +237,86 @@ function Profile() {
                         <label htmlFor="address" className="text-[#9f9f9f]">
                           Delivery Address
                         </label>
-                        <input
-                          type="text"
-                          value={form.address}
-                          id="address"
-                          name="address"
-                          onChange={formHandler}
-                          className="focus:outline-none border-b-[1px] border-black w-full"
-                          disabled={!editMode}
-                        />
+                        <div className="flex gap-2 items-center">
+                          <select
+                            className="border rounded px-2 py-1 text-sm"
+                            value={selectedUserAddressId || "__new__"}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === "__new__") {
+                                setSelectedUserAddressId("__new__");
+                                setNewProfileAddressText("");
+                                return;
+                              }
+                              const uaid = Number(val);
+                              setSelectedUserAddressId(uaid);
+                          // Selecting an address should not toggle Save/Cancel state
+                            }}
+                          >
+                            {editMode && <option value="__new__">New address...</option>}
+                            {addresses.map((a) => (
+                              <option key={a.user_address_id} value={a.user_address_id}>
+                                {a.is_default ? "(Default) " : ""}{a.address_line}
+                              </option>
+                            ))}
+                          </select>
+                          {editMode && selectedUserAddressId === "__new__" && (
+                            <div className="w-full mt-2">
+                              <input
+                                type="text"
+                                className="border rounded px-2 py-1 text-sm w-full"
+                                placeholder="Type new address and press Enter"
+                                value={newProfileAddressText}
+                                onChange={(e) => setNewProfileAddressText(e.target.value)}
+                                onKeyDown={async (e) => {
+                                  if (e.key === "Enter") {
+                                    const text = (newProfileAddressText || "").trim();
+                                    if (!text) return;
+                                    try {
+                                      const resp = await createAddress(userInfo.token, { address_line: text, set_default: (addresses.length === 0) }, controller);
+                                      const uaid = resp.data?.user_address_id;
+                                      const res2 = await listAddresses(userInfo.token, controller);
+                                      const data2 = res2.data?.data || [];
+                                      setAddresses(data2);
+                                      setSelectedUserAddressId(uaid || null);
+                                      toast.success("Address added");
+                                    } catch {
+                                      toast.error("Failed to add address");
+                                    }
+                                  }
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        {editMode && selectedUserAddressId && selectedUserAddressId !== "__new__" && (
+                          <div className="flex gap-2 mt-2">
+                            {(() => {
+                              const found = addresses.find((a) => a.user_address_id === selectedUserAddressId);
+                              const isDefault = !!found?.is_default;
+                              return (
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-primary text-white disabled:opacity-50"
+                                  disabled={isDefault}
+                                  onClick={async () => {
+                                    try {
+                                      await setDefaultAddress(userInfo.token, selectedUserAddressId, controller);
+                                      toast.success("Default address updated");
+                                      const res2 = await listAddresses(userInfo.token, controller);
+                                      const data2 = res2.data?.data || [];
+                                      setAddresses(data2);
+                                    } catch {
+                                      toast.error("Failed to set default");
+                                    }
+                                  }}
+                                >
+                                  Set default
+                                </button>
+                              );
+                            })()}
+                          </div>
+                        )}
                       </div>
                     </div>
 

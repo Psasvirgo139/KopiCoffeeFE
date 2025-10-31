@@ -55,6 +55,18 @@ export const CheckIsEmployee = ({ children }) => {
   return <Outlet />;
 };
 
+export const CheckIsStaff = ({ children }) => {
+  const { userInfo } = useSelector((state) => ({
+    userInfo: state.userInfo,
+  }));
+  // Staff includes Admin (1) and Employee (2)
+  const roleId = Number(userInfo.role);
+  if (userInfo.token === "" || (roleId !== 1 && roleId !== 2)) {
+    return <Navigate to="/products" replace={true} />;
+  }
+  return <Outlet />;
+};
+
 export const TokenHandler = () => {
   const { userInfo, profile } = useSelector((state) => ({
     userInfo: state.userInfo,

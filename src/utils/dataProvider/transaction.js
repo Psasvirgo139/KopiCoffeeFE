@@ -6,6 +6,7 @@ export const createTransaction = (
     delivery_id = 1,
     status_id = 3,
     address = "Table no 4",
+    address_id = undefined,
     notes = "Makkah",
     customer_id = undefined,
     paid = undefined,
@@ -22,6 +23,7 @@ export const createTransaction = (
     address,
     notes,
   };
+  if (typeof address_id !== "undefined") body.address_id = address_id;
   if (typeof customer_id !== "undefined") body.customer_id = customer_id;
   if (typeof paid !== "undefined") body.paid = paid;
   return api.post(`/apiv1/transactions`, body, {
