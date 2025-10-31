@@ -158,33 +158,41 @@ function ShippingTrack() {
         initMapIfNeeded({ center: kopi });
         if (!mapRef.current) return;
         mapRef.current.once("load", async () => {
-          upsertMarker(kopiMarkerRef, kopi, "#10b981"); // green
-          upsertMarker(destMarkerRef, dest, "#f59e0b"); // amber
+          upsertMarker(kopiMarkerRef, kopi, "#10b981"); // green for Kopi
+          upsertMarker(destMarkerRef, dest, "#f59e0b"); // amber for destination
           fitBoundsToPoints([kopi, dest]);
 
           if (isStaff) {
-            const line = await fetchDirections(kopi, dest);
-            if (line) drawRoute(line);
-            // start geolocation watch and report to backend
+            // start geolocation watch and report to backend, draw route shipper -> destination
             if (navigator.geolocation) {
               watchIdRef.current = navigator.geolocation.watchPosition(
                 async (pos) => {
                   const coord = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                  upsertMarker(shipperMarkerRef, coord, "#ef4444");
+                  upsertMarker(shipperMarkerRef, coord, "#3b82f6"); // blue for shipper
                   try { await updateShipperLocation(orderId, coord, userInfo.token, controller); } catch {}
+                  try {
+                    const line = await fetchDirections({ lng: coord.lng, lat: coord.lat }, dest);
+                    if (line) drawRoute(line);
+                    fitBoundsToPoints([kopi, dest, coord]);
+                  } catch {}
                 },
                 () => {},
                 { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 }
               );
             }
           } else if (isCustomer) {
-            // customer: poll shipper location
+            // customer: poll shipper location, draw route shipper -> destination
             pollingRef.current = setInterval(async () => {
               try {
                 const resp = await getShipperLocation(orderId, userInfo.token, controller);
                 const coord = resp?.data?.data;
                 if (coord && typeof coord.lng === "number" && typeof coord.lat === "number") {
-                  upsertMarker(shipperMarkerRef, coord, "#ef4444");
+                  upsertMarker(shipperMarkerRef, { lng: coord.lng, lat: coord.lat }, "#3b82f6");
+                  try {
+                    const line = await fetchDirections({ lng: coord.lng, lat: coord.lat }, dest);
+                    if (line) drawRoute(line);
+                    fitBoundsToPoints([kopi, dest, { lng: coord.lng, lat: coord.lat }]);
+                  } catch {}
                 }
               } catch {}
             }, 5000);
