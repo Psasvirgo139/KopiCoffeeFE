@@ -78,6 +78,11 @@ export const EditProduct = (props) => {
       return;
     }
 
+    if (typeof form.image === "string") {
+      setPreview(form.image);
+      return;
+    }
+
     const objectUrl = URL.createObjectURL(form.image);
     setPreview(objectUrl);
 
@@ -176,10 +181,10 @@ export const EditProduct = (props) => {
                 </div>
               </div>
               <label
-                htmlFor="form_image"
+                htmlFor="image_url"
                 className="btn btn-block btn-lg normal-case mt-2 btn-accent text-white"
               >
-                Take a picture
+                Import Image URL
               </label>
               <label
                 htmlFor="form_image"
@@ -203,7 +208,6 @@ export const EditProduct = (props) => {
                 type="file"
                 accept="image/png, image/webp, image/jpeg"
                 className="hidden"
-                required
                 onChange={onSelectFile}
               />
               <label
@@ -252,11 +256,26 @@ export const EditProduct = (props) => {
                 value={form.desc}
                 onChange={formChangeHandler}
                 className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
-                minLength={50}
+                minLength={10}
                 maxLength={350}
               >
                 {form.desc}
               </textarea>
+
+              <label
+                className="text-tertiary font-bold text-lg"
+                htmlFor="image_url"
+              >
+                Image URL :
+              </label>
+              <input
+                placeholder="https://example.com/image.jpg"
+                name="image"
+                id="image_url"
+                value={typeof form.image === "string" ? form.image : ""}
+                onChange={formChangeHandler}
+                className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
+              />
 
               <label
                 className="text-tertiary font-bold text-lg"
