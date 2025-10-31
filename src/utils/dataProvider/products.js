@@ -29,7 +29,14 @@ export const createProductEntry = (
   controller
 ) => {
   const bodyForm = new FormData();
-  bodyForm.append("image", image);
+ // ✅ Nếu là File (từ input type="file")
+  if (image instanceof File) {
+    bodyForm.append("image", image);
+  }
+  // ✅ Nếu là string URL (ảnh đã có sẵn)
+  else if (typeof image === "string" && image.trim() !== "") {
+    bodyForm.append("image", image);
+  }
   bodyForm.append("name", name);
   bodyForm.append("category_id", category_id);
   bodyForm.append("desc", desc);
@@ -59,7 +66,12 @@ export const editProductEntry = (
   controller
 ) => {
   const bodyForm = new FormData();
-  if (image?.uri && image?.uri !== "") bodyForm.append("image", image);
+  // If image is a File/Blob, send as 'image'; if string URL, send as 'img'
+  if (image && typeof image !== "string") {
+    bodyForm.append("image", image);
+  } else if (typeof image === "string" && image !== "") {
+    bodyForm.append("img", image);
+  }
   bodyForm.append("name", name);
   bodyForm.append("category_id", category_id);
   bodyForm.append("desc", desc);
