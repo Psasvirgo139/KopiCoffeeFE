@@ -35,7 +35,14 @@ export default function AiSuggest() {
       setExpandedIndex(null);
     } catch (err) {
       console.error(err);
-      alert("Request failed: " + (err.response?.data?.message || err.message));
+      
+      // Xử lý lỗi quota exceeded đặc biệt
+      if (err.response?.status === 429 && err.response?.data?.error === 'QUOTA_EXCEEDED') {
+        const { message, resetTime } = err.response.data;
+        alert(`⚠️ ${message}\n\nQuota sẽ được reset sau: ${resetTime}\n\nGợi ý: Tạo API key mới hoặc chờ đến khi quota reset.`);
+      } else {
+        alert("Request failed: " + (err.response?.data?.message || err.message));
+      }
     } finally {
       setLoading(false);
     }
@@ -71,12 +78,28 @@ export default function AiSuggest() {
                   const videos = it.videos || [];
                   
                   return (
-                    <div key={idx} className="p-4 rounded-xl border bg-white shadow-sm">
+                    <div key={idx} className="p-4 rounded-xl border bg-white shadow-sm hover:shadow-md transition-shadow">
                       <button
                         className="w-full flex items-center justify-between"
                         onClick={() => setExpandedIndex(expandedIndex === idx ? null : idx)}
                       >
+                        <div className="flex items-center gap-3">
                         <h3 className="text-lg font-semibold text-left">{it.name}</h3>
+                          {/* Rating (1-5 sao) */}
+                          <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <svg
+                                key={i}
+                                className={`w-4 h-4 ${i < Math.floor(it.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}`}
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                              </svg>
+                            ))}
+                            <span className="text-xs text-gray-600 ml-1">{(it.rating || 0).toFixed(1)}</span>
+                          </div>
+                        </div>
                         <svg
                           className={`w-5 h-5 transition-transform ${expandedIndex === idx ? "rotate-180" : "rotate-0"}`}
                           fill="none"
@@ -98,23 +121,44 @@ export default function AiSuggest() {
                       )}
 
                       <div className="mt-3">
-                        <p className="text-xs text-gray-500 mb-2">
-                          Trending drink with {it.totalVideos} videos
-                        </p>
-                        <p className="text-xs text-gray-500 mb-2">Source video (theo độ viral):</p>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs text-gray-500">
+                            {it.totalVideos} videos
+                          </span>
+                          {/* Badge trending nếu rating >= 4.0 */}
+                          {it.rating >= 4.0 && (
+                            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-600">
+                              🔥 HOT
+                            </span>
+                          )}
+                          {/* Badge mới nếu có nhiều video */}
+                          {it.totalVideos >= 5 && (
+                            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-600">
+                              ⭐ TRENDING
+                            </span>
+                          )}
+                      </div>
+                      <p className="text-xs text-gray-500 mb-2">Source video (theo độ viral):</p>
+                      {videos.length === 0 ? (
+                        <div className="px-4 py-3 rounded-lg bg-gray-50 border border-dashed border-gray-300">
+                          <p className="text-sm text-gray-500 italic text-center">
+                            📹 Không có video cụ thể
+                          </p>
+                        </div>
+                      ) : (
                         <ul className="space-y-1">
                           {videos.slice(0, 5).map((v, i) => (
                             <li key={i} className="flex items-start gap-2">
                               <span className="text-xs text-gray-400 font-mono">#{i + 1}</span>
                               <div className="flex-1">
-                                <a 
+                              <a 
                                   className="text-sm link link-primary break-all block" 
                                   href={v.videoUrl} 
-                                  target="_blank" 
-                                  rel="noreferrer"
-                                >
+                                target="_blank" 
+                                rel="noreferrer"
+                              >
                                   {v.title || v.videoUrl}
-                                </a>
+                              </a>
                                 <p className="text-xs text-gray-400 mt-0.5">
                                   {v.viewCount?.toLocaleString()} views • {v.likeCount?.toLocaleString()} likes
                                 </p>
@@ -122,6 +166,7 @@ export default function AiSuggest() {
                             </li>
                           ))}
                         </ul>
+                      )}
                       </div>
                     </div>
                   );
