@@ -9,9 +9,9 @@ const Modal = ({ isOpen, onClose, children, className }) => {
           className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center z-[42]"
           onClick={onClose}
         >
-          <div className="global-px ">
+          <div className="px-3 w-full">
             <div
-              className={`bg-white p-4 rounded-lg shadow-lg mx-auto ${className}`}
+              className={`relative bg-white p-4 rounded-lg shadow-lg mx-auto max-h-[90vh] overflow-auto w-[92vw] max-w-md ${className}`}
               onClick={(e) => {
                 e.stopPropagation();
               }}

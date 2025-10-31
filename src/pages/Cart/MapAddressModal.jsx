@@ -85,9 +85,9 @@ function MapAddressModal({ isOpen, onClose, onPick }) {
   }, [isOpen, accessToken, mapStyle, reverseGeocode]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="flex flex-col gap-4 w-[90vw] max-w-[90vw]">
+    <Modal isOpen={isOpen} onClose={onClose} className="flex flex-col gap-4 w-[95vw] max-w-[840px]">
       <div className="text-lg font-semibold">Pick address from map</div>
-      <div ref={mapContainerRef} style={{ width: "100%", height: "70vh", borderRadius: 12, overflow: "hidden" }} />
+      <div ref={mapContainerRef} style={{ width: "100%", height: "min(60vh, 520px)", borderRadius: 12, overflow: "hidden" }} />
       <input
         className="bg-gray-100 border border-gray-300 text-black text-sm rounded-lg block w-full p-2.5"
         value={picked.address}

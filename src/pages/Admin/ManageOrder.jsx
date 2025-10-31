@@ -33,11 +33,18 @@ const ManageOrder = (props) => {
         const merged = results.flatMap((r) => r.data?.data || []);
         const from = new Date(dateRange.startDate);
         const to = new Date(dateRange.endDate);
-        to.setHours(23, 59, 59, 999);
+        // normalize end to end-of-day
+        const toEnd = new Date(to);
+        toEnd.setHours(23, 59, 59, 999);
+
+        const isSameDay = from.toDateString() === to.toDateString();
         const filtered = merged
           .filter((o) => {
             const t = new Date(o.created_at);
-            return t >= from && t <= to;
+            if (isSameDay) {
+              return t.toDateString() === from.toDateString();
+            }
+            return t >= from && t <= toEnd;
           })
           .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         setOrders(filtered);
@@ -155,7 +162,11 @@ const ManageOrder = (props) => {
                 value={dateRange}
                 popoverDirection="down"
                 separator="until"
-                onChange={(e) => setDateRange({ startDate: e.startDate ? new Date(e.startDate) : new Date(), endDate: e.endDate ? new Date(e.endDate) : new Date() })}
+                onChange={(e) => {
+                  const start = e?.startDate ? new Date(e.startDate) : new Date();
+                  const end = e?.endDate ? new Date(e.endDate) : start; // single-day selection fallback
+                  setDateRange({ startDate: start, endDate: end });
+                }}
               />
               <div className="w-px h-8 bg-gray-200 mx-1" />
               <div className="join">

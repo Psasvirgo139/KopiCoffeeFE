@@ -31,6 +31,7 @@ import {
   CheckAuth,
   CheckIsAdmin,
   CheckIsEmployee,
+  CheckIsStaff,
   CheckNoAuth,
   TokenHandler,
 } from "./utils/wrappers/protectedRoute";
@@ -57,7 +58,7 @@ const Routers = () => {
             path="products/detail/:productId"
             element={<ProductDetail />}
           />
-          <Route path="cart" element={<Cart />} />
+          {/* Cart requires login - moved under CheckAuth below */}
           {/* Public change-password to avoid being blocked by CheckNoAuth */}
           <Route path="auth/change-password" element={<ChangePassword />} />
 
@@ -80,6 +81,7 @@ const Routers = () => {
 
           {/* Route must be logged in */}
           <Route element={<CheckAuth />}>
+            <Route path="cart" element={<Cart />} />
             <Route path="profile" element={<Profile title="User Profile" />} />
             <Route path="history" element={<History />} />
             <Route path="history/:id" element={<HistoryDetail />} />
@@ -89,6 +91,9 @@ const Routers = () => {
               <Route path="draft-order" element={<OrderDrafts />} />
               <Route path="table-order" element={<TableOrder />} />
               <Route path="shipping-order" element={<ShippingOrder />} />
+            </Route>
+            {/* Staff (Admin or Employee) */}
+            <Route element={<CheckIsStaff />}>
               <Route path="manage-order" element={<ManageOrder />} />
             </Route>
           </Route>

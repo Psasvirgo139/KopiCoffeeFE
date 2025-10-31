@@ -116,6 +116,10 @@ function Products(props) {
   }, [search]);
 
   const confirmOrder = async () => {
+    if (!userInfo?.token || userInfo.token === "") {
+      navigate("/auth/login");
+      return;
+    }
     if (cart.length < 1) return;
     if (Number(userInfo.role) === 2) {
       try {
