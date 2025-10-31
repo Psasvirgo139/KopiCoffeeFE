@@ -178,7 +178,7 @@ function ProductDetail(props) {
   const Detail = (props) => {
     const p = props.data;
     const desc = !p.desc
-      ? "A signature drink crafted from carefully selected ingredients, offering a perfectly balanced flavor of sweetness, richness, and aroma — a true taste of KOPICAFE."
+      ? "This product does not have a description yet."
       : p.desc;
     useDocumentTitle(p.name);
     return (
