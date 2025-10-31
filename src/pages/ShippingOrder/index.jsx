@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { getTransactions, updateTransactionStatus } from "../../utils/dataProvider/transaction";
@@ -262,20 +262,25 @@ function ShipperActions({ o, userInfo, controller, onUpdated, profile, hasActive
       )}
 
       {claimedByMe && o.status === "SHIPPING" && (
-        <button
-          className="btn btn-success text-white"
-          onClick={async () => {
-            try {
-              await updateTransactionStatus(o.id, "PAID", userInfo.token, controller);
-              onUpdated?.();
-              toast.success("Marked paid");
-            } catch {
-              toast.error("Error");
-            }
-          }}
-        >
-          Confirm paid
-        </button>
+        <>
+          <button
+            className="btn btn-success text-white"
+            onClick={async () => {
+              try {
+                await updateTransactionStatus(o.id, "PAID", userInfo.token, controller);
+                onUpdated?.();
+                toast.success("Marked paid");
+              } catch {
+                toast.error("Error");
+              }
+            }}
+          >
+            Confirm paid
+          </button>
+          <Link to={`/shipping/${o.id}`} className="btn btn-secondary text-white">
+            Track order
+          </Link>
+        </>
       )}
 
       {o.shipper_id && !claimedByMe && (
