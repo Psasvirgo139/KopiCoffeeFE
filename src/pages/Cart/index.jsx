@@ -248,7 +248,7 @@ function Cart() {
       <Header />
 
       <main className="bg-cart bg-cover bg-center">
-        <div className="global-px  space-y-3 py-10">
+        <div className="mx-auto px-3 space-y-3 py-10 max-w-sm sm:max-w-lg md:max-w-4xl lg:max-w-6xl xl:max-w-7xl 2xl:max-w-[88rem]">
           <section className="text-white lg:text-3xl text-2xl font-extrabold drop-shadow-lg text-center md:text-left">
             Checkout your item now!
           </section>
@@ -364,6 +364,16 @@ function Cart() {
                       {shipLoading ? "..." : n_f(shipFee)} VND
                     </p>
                   </div>
+                  {!shipLoading && shipDistance !== null && (
+                    <div className="flex flex-row text-sm text-gray-500">
+                      <p className="flex-[2_2_0%]">Distance</p>
+                      <p className="flex-1 lg:flex-none text-right">
+                        {shipDistance >= 1000
+                          ? `${(shipDistance / 1000).toFixed(2)} km`
+                          : `${Math.round(shipDistance)} m`}
+                      </p>
+                    </div>
+                  )}
                   {shipError && (
                     <div className="text-red-500 text-sm mt-2">{shipError}</div>
                   )}
