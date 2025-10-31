@@ -505,6 +505,14 @@ class Header extends Component {
                             >
                               Manage Users
                             </NavLink>
+                            <li>
+                              <NavLink
+                                to="/admin/ai-suggest"
+                                className="block px-4 py-2 hover:bg-gray-100"
+                              >
+                                AI Product Suggestions
+                              </NavLink>
+                            </li>
                             <NavLink
                               className="block px-4 py-2 hover:bg-gray-100  duration-200"
                               to="/products/new"
