@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useSelector } from "react-redux";
 import Modal from "../../components/Modal";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { saveDefaultAddress } from "../../utils/dataProvider/profile";
 
 let mapboxgl;
 try {
@@ -103,21 +102,6 @@ function MapAddressModal({ isOpen, onClose, onPick }) {
           disabled={!picked.address}
           onClick={() => {
             if (!picked.address) return;
-            // persist default address with coordinates
-            try {
-              saveDefaultAddress(
-                userInfo.token,
-                {
-                  address_line: picked.address || "",
-                  ward: picked.ward || "",
-                  district: picked.district || "",
-                  city: picked.city || "",
-                  latitude: picked.lat,
-                  longitude: picked.lng,
-                },
-                controller
-              );
-            } catch {}
             onPick?.(picked);
             onClose?.();
           }}

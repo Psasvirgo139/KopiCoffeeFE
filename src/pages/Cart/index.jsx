@@ -22,6 +22,7 @@ import { createTransaction } from '../../utils/dataProvider/transaction';
 import useDocumentTitle from '../../utils/documentTitle';
 import { n_f } from '../../utils/helpers';
 import MapAddressModal from './MapAddressModal';
+import { listAddresses, createAddress } from '../../utils/dataProvider/profile';
 
 function Cart() {
   const userInfo = useSelector((state) => state.userInfo);
@@ -39,6 +40,9 @@ function Cart() {
   const cart = cartRedux.list;
   const [result, setResult] = useState("");
   const [showMapModal, setShowMapModal] = useState(false);
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [newAddressText, setNewAddressText] = useState("");
 
   const [form, setForm] = useState({
     payment: "",
@@ -64,6 +68,24 @@ function Cart() {
         phone_number: profile.data?.phone_number,
         delivery_address: profile.data?.address,
       });
+      // fetch user addresses for dropdown
+      if (userInfo?.token) {
+        listAddresses(userInfo.token, controller)
+          .then((res) => {
+            const data = res.data?.data || [];
+            setAddresses(data);
+            const def = data.find((a) => a.is_default);
+            if (def) {
+              setSelectedAddressId(def.address_id || null);
+            } else if (data.length > 0) {
+              setSelectedAddressId(data[0].address_id || null);
+            } else {
+              setSelectedAddressId("__new__");
+              setNewAddressText("");
+            }
+          })
+          .catch(() => setAddresses([]));
+      }
     }
     // setIsLoading(true);
     //   getCart(userInfo.token)
@@ -92,10 +114,24 @@ function Cart() {
     toggleEdit();
   };
 
-  const disabled = form.payment === "" || form.delivery_address === "";
+  const isNewAddressSelected = selectedAddressId === "__new__" || selectedAddressId === null;
+  const missingAddress = isNewAddressSelected ? !newAddressText || String(newAddressText).trim() === "" : false;
+  const missingPhone = !form.phone_number || String(form.phone_number).trim() === "";
+  const disabled = form.payment === "" || missingAddress || missingPhone;
   const controller = useMemo(() => new AbortController());
-  const payHandler = () => {
-    if (disabled) return;
+  const payHandler = async () => {
+    if (missingAddress) {
+      toast.error("Vui lòng nhập địa chỉ giao hàng");
+      return;
+    }
+    if (missingPhone) {
+      toast.error("Vui lòng cập nhật số điện thoại trước khi thanh toán");
+      return;
+    }
+    if (form.payment === "") {
+      toast.error("Vui lòng chọn phương thức thanh toán");
+      return;
+    }
     if (userInfo.token === "") {
       toast.error("Login to continue transaction");
       navigate("/auth/login");
@@ -105,29 +141,38 @@ function Cart() {
     if (cart.length < 1)
       return toast.error("Add at least 1 product to your cart");
     setIsLoading(true);
-    createTransaction(
-      {
-        payment_id: form.payment,
-        delivery_id: 1,
-        address: form.delivery_address,
-        notes: form.notes,
-      },
-      cart,
-      userInfo.token,
-      controller
-    )
-      .then(() => {
-        toast.success("Success create transaction");
-        dispatch(cartActions.resetCart());
-        navigate("/history");
-      })
-      .catch((err) => {
-        console.log(err);
-        toast.error("An error ocurred, please check your internet connection");
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    try {
+      let addressIdToUse = selectedAddressId;
+      if (!addressIdToUse || addressIdToUse === "__new__") {
+        // create new non-default address for this user by default
+        const resp = await createAddress(
+          userInfo.token,
+          { address_line: newAddressText || form.delivery_address, ward: undefined, district: undefined, city: undefined, latitude: undefined, longitude: undefined, set_default: (addresses.length === 0) },
+          controller
+        );
+        addressIdToUse = resp.data?.address_id;
+      }
+
+      await createTransaction(
+        {
+          payment_id: form.payment,
+          delivery_id: 1,
+          address_id: addressIdToUse,
+          notes: form.notes,
+        },
+        cart,
+        userInfo.token,
+        controller
+      );
+      toast.success("Success create transaction");
+      dispatch(cartActions.resetCart());
+      navigate("/history");
+    } catch (err) {
+      console.log(err);
+      toast.error("An error ocurred, please check your internet connection");
+    } finally {
+      setIsLoading(false);
+    }
   };
   const closeRemoveModal = () => {
     setRemove({ product_id: "", size_id: "" });
@@ -315,17 +360,67 @@ function Cart() {
                 )}
               </section>
               <section className="bg-white rounded-xl  p-5 lg:p-7 space-y-2">
-                <div className="flex gap-1">
+                <div className="flex gap-2 items-center">
                   <b>Delivery</b> to
-                  <input
-                    value={form.delivery_address}
-                    onChange={onChangeForm}
-                    disabled={!editMode}
-                    className="outline-none flex-1"
-                    name="delivery_address"
-                    placeholder="address..."
-                  />
+                  <select
+                    className="border rounded px-2 py-1 text-sm"
+                    value={selectedAddressId || "__new__"}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "__new__") {
+                        setSelectedAddressId("__new__");
+                        setNewAddressText("");
+                        return;
+                      }
+                      const aid = Number(val);
+                      setSelectedAddressId(aid);
+                      const found = addresses.find((a) => a.address_id === aid);
+                      if (found?.address_line) setForm((prev) => ({ ...prev, delivery_address: found.address_line }));
+                    }}
+                  >
+                    {editMode && <option value="__new__">New address...</option>}
+                    {addresses.map((a) => (
+                      <option key={a.user_address_id} value={a.address_id}>
+                        {a.is_default ? "(Default) " : ""}{a.address_line}
+                      </option>
+                    ))}
+                  </select>
+                  {editMode && selectedAddressId === "__new__" && (
+                    <div className="w-full mt-2">
+                      <input
+                        type="text"
+                        className="border rounded px-2 py-1 text-sm w-full"
+                        placeholder="Type new address and press Enter"
+                        value={newAddressText}
+                        onChange={(e) => setNewAddressText(e.target.value)}
+                        onKeyDown={async (e) => {
+                          if (e.key === "Enter") {
+                            const text = (newAddressText || "").trim();
+                            if (!text) return;
+                            try {
+                              const resp = await createAddress(
+                                userInfo.token,
+                                { address_line: text, set_default: (addresses.length === 0) },
+                                controller
+                              );
+                              const res2 = await listAddresses(userInfo.token, controller);
+                              const data2 = res2.data?.data || [];
+                              setAddresses(data2);
+                              const newId = resp.data?.address_id;
+                              if (newId) setSelectedAddressId(newId);
+                              toast.success("Address saved");
+                            } catch {
+                              toast.error("Failed to save address");
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
+                {missingAddress && (
+                  <p className="text-red-500 text-sm">Address is required</p>
+                )}
                 <hr />
                 <input
                   value={form.notes}
@@ -344,6 +439,18 @@ function Cart() {
                   name="phone_number"
                   placeholder="phone number..."
                 />
+                {missingPhone && (
+                  <div className="text-red-500 text-sm flex items-center gap-2">
+                    Phone number is required. Update it in your profile.
+                    <button
+                      type="button"
+                      className="underline text-tertiary"
+                      onClick={() => navigate("/profile")}
+                    >
+                      Go to Profile
+                    </button>
+                  </div>
+                )}
               </section>
               <section className="text-white text-xl lg:text-2xl font-extrabold drop-shadow-lg text-center md:text-left relative">
                 Payment method
@@ -485,9 +592,35 @@ function Cart() {
       <MapAddressModal
         isOpen={showMapModal}
         onClose={() => setShowMapModal(false)}
-        onPick={(picked) => {
-          setForm((prev) => ({ ...prev, delivery_address: picked.address }));
-          setEditMode(false);
+        onPick={async (picked) => {
+          try {
+            // Create address immediately with coordinates, default if first
+            const resp = await createAddress(
+              userInfo.token,
+              {
+                address_line: picked.address || "",
+                ward: picked.ward || "",
+                district: picked.district || "",
+                city: picked.city || "",
+                latitude: picked.lat,
+                longitude: picked.lng,
+                set_default: (addresses.length === 0),
+              },
+              controller
+            );
+            const newId = resp.data?.address_id;
+            const res2 = await listAddresses(userInfo.token, controller);
+            const data2 = res2.data?.data || [];
+            setAddresses(data2);
+            if (newId) setSelectedAddressId(newId);
+            setEditMode(false);
+            toast.success("Address saved from map");
+          } catch {
+            // fallback to inline entry
+            setSelectedAddressId("__new__");
+            setNewAddressText(picked.address || "");
+            toast.error("Failed to save address, please confirm manually");
+          }
         }}
       />
     </>
