@@ -135,139 +135,104 @@ function GetAllProducts(props) {
 
     return (
       <>
-        <section className="grid grid-cols-2 xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-3 sm:grid-cols-3 justify-items-center content-around gap-3 gap-y-16 mt-10">
-          {products.map((product) => (
-            <Link to={`/products/detail/${product.id}`} key={product.id}>
-              <section className="relative w-36 bg-white shadow-lg hover:shadow-xl duration-200 p-5 rounded-3xl">
-                <img
-                  src={product.img ?? productPlaceholder}
-                  alt=""
-                  className="aspect-square rounded-full object-cover mt-[-50%] w-full mb-3 shadow-lg"
-                />
-                {/* <div className="absolute top-0 right-0 bg-white p-2 rounded-3xl font-extrabold text-lg">
-                20%
-              </div> */}
-                <div className="flex flex-col gap-5 content-between text-center">
-                  <p className="font-black text-lg min-h-[102px]">
-                    {product.name}
-                  </p>
-                  <p className="font-bold end text-tertiary">
-                    VND {n_f(product.price)}
-                  </p>
-                  {Number(userInfo.role) === 1 && (
-                    <NavLink
-                      to={`/products/edit/${product.id}`}
-                      className="bg-tertiary absolute bottom-0 right-0 w-7 h-7 rounded-full flex items-center justify-center hover:bg-primary-focus"
-                    >
-                      <img src={penIcon} className="w-4 h-4" />
-                    </NavLink>
-                  )}
-                </div>
-              </section>
-            </Link>
-          ))}
-        </section>
-        <section className="flex items-center justify-center mt-12 relative">
-          <ul
-            className="pagination flex justify-center sm:justify-start lg:justify-center items-center p-0 w-full"
-            role="navigation"
-          >
-            {meta.prev ? (
-              <li>
-                <button
-                  className="group border border-secondary bg-white hover:bg-secondary-200 text-secondary hover:text-tertiary rounded-lg font-bold py-2 px-4 mx-1 flex items-center lg:py-3 lg:px-4 duration-200"
-                  rel="prev"
-                  onClick={handlePrevClick}
-                >
-                  <svg
-                    className="fill-current h-5 w-5 sm:mr-2 transform rotate-180 transition-transform ease-in group-hover:transform group-hover:-translate-x-0.5"
-                    viewBox="0 0 16 17"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M2.63236 9.26808H10.8757L9.1343 11.0095C8.73118 11.4126 8.73118 12.0662 9.1343 12.4693C9.53742 12.8724 10.191 12.8724 10.5941 12.4693L14.0977 8.96571C14.2913 8.77218 14.4001 8.50957 14.4001 8.23582C14.4001 7.96207 14.2913 7.6995 14.0977 7.50589L10.5942 4.00232C10.191 3.59925 9.53746 3.59921 9.13434 4.00232C8.73123 4.40544 8.73123 5.05903 9.13434 5.46214L10.8758 7.20356H2.63236C2.06226 7.20356 1.6001 7.66572 1.6001 8.23582C1.60006 8.80592 2.06226 9.26808 2.63236 9.26808Z"></path>
-                  </svg>{" "}
-                  <p className="hidden sm:flex">Previous</p>
-                </button>
-              </li>
-            ) : (
-              ""
-            )}
+       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+  {products.map((product) => (
+    <div
+      key={product.id}
+      className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 group flex flex-col justify-between"
+    >
+      {/* Ảnh sản phẩm */}
+      <Link to={`/products/detail/${product.id}`}>
+        <div className="relative overflow-hidden">
+          <img
+            src={product.img ?? productPlaceholder}
+            alt={product.name}
+            className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        </div>
+      </Link>
 
-            {meta.next ? (
-              <li>
-                <button
-                  className="group bg-secondary text-tertiary rounded-lg font-bold py-2 px-4 mx-1 flex items-center hover:bg-secondary-200 lg:py-3 lg:px-4 duration-200"
-                  rel="next"
-                  onClick={handleNextClick}
-                >
-                  <p className="flex">Next</p>
-                  <svg
-                    alt="Next page"
-                    className="fill-current h-5 ml-2 transition ease-in group-hover:transform group-hover:translate-x-0.5"
-                    viewBox="0 0 16 17"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M2.63236 9.26808H10.8757L9.1343 11.0095C8.73118 11.4126 8.73118 12.0662 9.1343 12.4693C9.53742 12.8724 10.191 12.8724 10.5941 12.4693L14.0977 8.96571C14.2913 8.77218 14.4001 8.50957 14.4001 8.23582C14.4001 7.96207 14.2913 7.6995 14.0977 7.50589L10.5942 4.00232C10.191 3.59925 9.53746 3.59921 9.13434 4.00232C8.73123 4.40544 8.73123 5.05903 9.13434 5.46214L10.8758 7.20356H2.63236C2.06226 7.20356 1.6001 7.66572 1.6001 8.23582C1.60006 8.80592 2.06226 9.26808 2.63236 9.26808Z"></path>
-                  </svg>
-                </button>
-              </li>
-            ) : (
-              ""
-            )}
-          </ul>
-          <div className="hidden sm:flex justify-between items-center sm:absolute right-0">
-            <span className="text-sm mr-2">Page</span>
-            <input
-              type="number"
-              name="paginator"
-              min="1"
-              max={meta.totalPage}
-              value={inputPage}
-              onChange={(e) => setInputPage(e.target.value)}
-              onKeyDown={paginatorPress}
-              className="w-10 h-6 border border-gray-200 bg-white rounded-sm p-1 text-center appearance-none focus:outline-none focus:ring-1 focus:ring-secondary text-sm"
-            />
-            <span className="text-sm mx-1.5">of</span>
-            <span className="mr-2 text-sm">{meta.totalPage}</span>
-            {meta.prev ? (
-              <button
-                className="w-6 h-6 bg-secondary flex items-center justify-center rounded-l-sm hover:bg-secondary-200 duration-200"
-                onClick={handlePrevClick}
-              >
-                <svg
-                  alt="icon previous"
-                  className="fill-current h-5 w-5 text-tertiary transform rotate-180"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="-49 141 512 512"
-                >
-                  <defs></defs>
-                  <path d="M226.6 397l-92.3 92.3a25 25 0 0035.4 35.4l110-110a25 25 0 000-35.4l-110-110a25 25 0 00-35.4 35.4l92.3 92.3z"></path>
-                </svg>
-              </button>
-            ) : (
-              ""
-            )}
+      {/* Nội dung */}
+      <div className="p-4 flex flex-col justify-between flex-grow">
+        <div>
+          <Link to={`/products/detail/${product.id}`}>
+            <h3 className="font-bold text-lg text-gray-900 line-clamp-2 h-12 hover:text-orange-500 transition-colors">
+              {product.name}
+            </h3>
+          </Link>
+          {product.desc && (
+            <p className="text-sm text-gray-600 line-clamp-2 min-h-[2.5rem] mt-1">
+              {product.desc}
+            </p>
+          )}
+        </div>
 
-            {meta.next ? (
-              <button
-                className="w-6 h-6 bg-secondary flex items-center justify-center rounded-sm hover:bg-secondary-200 -ml-0.5 duration-200"
-                onClick={handleNextClick}
-              >
-                <svg
-                  alt="icon next"
-                  className="fill-current h-5 w-5 text-tertiary"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="-49 141 512 512"
-                >
-                  <defs></defs>
-                  <path d="M226.6 397l-92.3 92.3a25 25 0 0035.4 35.4l110-110a25 25 0 000-35.4l-110-110a25 25 0 00-35.4 35.4l92.3 92.3z"></path>
-                </svg>
-              </button>
-            ) : (
-              ""
-            )}
-          </div>
-        </section>
+        {/* Giá và nút edit */}
+        <div className="flex items-center justify-between mt-4">
+          <span className="text-xl font-bold text-tertiary">
+             {n_f(product.price)} VND
+          </span>
+          {Number(userInfo.role) === 1 && (
+            <NavLink
+              to={`/products/edit/${product.id}`}
+              className="bg-orange-500 text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-orange-600 transition-all duration-200 hover:scale-110 shadow-md"
+            >
+              <img src={penIcon} className="w-4 h-4" alt="Edit" />
+            </NavLink>
+          )}
+        </div>
+      </div>
+    </div>
+  ))}
+</section>
+
+      {/* Pagination */}
+      <section className="flex items-center justify-center mt-12 gap-4">
+        {/* Previous & Next Buttons */}
+        <div className="flex gap-2">
+          {meta.prev && (
+            <button
+              className="group border-2 border-orange-500 bg-white hover:bg-orange-500 text-orange-500 hover:text-white rounded-lg font-bold py-2 px-6 flex items-center gap-2 transition-all duration-200"
+              onClick={handlePrevClick}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="hidden sm:inline">Previous</span>
+            </button>
+          )}
+
+          {meta.next && (
+            <button
+              className="group bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-bold py-2 px-6 flex items-center gap-2 hover:shadow-lg transition-all duration-200 hover:scale-105"
+              onClick={handleNextClick}
+            >
+              <span>Next</span>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {/* Page Info */}
+        <div className="hidden sm:flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-md border-2 border-gray-100">
+          <span className="text-sm text-gray-600">Page</span>
+          <input
+            type="number"
+            name="paginator"
+            min="1"
+            max={meta.totalPage}
+            value={inputPage}
+            onChange={(e) => setInputPage(e.target.value)}
+            onKeyDown={paginatorPress}
+            className="w-12 h-8 border-2 border-orange-200 bg-white rounded-md px-2 text-center font-bold text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+          />
+          <span className="text-sm text-gray-600">of</span>
+          <span className="font-bold text-gray-900">{meta.totalPage}</span>
+        </div>
+      </section>
       </>
     );
   }

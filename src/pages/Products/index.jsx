@@ -328,7 +328,7 @@ function Products(props) {
                             <p className="m-auto">X</p>
                           </button>
                           <p>
-                            VND {n_f(Number(list.price) * Number(list.qty))}
+                             {n_f(Number(list.price) * Number(list.qty))} VND
                           </p>
                         </aside>
                       </div>
@@ -352,7 +352,7 @@ function Products(props) {
                 <div className="flex flex-row uppercase font-bold my-4">
                   <p className="flex-[2_2_0%]">Total</p>
                   <p className="flex-1 text-right">
-                    VND {n_f(cart.reduce((acc, cur) => acc + cur.price * cur.qty, 0))}
+                     {n_f(cart.reduce((acc, cur) => acc + cur.price * cur.qty, 0))} VND
                   </p>
                 </div>
               </section>
@@ -378,78 +378,95 @@ function Products(props) {
           )}
         </section>
         <section className="flex-[2_2_0%] flex flex-col md:pl-16 py-5">
-          <nav className="list-none flex flex-row md:justify-between justify-evenly flex-wrap gap-5 mb-10 ">
-            <li>
-              <NavLink className={({ isActive }) => (isActive ? "font-semibold text-tertiary border-b-2 border-tertiary pb-1 drop-shadow-lg" : "" + " hover:drop-shadow-lg hover:border-b-2 border-tertiary pb-1")} to="/products" end>
-                Menu
-              </NavLink>
-            </li>
-            {categories.map((c) => (
-              <li key={c.id}>
-                <NavLink className={({ isActive }) => (isActive ? "font-semibold text-tertiary border-b-2 border-tertiary pb-1 drop-shadow-lg" : "" + " hover:drop-shadow-lg hover:border-b-2 border-tertiary pb-1")} to={`category/${c.id}`}>
-                  {c.name}
-                </NavLink>
-              </li>
-            ))}
-            <li className="relative">
-              <button
-                onClick={toggleDdmenu}
-                className={
-                  (ddMenu ? "rotate-180" : "rotate-0") +
-                  " duration-150 focus:bg-none"
-                }
+          <div className="relative">
+  <div className="flex items-center justify-between mb-10">
+    <nav className="list-none flex flex-row gap-5 overflow-x-auto whitespace-nowrap flex-nowrap scrollbar-hide pr-4">
+      <li>
+        <NavLink
+          className={({ isActive }) =>
+            isActive
+              ? "font-semibold text-tertiary border-b-2 border-tertiary pb-1 drop-shadow-lg"
+              : "hover:drop-shadow-lg hover:border-b-2 border-tertiary pb-1"
+          }
+          to="/products"
+          end
+        >
+          Menu
+        </NavLink>
+      </li>
+      {categories.map((c) => (
+        <li key={c.id}>
+          <NavLink
+            className={({ isActive }) =>
+              isActive
+                ? "font-semibold text-tertiary border-b-2 border-tertiary pb-1 drop-shadow-lg"
+                : "hover:drop-shadow-lg hover:border-b-2 border-tertiary pb-1"
+            }
+            to={`category/${c.id}`}
+          >
+            {c.name}
+          </NavLink>
+        </li>
+      ))}
+    </nav>
+
+    {/* dropdown tách ra khỏi nav */}
+    <div className="relative ml-2">
+      <button
+        onClick={toggleDdmenu}
+        className={`${ddMenu ? "rotate-180" : "rotate-0"} duration-150 focus:bg-none`}
+      >
+        ▼
+      </button>
+
+      {ddMenu && (
+        <div className="absolute w-72 shadow border border-gray-200 bg-white rounded-md right-0 p-5 top-10 text-primary z-50">
+          <section className="flex flex-col">
+            <aside className="flex-1 flex flex-col">
+              <label
+                htmlFor="searchProduct"
+                className="block mb-2 text-sm font-medium text-gray-900"
               >
-                ▼
-              </button>
-              <div
-                className={
-                  (!ddMenu ? "opacity-0 z-0 " : " z-[5]") +
-                  " absolute w-72 shadow border-1 border-gray-200 bg-white rounded-md right-0 p-5 top-10 text-primary duration-200 transition-opacity"
-                }
+                Keywords
+              </label>
+              <input
+                type="text"
+                name="searchProduct"
+                id="searchProduct"
+                className="block w-full p-2 mb-6 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </aside>
+            <aside className="flex-1">
+              <label
+                htmlFor="orderBy"
+                className="block mb-2 text-sm font-medium text-gray-900"
               >
-                <section className="flex flex-col">
-                  <aside className="flex-1 flex flex-col">
-                    <label
-                      htmlFor="searchProduct"
-                      className="block mb-2 text-sm font-medium text-gray-900"
-                    >
-                      Keywords
-                    </label>
-                    <input
-                      type="text"
-                      name="searchProduct"
-                      id="searchProduct"
-                      className="block w-full p-2 mb-6 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                    />
-                  </aside>
-                  <aside className="flex-1">
-                    <label
-                      htmlFor="orderBy"
-                      className="block mb-2 text-sm font-medium text-gray-900"
-                    >
-                      Order by
-                    </label>
-                    <select
-                      id="orderBy"
-                      className="block w-full p-2 mb-6 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 "
-                      value={sort}
-                      onChange={(e) => setSort(e.target.value)}
-                    >
-                      <option value={undefined}>Choose a order</option>
-                      <option value="price_asc">Price (Asc)</option>
-                      <option value="price_desc">Price (Desc)</option>
-                      <option value="id_desc">Newest</option>
-                      <option value="id_asc">Oldest</option>
-                      <option value="category_asc">Category (Asc)</option>
-                      <option value="category_desc">Category (Desc)</option>
-                    </select>
-                  </aside>
-                </section>
-              </div>
-            </li>
-          </nav>
+                Order by
+              </label>
+              <select
+                id="orderBy"
+                className="block w-full p-2 mb-6 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 "
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+              >
+                <option value={undefined}>Choose a order</option>
+                <option value="price_asc">Price (Asc)</option>
+                <option value="price_desc">Price (Desc)</option>
+                <option value="id_desc">Newest</option>
+                <option value="id_asc">Oldest</option>
+                <option value="category_asc">Category (Asc)</option>
+                <option value="category_desc">Category (Desc)</option>
+              </select>
+            </aside>
+          </section>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
+
           <Routes path="/products/*">
             <Route
               index

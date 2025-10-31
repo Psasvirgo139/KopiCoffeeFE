@@ -189,6 +189,14 @@ function ProductDetail(props) {
           </li>
           <li className="text-tertiary font-semibold">{p.name}</li>
         </nav>
+        <div className="flex justify-center mb-6">
+  <img
+    src={p.img ? p.img : productPlaceholder}
+    alt={p.name}
+    onError={(e) => (e.target.src = productPlaceholder)}
+    className="w-full max-w-md h-auto object-cover rounded-2xl shadow-lg"
+  />
+</div>
         <section className="my-10">
           <div className="max-w-3xl mx-auto flex flex-col gap-5">
             <p className="font-black text-5xl uppercase w-full text-center mb-4">
@@ -197,9 +205,9 @@ function ProductDetail(props) {
             <p className="text-tertiary text-lg text-justify md:min-h-[200px]">
               {desc}
             </p>
-            <p className="text-tertiary text-lg mb-8">
+            {/* <p className="text-tertiary text-lg mb-8">
               Delivery only on <b>Monday to friday</b> at <b>1 - 7 pm</b>
-            </p>
+            </p> */}
             {/* Inline size selector (moved from below) */}
             <div className="font-bold mb-4">
               <p className="mb-2">Size</p>
@@ -285,9 +293,9 @@ function ProductDetail(props) {
                   </button>
                 </div>
               </div>
-              <p className="font-bold text-xl">
-                VND {p.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
-              </p>
+              <p className="font-bold text-xl text-tertiary">
+   {(p.price * form.count).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} VND
+</p>
             </div>
             <button
               className="mt-4 block bg-tertiary text-white font-bold text-lg py-4 rounded-xl"
@@ -295,12 +303,12 @@ function ProductDetail(props) {
             >
               Add to Cart
             </button>
-            <button
+            {/* <button
               className="block bg-secondary disabled:bg-gray-300 disabled:cursor-not-allowed text-tertiary font-bold text-lg py-4 rounded-xl"
               disabled
             >
               Ask a Staff
-            </button>
+            </button> */}
           </div>
         </section>
         <section className="flex flex-col md:flex-row gap-8">
@@ -316,9 +324,10 @@ function ProductDetail(props) {
           <aside className="flex-[3_3_0] rounded-xl shadow-primary flex items-center px-6 md:px-14 py-8 gap-4 flex-wrap lg:flex-nowrap">
             <div className="">
               <img
-                src={productPlaceholder}
-                alt=""
-                className="h-24 aspect-square object-cover rounded-full"
+                src={p.img ? p.img : productPlaceholder}
+                alt={p.name}
+                onError={(e) => (e.target.src = productPlaceholder)}
+                className="h-24 w-24 md:h-40 md:w-40 object-cover rounded-full shadow-md"
               />
             </div>
             <div className="flex-[4_4_0] min-w-[100px] space-y-2">
