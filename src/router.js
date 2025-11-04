@@ -34,6 +34,7 @@ import {
   CheckIsStaff,
   CheckNoAuth,
   TokenHandler,
+  BlockShipperOnTableOrder,
 } from "./utils/wrappers/protectedRoute";
 import OrderDrafts from "./pages/Order";
 import TableOrder from "./pages/TableOrder";
@@ -89,7 +90,9 @@ const Routers = () => {
             {/* Employee only */}
             <Route element={<CheckIsEmployee />}>
               <Route path="draft-order" element={<OrderDrafts />} />
-              <Route path="table-order" element={<TableOrder />} />
+              <Route element={<BlockShipperOnTableOrder />}>
+                <Route path="table-order" element={<TableOrder />} />
+              </Route>
               <Route path="shipping-order" element={<ShippingOrder />} />
             </Route>
             {/* Staff (Admin or Employee) */}
@@ -108,7 +111,8 @@ const Routers = () => {
             <Route path="products/edit/:productId" element={<EditProduct />} />
             <Route path="promo" element={<PromoList />} />
             <Route path="promo/new" element={<NewPromo />} />
-            <Route path="promo/edit/:promoId" element={<EditPromo />} />
+            <Route path="promo/edit/event/:promoId" element={<EditPromo />} />
+            <Route path="promo/edit/code/:promoId" element={<EditPromo />} />
           </Route>
         </Route>
       </Routes>

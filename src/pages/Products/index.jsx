@@ -254,7 +254,7 @@ function Products(props) {
                         <p className="font-bold">{promo.name}</p>
                         <p className="text-sm">{promo.desc}</p>
                       </div>
-                      <NavLink to={`/promo/edit/${promo.id}`} className="flex items-center gap-2 text-primary">
+                      <NavLink to={`/promo/edit/${String(promo.kind || promo.type || "code").toLowerCase() === "event" ? "event" : "code"}/${promo.id}`} className="flex items-center gap-2 text-primary">
                         Edit Promo
                       </NavLink>
                     </div>
@@ -375,7 +375,7 @@ function Products(props) {
                   </p>
                 </div>
               </section>
-              <div className="mt-auto flex w-full">
+              <div className="flex w-full mt-3">
                 <div className="grid grid-cols-1 gap-3 w-full">
                   <button onClick={confirmOrder} className="btn btn-primary text-white w-full">
                     Confirm Order
