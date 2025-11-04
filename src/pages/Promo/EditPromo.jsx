@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import _ from "lodash";
 import { toast } from "react-hot-toast";
 import { connect } from "react-redux";
-import { NavLink, useNavigate, useParams } from "react-router-dom";
+import { NavLink, useMatch, useNavigate, useParams } from "react-router-dom";
 import Datepicker from "react-tailwindcss-datepicker";
 import closeIcon from "../../assets/icons/close.svg";
 import loadingImage from "../../assets/images/loading.svg";
@@ -18,6 +18,8 @@ import { n_f } from "../../utils/helpers";
 
 const EditPromo = (props) => {
   const { promoId } = useParams();
+  const matchEvent = useMatch("/promo/edit/event/:promoId");
+  const matchCode = useMatch("/promo/edit/code/:promoId");
   useDocumentTitle("Edit Promo");
   const initialState = {
     // unified form for code or event data shape
@@ -75,6 +77,11 @@ const EditPromo = (props) => {
   }, [form.search_product]);
 
   useEffect(() => {
+    if (matchEvent) setKind("event");
+    else if (matchCode) setKind("code");
+  }, [matchEvent, matchCode]);
+
+  useEffect(() => {
     setLoadings({ ...loadings, data: true });
     getPromoById(promoId, controller)
       .then((res) => res.data)
@@ -99,7 +106,10 @@ const EditPromo = (props) => {
         };
         setForm(next);
         setSelectedProducts(it.products || []);
-        setKind((it.kind || it.type || "").toLowerCase() === "event" ? "event" : "code");
+        // keep server-reported kind only if route didn't decide
+        if (!matchEvent && !matchCode) {
+          setKind((it.kind || it.type || "").toLowerCase() === "event" ? "event" : "code");
+        }
         setLoadings({ ...loadings, data: false });
       })
       .catch((err) => {
