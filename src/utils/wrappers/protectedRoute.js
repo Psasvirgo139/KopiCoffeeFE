@@ -73,8 +73,8 @@ export const BlockShipperOnTableOrder = ({ children }) => {
     profile: state.profile,
   }));
   const roleId = Number(userInfo.role);
-  const pos = String(profile?.data?.position_name || profile?.data?.positionName || "").toLowerCase();
-  if (roleId === 2 && pos === "shipper") {
+  const posId = Number(profile?.data?.position_id ?? profile?.data?.positionId);
+  if (roleId === 2 && posId === 4) {
     return <Navigate to="/shipping-order" replace={true} />;
   }
   return <Outlet />;

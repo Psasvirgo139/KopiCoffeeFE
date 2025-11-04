@@ -152,7 +152,8 @@ class Header extends Component {
   }
 
   render() {
-    const isShipper = String(this.props?.profile?.data?.position_name || this.props?.profile?.data?.positionName || "").toLowerCase() === "shipper";
+    const posId = Number(this.props?.profile?.data?.position_id ?? this.props?.profile?.data?.positionId);
+    const isShipper = posId === 4;
     return (
       <>
         <Logout />
