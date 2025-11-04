@@ -151,7 +151,7 @@ function PromoList() {
                 <div className="mt-3 flex gap-2">
                   <button
                     className="btn btn-sm"
-                    onClick={() => navigate(`/promo/edit/${it.id}`)}
+                    onClick={() => navigate(`/promo/edit/${String(it.kind || it.type || "code").toLowerCase() === "event" ? "event" : "code"}/${it.id}`)}
                   >
                     Edit
                   </button>

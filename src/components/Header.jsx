@@ -152,6 +152,7 @@ class Header extends Component {
   }
 
   render() {
+    const isShipper = String(this.props?.profile?.data?.position_name || this.props?.profile?.data?.positionName || "").toLowerCase() === "shipper";
     return (
       <>
         <Logout />
@@ -244,16 +245,18 @@ class Header extends Component {
                     </NavLink>
                   </li>
                   {/* Draft Order moved into avatar dropdown for staff */}
-                  <li className="list-none" key="TableOrder">
-                    <NavLink
-                      to="/table-order"
-                      className={({ isActive }) =>
-                        isActive ? "font-bold text-[#6A4029]" : ""
-                      }
-                    >
-                      Table Order
-                    </NavLink>
-                  </li>
+                  {!isShipper && (
+                    <li className="list-none" key="TableOrder">
+                      <NavLink
+                        to="/table-order"
+                        className={({ isActive }) =>
+                          isActive ? "font-bold text-[#6A4029]" : ""
+                        }
+                      >
+                        Table Order
+                      </NavLink>
+                    </li>
+                  )}
                   <li className="list-none" key="ShippingOrder">
                     <NavLink
                       to="/shipping-order"

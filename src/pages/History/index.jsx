@@ -78,7 +78,7 @@ function History() {
       setDataDetail({ isLoading: false, ...result.data.data[0] });
     } catch (error) {
       if (axios.isCancel(error)) return;
-      setDataDetail({ ...detail, isLoading: false, isError: true });
+      setDataDetail({ ...initialValue, isLoading: false, isError: true });
       console.log(error);
     }
   };

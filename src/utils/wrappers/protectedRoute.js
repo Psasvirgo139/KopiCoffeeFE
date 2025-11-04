@@ -67,6 +67,19 @@ export const CheckIsStaff = ({ children }) => {
   return <Outlet />;
 };
 
+export const BlockShipperOnTableOrder = ({ children }) => {
+  const { userInfo, profile } = useSelector((state) => ({
+    userInfo: state.userInfo,
+    profile: state.profile,
+  }));
+  const roleId = Number(userInfo.role);
+  const pos = String(profile?.data?.position_name || profile?.data?.positionName || "").toLowerCase();
+  if (roleId === 2 && pos === "shipper") {
+    return <Navigate to="/shipping-order" replace={true} />;
+  }
+  return <Outlet />;
+};
+
 export const TokenHandler = () => {
   const { userInfo, profile } = useSelector((state) => ({
     userInfo: state.userInfo,

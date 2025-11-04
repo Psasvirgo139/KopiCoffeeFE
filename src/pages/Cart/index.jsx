@@ -32,10 +32,7 @@ function Cart() {
   // const [cart, setCart] = useState([]);
   const cartRedux = useSelector((state) => state.cart);
   const profile = useSelector((state) => state.profile);
-  const [remove, setRemove] = useState({
-    product_id: "",
-    size_id: "",
-  });
+  const [discountCode, setDiscountCode] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const cart = cartRedux.list;
@@ -214,37 +211,8 @@ function Cart() {
       setIsLoading(false);
     }
   };
-  const closeRemoveModal = () => {
-    setRemove({ product_id: "", size_id: "" });
-  };
   return (
     <>
-      <Modal
-        isOpen={remove.product_id !== "" && remove.size_id !== ""}
-        onClose={() => setRemove({ product_id: "", size_id: "" })}
-        className="flex flex-col gap-y-5"
-      >
-        Are you sure to delete this item from your cart?
-        <div className="mx-auto space-x-3">
-          <button
-            onClick={() => {
-              dispatch(
-                cartActions.removeFromCart({
-                  product_id: remove.product_id,
-                  size_id: remove.size_id,
-                })
-              );
-              setRemove({ product_id: "", size_id: "" });
-            }}
-            className="btn btn-primary text-white"
-          >
-            Yes
-          </button>
-          <div onClick={closeRemoveModal} className="btn btn-error">
-            No
-          </div>
-        </div>
-      </Modal>
       <Header />
 
       <main className="bg-cart bg-cover bg-center">
@@ -292,38 +260,7 @@ function Cart() {
                         <aside className="flex-[2_2_0%]">
                           <p className="font-semibold">{list.name}</p>
                           <div className="flex gap-2">
-                            <button
-                              onClick={() => {
-                                if (list.qty - 1 < 1)
-                                  return setRemove({
-                                    product_id: list.product_id,
-                                    size_id: list.size_id,
-                                  });
-                                dispatch(
-                                  cartActions.decrementQty({
-                                    product_id: list.product_id,
-                                    size_id: list.size_id,
-                                  })
-                                );
-                              }}
-                              className="rounded-full bg-tertiary text-white font-bold w-6 h-6 items-center justify-center duration-200 hover:bg-primary-focus"
-                            >
-                              -
-                            </button>
                             <p>x {list.qty}</p>
-                            <button
-                              onClick={() =>
-                                dispatch(
-                                  cartActions.incrementQty({
-                                    product_id: list.product_id,
-                                    size_id: list.size_id,
-                                  })
-                                )
-                              }
-                              className="rounded-full bg-tertiary text-white font-bold w-6 h-6 items-center justify-center duration-200 hover:bg-primary-focus"
-                            >
-                              +
-                            </button>
                           </div>
                           <p>{sizeName}</p>
                         </aside>
@@ -332,23 +269,22 @@ function Cart() {
                              {n_f(Number(list.price) * Number(list.qty))} VND
                           </p>
                         </aside>
-                        <button
-                          onClick={() =>
-                            setRemove({
-                              product_id: list.product_id,
-                              size_id: list.size_id,
-                            })
-                          }
-                          className="absolute top-2 right-2 rounded-full h-6 w-6 bg-tertiary text-white font-bold text-xs text-center flex"
-                        >
-                          <p className="m-auto">X</p>
-                        </button>
                       </div>
                     );
                   })}
                 </section>
                 <hr />
                 <section className="flex flex-col w-full my-4">
+                  <div className="flex flex-col mb-4">
+                    <label className="text-sm font-semibold mb-1">Discount code</label>
+                    <input
+                      type="text"
+                      value={discountCode}
+                      onChange={(e) => setDiscountCode(e.target.value)}
+                      placeholder="Enter discount code"
+                      className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
+                    />
+                  </div>
                   <div className="flex flex-row uppercase lg:text-lg">
                     <p className="flex-[2_2_0%]">Subtotal</p>
                     <p className="flex-1 lg:flex-none text-right">
