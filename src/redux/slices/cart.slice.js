@@ -46,14 +46,19 @@ const cartSlice = createSlice({
     addtoCart: (prevState, action) => {
       const target = getTargetCart(prevState);
       const list = target.cart.list || [];
+      const addOnIds = Array.isArray(action.payload.add_on_ids) ? [...action.payload.add_on_ids].sort((a,b)=>Number(a)-Number(b)) : [];
+      const addOnSig = addOnIds.join("-");
       const existIdx = list.findIndex(
         (item) =>
           item.product_id === action.payload.product_id &&
-          item.size_id === action.payload.size_id
+          item.size_id === action.payload.size_id &&
+          (item.add_on_sig || "") === addOnSig
       );
 
       const updatedItem = {
         ...action.payload,
+        add_on_ids: addOnIds,
+        add_on_sig: addOnSig,
         qty: existIdx !== -1 ? list[existIdx].qty + action.payload.qty : action.payload.qty,
         subtotal:
           existIdx !== -1 && typeof list[existIdx].subtotal === "number"
@@ -87,9 +92,12 @@ const cartSlice = createSlice({
     incrementQty: (prevState, action) => {
       const target = getTargetCart(prevState);
       const updatedList = (target.cart.list || []).map((item) => {
+        const addOnIds = Array.isArray(action.payload.add_on_ids) ? [...action.payload.add_on_ids].sort((a,b)=>Number(a)-Number(b)) : [];
+        const addOnSig = addOnIds.join("-");
         if (
           item.product_id === action.payload.product_id &&
-          item.size_id === action.payload.size_id
+          item.size_id === action.payload.size_id &&
+          (item.add_on_sig || "") === addOnSig
         ) {
           return { ...item, qty: item.qty + 1, subtotal: (item.subtotal || item.price * item.qty) + item.price };
         }
@@ -105,9 +113,12 @@ const cartSlice = createSlice({
     decrementQty: (prevState, action) => {
       const target = getTargetCart(prevState);
       const updatedList = (target.cart.list || []).map((item) => {
+        const addOnIds = Array.isArray(action.payload.add_on_ids) ? [...action.payload.add_on_ids].sort((a,b)=>Number(a)-Number(b)) : [];
+        const addOnSig = addOnIds.join("-");
         if (
           item.product_id === action.payload.product_id &&
-          item.size_id === action.payload.size_id
+          item.size_id === action.payload.size_id &&
+          (item.add_on_sig || "") === addOnSig
         ) {
           if (item.qty === 1) return item;
           return { ...item, qty: item.qty - 1, subtotal: Math.max(0, (item.subtotal || item.price * item.qty) - item.price) };
@@ -123,10 +134,13 @@ const cartSlice = createSlice({
     },
     removeFromCart: (prevState, action) => {
       const target = getTargetCart(prevState);
+      const addOnIds = Array.isArray(action.payload.add_on_ids) ? [...action.payload.add_on_ids].sort((a,b)=>Number(a)-Number(b)) : [];
+      const addOnSig = addOnIds.join("-");
       const updatedList = (target.cart.list || []).filter((item) => {
         return !(
           item.product_id === action.payload.product_id &&
-          item.size_id === action.payload.size_id
+          item.size_id === action.payload.size_id &&
+          (item.add_on_sig || "") === addOnSig
         );
       });
       if (target.type === "draft") {

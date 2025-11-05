@@ -62,7 +62,7 @@ function Products(props) {
   const cartRedux = useSelector((state) => state.cart);
   const cart = cartRedux.list;
   const dispatch = useDispatch();
-  const [remove, setRemove] = useState({ product_id: "", size_id: "" });
+  const [remove, setRemove] = useState({ product_id: "", size_id: "", add_on_ids: [] });
   const [categories, setCategories] = useState([]);
   const closeRemoveModal = () => setRemove({ product_id: "", size_id: "" });
   const [paidNow, setPaidNow] = useState(false);
@@ -198,6 +198,7 @@ function Products(props) {
                 cartActions.removeFromCart({
                   product_id: remove.product_id,
                   size_id: remove.size_id,
+                  add_on_ids: Array.isArray(remove.add_on_ids) ? remove.add_on_ids : [],
                 })
               );
               closeRemoveModal();
@@ -306,11 +307,13 @@ function Products(props) {
                                   return setRemove({
                                     product_id: list.product_id,
                                     size_id: list.size_id,
+                                    add_on_ids: Array.isArray(list.add_on_ids) ? list.add_on_ids : [],
                                   });
                                 dispatch(
                                   cartActions.decrementQty({
                                     product_id: list.product_id,
                                     size_id: list.size_id,
+                                    add_on_ids: Array.isArray(list.add_on_ids) ? list.add_on_ids : [],
                                   })
                                 );
                               }}
@@ -325,6 +328,7 @@ function Products(props) {
                                   cartActions.incrementQty({
                                     product_id: list.product_id,
                                     size_id: list.size_id,
+                                    add_on_ids: Array.isArray(list.add_on_ids) ? list.add_on_ids : [],
                                   })
                                 )
                               }
@@ -340,6 +344,7 @@ function Products(props) {
                               setRemove({
                                 product_id: list.product_id,
                                 size_id: list.size_id,
+                                add_on_ids: Array.isArray(list.add_on_ids) ? list.add_on_ids : [],
                               })
                             }
                             className="rounded-full h-6 w-6 bg-tertiary text-white font-bold text-xs text-center flex mb-1"

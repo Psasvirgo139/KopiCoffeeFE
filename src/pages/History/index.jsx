@@ -177,6 +177,13 @@ function History() {
                         {item.product_name} x{item.qty}
                       </p>
                       <p>{item.size}</p>
+                      {Array.isArray(item.add_ons) && item.add_ons.length > 0 && (
+                        <ul className="text-xs text-gray-700 list-disc ml-4">
+                          {item.add_ons.map((ao, idx) => (
+                            <li key={idx}>{ao.name} (+{n_f(Number(ao.price || 0))} VND)</li>
+                          ))}
+                        </ul>
+                      )}
                       {/* <p>IDR {n_f(item.subtotal)}</p> */}
                     </div>
                     <div className="">
@@ -191,6 +198,18 @@ function History() {
               <div className="flex justify-between">
                 <p className="font-semibold">Grand Total</p>
                 <p>{n_f(dataDetail.grand_total)} VND</p>
+              </div>
+              <div className="flex justify-between">
+                <p className="font-semibold">Subtotal</p>
+                <p>{n_f(dataDetail.subtotal || 0)} VND</p>
+              </div>
+              <div className="flex justify-between">
+                <p className="font-semibold">Shipping</p>
+                <p>{n_f(dataDetail.delivery_fee || 0)} VND</p>
+              </div>
+              <div className="flex justify-between">
+                <p className="font-semibold">Discount</p>
+                <p>{n_f(dataDetail.discount || 0)} VND</p>
               </div>
               <div className="flex justify-between">
                 <p className="font-semibold">Payment Method</p>

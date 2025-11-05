@@ -73,11 +73,28 @@ function ShippingOrder() {
               <div key={o.id} className="border rounded p-3">
                 <div className="font-semibold">Order #{o.id}</div>
                 <div className="text-sm text-gray-600">{o.address}</div>
-                <div className="text-sm">Total: {o.total}</div>
+                <div className="text-sm flex flex-col md:flex-row md:items-center gap-2">
+                  <span>Total: {o.total}</span>
+                  <span className="text-gray-500">|</span>
+                  <span>Subtotal: {o.subtotal}</span>
+                  <span className="text-gray-500">|</span>
+                  <span>Shipping: {o.shipping_fee}</span>
+                  <span className="text-gray-500">|</span>
+                  <span>Discount: {o.discount}</span>
+                </div>
                 <div className="text-xs text-gray-500">Status: {o.status}</div>
                 <ul className="list-disc ml-5">
                   {o.products?.map((p, idx) => (
-                    <li key={idx}>{p.product_name} x{p.qty} - {p.subtotal}</li>
+                    <li key={idx}>
+                      {p.product_name} x{p.qty} {p.size ? `(${p.size})` : ""} - {p.subtotal}
+                      {Array.isArray(p.add_ons) && p.add_ons.length > 0 && (
+                        <ul className="list-disc ml-5 text-xs text-gray-600">
+                          {p.add_ons.map((ao, i2) => (
+                            <li key={i2}>{ao.name} (+{ao.price})</li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
                   ))}
                 </ul>
                 {isCashier && (

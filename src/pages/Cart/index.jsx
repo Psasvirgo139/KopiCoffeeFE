@@ -263,6 +263,15 @@ function Cart() {
                             <p>x {list.qty}</p>
                           </div>
                           <p>{sizeName}</p>
+                          {Array.isArray(list.add_ons_detail) && list.add_ons_detail.length > 0 && (
+                            <ul className="text-sm text-gray-500 list-disc ml-5">
+                              {list.add_ons_detail.map((ao) => (
+                                <li key={ao.id}>
+                                  {ao.name} (+{n_f(Number(ao.price || 0))} VND)
+                                </li>
+                              ))}
+                            </ul>
+                          )}
                         </aside>
                         <aside className="flex-1">
                           <p className="text-right">
