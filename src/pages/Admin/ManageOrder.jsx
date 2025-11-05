@@ -31,20 +31,23 @@ const ManageOrder = (props) => {
     Promise.all(statuses.map((s) => getTransactions({ status: s, page: 1, limit: 200 }, props.userInfo.token, controller)))
       .then((results) => {
         const merged = results.flatMap((r) => r.data?.data || []);
-        const from = new Date(dateRange.startDate);
-        const to = new Date(dateRange.endDate);
-        // normalize end to end-of-day
+        const from = new Date(dateRange.startDate || Date.now());
+        const to = new Date(dateRange.endDate || dateRange.startDate || Date.now());
+        // normalize to full-day inclusive range in local time
+        const fromStart = new Date(from);
+        fromStart.setHours(0, 0, 0, 0);
         const toEnd = new Date(to);
         toEnd.setHours(23, 59, 59, 999);
 
-        const isSameDay = from.toDateString() === to.toDateString();
+        const isSameDay = fromStart.toDateString() === new Date(toEnd).toDateString();
         const filtered = merged
           .filter((o) => {
             const t = new Date(o.created_at);
+            if (isNaN(t.getTime())) return false;
             if (isSameDay) {
-              return t.toDateString() === from.toDateString();
+              return t >= fromStart && t <= toEnd;
             }
-            return t >= from && t <= toEnd;
+            return t >= fromStart && t <= toEnd;
           })
           .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         setOrders(filtered);
@@ -100,6 +103,13 @@ const ManageOrder = (props) => {
                     <div className="flex-1">
                       <p className="font-medium">{item.product_name} x{item.qty}</p>
                       <p>{item.size}</p>
+                      {Array.isArray(item.add_ons) && item.add_ons.length > 0 && (
+                        <ul className="text-xs text-gray-700 list-disc ml-4">
+                          {item.add_ons.map((ao, i2) => (
+                            <li key={i2}>{ao.name} (+{n_f(Number(ao.price || 0))} VND)</li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                     <div className="">
                       <p className="">{n_f(item.subtotal)} VND</p>
@@ -113,6 +123,18 @@ const ManageOrder = (props) => {
               <div className="flex justify-between">
                 <p className="font-semibold">Grand Total</p>
                 <p>{n_f(detailData.grand_total)} VND</p>
+              </div>
+              <div className="flex justify-between">
+                <p className="font-semibold">Subtotal</p>
+                <p>{n_f(detailData.subtotal || 0)} VND</p>
+              </div>
+              <div className="flex justify-between">
+                <p className="font-semibold">Shipping</p>
+                <p>{n_f(detailData.delivery_fee || 0)} VND</p>
+              </div>
+              <div className="flex justify-between">
+                <p className="font-semibold">Discount</p>
+                <p>{n_f(detailData.discount || 0)} VND</p>
               </div>
               <div className="flex justify-between">
                 <p className="font-semibold">Payment Method</p>

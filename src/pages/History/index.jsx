@@ -124,10 +124,14 @@ function History() {
     if (dateRange.startDate && dateRange.endDate) {
       const start = new Date(dateRange.startDate);
       const end = new Date(dateRange.endDate);
+      const startDay = new Date(start);
+      startDay.setHours(0, 0, 0, 0);
+      const endDay = new Date(end);
+      endDay.setHours(23, 59, 59, 999);
       items = items.filter((it) => {
         const d = it.created_at ? new Date(it.created_at) : (it.transaction_time ? new Date(it.transaction_time) : null);
-        if (!d) return false;
-        return d >= start && d <= end;
+        if (!d || isNaN(d.getTime())) return false;
+        return d >= startDay && d <= endDay;
       });
     }
     // sort desc by created_at then fallback transaction_time
