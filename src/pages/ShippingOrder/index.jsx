@@ -244,20 +244,7 @@ function ShipperActions({ o, userInfo, controller, onUpdated, profile, hasActive
       {claimedByMe && o.status === "ACCEPTED" && (
         <>
           <button className="btn btn-ghost" disabled>Claimed</button>
-          <button
-            className="btn btn-primary text-white"
-            onClick={async () => {
-              try {
-                await updateTransactionStatus(o.id, "SHIPPING", userInfo.token, controller);
-                onUpdated?.();
-                toast.success("Shipping started");
-              } catch {
-                toast.error("Error");
-              }
-            }}
-          >
-            Shipping
-          </button>
+          <button className="btn btn-disabled" disabled>waiting for ready</button>
         </>
       )}
 

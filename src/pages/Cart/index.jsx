@@ -18,7 +18,7 @@ import Footer from '../../components/Footer';
 import Header from '../../components/Header';
 import Modal from '../../components/Modal';
 import { cartActions } from '../../redux/slices/cart.slice';
-import { createTransaction } from '../../utils/dataProvider/transaction';
+import { createTransaction, validateDiscount } from '../../utils/dataProvider/transaction';
 import useDocumentTitle from '../../utils/documentTitle';
 import { n_f } from '../../utils/helpers';
 import MapAddressModal from './MapAddressModal';
@@ -33,6 +33,9 @@ function Cart() {
   const cartRedux = useSelector((state) => state.cart);
   const profile = useSelector((state) => state.profile);
   const [discountCode, setDiscountCode] = useState("");
+  const [appliedCode, setAppliedCode] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState(0);
+  const [discountMsg, setDiscountMsg] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const cart = cartRedux.list;
@@ -156,6 +159,33 @@ function Cart() {
     };
     doEstimate();
   }, [selectedAddressId, newAddressText, userInfo?.token]);
+  const subtotal = useMemo(() => cart.reduce((acc, cur) => acc + Number(cur.price) * Number(cur.qty), 0), [cart]);
+
+  const applyDiscount = async () => {
+    setDiscountMsg("");
+    setAppliedDiscount(0);
+    setAppliedCode("");
+    const code = (discountCode || "").trim();
+    if (!code) {
+      setDiscountMsg("Vui lòng nhập mã giảm giá");
+      return;
+    }
+    try {
+      const res = await validateDiscount(code, subtotal, userInfo.token, controller);
+      const data = res.data || {};
+      setAppliedDiscount(Number(data.discount_amount || 0));
+      setAppliedCode(String(data.coupon_code || code));
+      setDiscountMsg(data.message || "Áp dụng mã thành công");
+      toast.success("Applied discount");
+    } catch (e) {
+      const msg = e?.response?.data?.message || "Mã giảm giá không hợp lệ";
+      setDiscountMsg(msg);
+      setAppliedDiscount(0);
+      setAppliedCode("");
+      toast.error(msg);
+    }
+  };
+
   const payHandler = async () => {
     if (missingAddress) {
       toast.error("Vui lòng nhập địa chỉ giao hàng");
@@ -196,6 +226,8 @@ function Cart() {
           delivery_id: 1,
           address_id: addressIdToUse,
           notes: form.notes,
+          discount_code: appliedCode || undefined,
+          discount_amount: appliedDiscount || undefined,
         },
         cart,
         userInfo.token,
@@ -286,23 +318,35 @@ function Cart() {
                 <section className="flex flex-col w-full my-4">
                   <div className="flex flex-col mb-4">
                     <label className="text-sm font-semibold mb-1">Discount code</label>
-                    <input
-                      type="text"
-                      value={discountCode}
-                      onChange={(e) => setDiscountCode(e.target.value)}
-                      placeholder="Enter discount code"
-                      className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
-                    />
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={discountCode}
+                        onChange={(e) => setDiscountCode(e.target.value)}
+                        placeholder="Enter discount code"
+                        className="flex-1 border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
+                      />
+                      <button type="button" onClick={applyDiscount} className="btn btn-sm btn-primary text-white">
+                        Apply
+                      </button>
+                    </div>
+                    {discountMsg && (
+                      <div className={`text-sm mt-1 ${appliedDiscount > 0 ? 'text-green-600' : 'text-red-500'}`}>{discountMsg}</div>
+                    )}
                   </div>
                   <div className="flex flex-row uppercase lg:text-lg">
                     <p className="flex-[2_2_0%]">Subtotal</p>
                     <p className="flex-1 lg:flex-none text-right">
                       {" "}
-                      {n_f(
-                        cart.reduce((acc, cur) => acc + cur.price * cur.qty, 0)
-                      )} VND
+                      {n_f(subtotal)} VND
                     </p>
                   </div>
+                  {appliedDiscount > 0 && (
+                    <div className="flex flex-row uppercase lg:text-lg text-green-700">
+                      <p className="flex-[2_2_0%]">Discount ({appliedCode})</p>
+                      <p className="flex-1 lg:flex-none text-right">- {n_f(appliedDiscount)} VND</p>
+                    </div>
+                  )}
                   <div className="flex flex-row uppercase lg:text-lg">
                     <p className="flex-[2_2_0%]">Shipping</p>
                     <p className="flex-1 lg:flex-none text-right">
@@ -326,9 +370,7 @@ function Cart() {
                     <p className="flex-[2_2_0%]">Total</p>
                     <p className="flex-initial lg:flex-none">
                       {" "}
-                      {n_f(
-                        cart.reduce((acc, cur) => acc + cur.price * cur.qty, 0) + Number(shipFee || 0)
-                      )} VND
+                      {n_f(Math.max(0, subtotal - Number(appliedDiscount || 0)) + Number(shipFee || 0))} VND
                     </p>
                   </div>
                 </section>
