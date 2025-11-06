@@ -104,11 +104,13 @@ componentWillUnmount() {
 
     {/* Ảnh giữa */}
     <div className="flex justify-center">
-      <img
-        src= {tiramisucoffeeImage}
-        alt="Coffee Cup"
-        className="w-64 md:w-72 drop-shadow-2xl rounded-2xl hover:scale-105 transition-transform duration-300"
-      />
+      <Link to="/products?q=tiramisu">
+        <img
+          src= {tiramisucoffeeImage}
+          alt="Coffee Cup"
+          className="w-64 md:w-72 drop-shadow-2xl rounded-2xl hover:scale-105 transition-transform duration-300 cursor-pointer"
+        />
+      </Link>
     </div>
 
     {/* Cột phải */}
@@ -141,36 +143,40 @@ componentWillUnmount() {
 
   <div className="flex flex-col md:flex-row justify-center items-center gap-10 md:gap-16">
     {/* Món 1 */}
-    <div className="group relative rounded-2xl overflow-hidden shadow-md transition-all duration-500 ease-in-out cursor-pointer w-full md:w-[45vw] max-w-[600px] bg-[#FAF7F2]">
-      <div className="overflow-hidden rounded-2xl">
-        <img
-          src={almondcoffeeImage}
-          alt="Almond Coffee"
-           className="w-full h-[550px] object-contain rounded-2xl transform transition-transform duration-700 group-hover:scale-105"
-        />
+    <Link to="/products?q=almond">
+      <div className="group relative rounded-2xl overflow-hidden shadow-md transition-all duration-500 ease-in-out cursor-pointer w-full md:w-[45vw] max-w-[600px] bg-[#FAF7F2]">
+        <div className="overflow-hidden rounded-2xl">
+          <img
+            src={almondcoffeeImage}
+            alt="Almond Coffee"
+             className="w-full h-[550px] object-contain rounded-2xl transform transition-transform duration-700 group-hover:scale-105"
+          />
+        </div>
+        <div className="absolute bottom-0 left-0 w-full py-6 text-center bg-white group-hover:bg-[#A12B2B] transition-all duration-500">
+          <h3 className="font-semibold text-lg tracking-wide text-quartenary group-hover:text-white transition-colors duration-500">
+            ALMOND COFFEE
+          </h3>
+        </div>
       </div>
-      <div className="absolute bottom-0 left-0 w-full py-6 text-center bg-white group-hover:bg-[#A12B2B] transition-all duration-500">
-        <h3 className="font-semibold text-lg tracking-wide text-quartenary group-hover:text-white transition-colors duration-500">
-          ALMOND COFFEE
-        </h3>
-      </div>
-    </div>
+    </Link>
 
     {/* Món 2 */}
-    <div className="group relative rounded-2xl overflow-hidden shadow-md transition-all duration-500 ease-in-out cursor-pointer w-full md:w-[45vw] max-w-[600px] bg-[#FFF8ED]">
-      <div className="overflow-hidden rounded-2xl">
-        <img
-          src={coconutcoffeeImage}
-          alt="Coconut Coffee"
-           className="w-full h-[550px] object-contain rounded-2xl transform transition-transform duration-700 group-hover:scale-105"
-        />
+    <Link to="/products?q=coconut">
+      <div className="group relative rounded-2xl overflow-hidden shadow-md transition-all duration-500 ease-in-out cursor-pointer w-full md:w-[45vw] max-w-[600px] bg-[#FFF8ED]">
+        <div className="overflow-hidden rounded-2xl">
+          <img
+            src={coconutcoffeeImage}
+            alt="Coconut Coffee"
+             className="w-full h-[550px] object-contain rounded-2xl transform transition-transform duration-700 group-hover:scale-105"
+          />
+        </div>
+        <div className="absolute bottom-0 left-0 w-full py-6 text-center bg-white group-hover:bg-[#A12B2B] transition-all duration-500">
+          <h3 className="font-semibold text-lg tracking-wide text-quartenary group-hover:text-white transition-colors duration-500">
+            COCONUT COFFEE
+          </h3>
+        </div>
       </div>
-      <div className="absolute bottom-0 left-0 w-full py-6 text-center bg-white group-hover:bg-[#A12B2B] transition-all duration-500">
-        <h3 className="font-semibold text-lg tracking-wide text-quartenary group-hover:text-white transition-colors duration-500">
-          COCONUT COFFEE
-        </h3>
-      </div>
-    </div>
+    </Link>
   </div>
 </section>
 
