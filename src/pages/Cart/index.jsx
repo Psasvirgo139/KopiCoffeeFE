@@ -528,32 +528,10 @@ function Cart() {
                     >
                       <rect width="40" height="40" rx="10" fill="#C4C4C4" />
                       <rect width="40" height="40" rx="10" fill="#FFBA33" />
-                      <rect
-                        x="8"
-                        y="10"
-                        width="24"
-                        height="21"
-                        fill="url(#pattern0)"
-                      />
-                      <defs>
-                        <pattern
-                          id="pattern0"
-                          patternContentUnits="objectBoundingBox"
-                          width="1"
-                          height="1"
-                        >
-                          <use
-                            xlinkHref="#image0_0_1"
-                            transform="matrix(0.00195312 0 0 0.00223214 0 -0.0714286)"
-                          />
-                        </pattern>
-                        <image
-                          id="image0_0_1"
-                          width="512"
-                          height="512"
-                          xlinkHref="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEwAACxMBAJqcGAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3Njape.org5vuPBoAABngSURBVHic7d15sKV5Xd/xd3fPyrCNyCIDA86AgAIuGJBhETVYiMuACBQmEU0Uk0opCKYkWi6piJqgqAmWwVIqGGWLbBqVTRiUzSJEFGWdAWRVMAzDwMAMM9P54+kObTM93XP7nPM753ler6pf3Tu379zzOec+z/d87+9ZfgUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADb5v8Bn7y7Hk/76PwAAAAASUVORK5CYII="
-                        />
-                      </defs>
+                    <path
+                      d="M10 15C9.44772 15 9 15.4477 9 16V25C9 25.5523 9.44772 26 10 26H12C12 27.6569 13.3431 29 15 29C16.6569 29 18 27.6569 18 26H24C24 27.6569 25.3431 29 27 29C28.6569 29 30 27.6569 30 26H31C31.5523 26 32 25.5523 32 25V20.5C32 20.2239 31.7761 20 31.5 20H28V16C28 15.4477 27.5523 15 27 15H10ZM28 21H30.5858C30.851 21 31.1054 21.1054 31.2929 21.2929L32 22V24H30C30 22.3431 28.6569 21 27 21H28ZM15 27C14.4477 27 14 26.5523 14 26C14 25.4477 14.4477 25 15 25C15.5523 25 16 25.4477 16 26C16 26.5523 15.5523 27 15 27ZM27 27C26.4477 27 26 26.5523 26 26C26 25.4477 26.4477 25 27 25C27.5523 25 28 25.4477 28 26C28 26.5523 27.5523 27 27 27Z"
+                      fill="white"
+                    />
                     </svg>
                     Cash on delivery
                   </label>

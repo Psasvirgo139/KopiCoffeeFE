@@ -224,7 +224,7 @@ function ProductDetail(props) {
             <p className="font-black text-5xl uppercase w-full text-center mb-4">
               {p.name}
             </p>
-            <p className="text-tertiary text-lg text-justify md:min-h-[200px]">
+            <p className="text-tertiary text-lg text-justify md:min-h-[100px]">
               {desc}
             </p>
             {/* <p className="text-tertiary text-lg mb-8">
@@ -316,16 +316,11 @@ function ProductDetail(props) {
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-bold text-xl">
-                  VND {p.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
+                <p className="font-bold text-xl text-tertiary">
+                 {p.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}  VND 
                 </p>
-                <p className="text-sm text-tertiary mt-1">Stock: {(() => { const s = getAvailableStock(p); return typeof s === "number" ? s : "-"; })()}</p>
+                <p className="text-sm mt-1">Stock: {(() => { const s = getAvailableStock(p); return typeof s === "number" ? s : "-"; })()}</p>
               </div>
-              {/*Merge without knowing what does it do, why is it here, what error may occur*/}
-              <p className="font-bold text-xl text-tertiary">
-                {(p.price * form.count).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} VND
-              </p>
-              {/*Merge without knowing */}
             </div>
             <button
               className="mt-4 block bg-tertiary text-white font-bold text-lg py-4 rounded-xl"

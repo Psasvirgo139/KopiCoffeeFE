@@ -72,7 +72,7 @@ componentWillUnmount() {
         <Header />
         <main>
           <section
-  className="bg-cover bg-center bg-no-repeat min-h-screen transition-all duration-1000 ease-in-out"
+  className="bg-cover bg-center bg-no-repeat h-[80vh] transition-all duration-1000 ease-in-out"
   style={{
     backgroundImage: `url(${bgImages[currentBg]})`,
     backgroundSize: "cover",
