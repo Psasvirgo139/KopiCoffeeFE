@@ -153,7 +153,10 @@ class Header extends Component {
   }
 
   render() {
-    const posId = Number(this.props?.profile?.data?.position_id ?? this.props?.profile?.data?.positionId);
+    const posId = Number(
+      this.props?.profile?.data?.position_id ??
+        this.props?.profile?.data?.positionId
+    );
     const isShipper = posId === 4;
     return (
       <>
@@ -206,9 +209,7 @@ class Header extends Component {
                   />
                 </svg>
               </div>
-              {!_.isEmpty(this.props.userInfo.token) && (
-                <NotificationIcon />
-              )}
+              {!_.isEmpty(this.props.userInfo.token) && <NotificationIcon />}
               <button onClick={this.toggleNavbar}>
                 <img
                   src={burgerIcon}
@@ -266,7 +267,7 @@ class Header extends Component {
                   </li>
                   <li className="list-none" key="TableSchedules">
                     <NavLink
-                      to="/table-schedules"
+                      to="/staff/schedules"
                       className={({ isActive }) =>
                         isActive ? "font-bold text-[#6A4029]" : ""
                       }
@@ -484,7 +485,7 @@ class Header extends Component {
                             </NavLink>
                             <NavLink
                               className="block px-4 py-2 hover:bg-gray-100  duration-200"
-                              to="/schedule"
+                              to="/schedules"
                             >
                               Manage Schedules
                             </NavLink>

@@ -27,6 +27,15 @@ import Employees from "./pages/Employees";
 import Customers from "./pages/Customers";
 import ScrollToTop from "./utils/scrollToTop";
 import ChangePassword from "./pages/Auth/ChangePassword";
+import Schedules from "./pages/Schedules";
+import RecurrencePatterns from "./pages/Schedules/RecurrencePatterns";
+import AllShifts from "./pages/Schedules/AllShifts";
+import WeeklyTimetable from "./pages/Schedules/WeeklyTimetable";
+import NewShift from "./pages/Schedules/NewShift";
+import EditShift from "./pages/Schedules/EditShift";
+import EmployeeAssignment from "./pages/Schedules/EmployeeAssignment";
+import GenerateFromPattern from "./pages/Schedules/GenerateFromPattern";
+import StaffSchedule from "./pages/Staff/StaffSchedule";
 
 import {
   CheckAuth,
@@ -91,6 +100,7 @@ const Routers = () => {
             <Route path="notifications" element={<NotificationPage />} />
             {/* Employee only */}
             <Route element={<CheckIsEmployee />}>
+              <Route path="staff/schedules" element={<StaffSchedule />} />
               <Route path="draft-order" element={<OrderDrafts />} />
               <Route element={<BlockShipperOnTableOrder />}>
                 <Route path="table-order" element={<TableOrder />} />
@@ -115,6 +125,28 @@ const Routers = () => {
             <Route path="promo/new" element={<NewPromo />} />
             <Route path="promo/edit/event/:promoId" element={<EditPromo />} />
             <Route path="promo/edit/code/:promoId" element={<EditPromo />} />
+            <Route path="schedules" element={<Schedules />} />
+            <Route path="admin/schedules" element={<Schedules />} />
+            <Route path="admin/schedules/new" element={<NewShift />} />
+            <Route
+              path="admin/schedules/:shiftId/edit"
+              element={<EditShift />}
+            />
+            <Route path="admin/shifts/:shiftId/edit" element={<EditShift />} />
+            <Route
+              path="admin/schedules/:shiftId/employees"
+              element={<EmployeeAssignment />}
+            />
+            <Route
+              path="admin/recurrence-patterns"
+              element={<RecurrencePatterns />}
+            />
+            <Route
+              path="admin/schedules/generate"
+              element={<GenerateFromPattern />}
+            />
+            <Route path="admin/shifts" element={<AllShifts />} />
+            <Route path="admin/timetable" element={<WeeklyTimetable />} />
           </Route>
         </Route>
       </Routes>
