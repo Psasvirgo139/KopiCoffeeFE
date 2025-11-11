@@ -14,6 +14,7 @@ import NotFound from "./pages/Error";
 import History from "./pages/History";
 import HistoryDetail from "./pages/History/HistoryDetail";
 import Mainpage from "./pages/Mainpage";
+import NotificationPage from "./pages/Notifications";
 import Products from "./pages/Products";
 import EditProduct from "./pages/Products/EditProduct";
 import NewProduct from "./pages/Products/NewProduct";
@@ -87,6 +88,7 @@ const Routers = () => {
             <Route path="history" element={<History />} />
             <Route path="history/:id" element={<HistoryDetail />} />
             <Route path="shipping/:orderId" element={<ShippingTrack />} />
+            <Route path="notifications" element={<NotificationPage />} />
             {/* Employee only */}
             <Route element={<CheckIsEmployee />}>
               <Route path="draft-order" element={<OrderDrafts />} />

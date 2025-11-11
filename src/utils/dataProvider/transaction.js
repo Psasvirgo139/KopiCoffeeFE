@@ -10,6 +10,8 @@ export const createTransaction = (
     notes = "Makkah",
     customer_id = undefined,
     paid = undefined,
+    discount_code = undefined,
+    discount_amount = undefined,
   },
   products = [],
   token,
@@ -26,6 +28,8 @@ export const createTransaction = (
   if (typeof address_id !== "undefined") body.address_id = address_id;
   if (typeof customer_id !== "undefined") body.customer_id = customer_id;
   if (typeof paid !== "undefined") body.paid = paid;
+  if (typeof discount_code !== "undefined") body.discount_code = discount_code;
+  if (typeof discount_amount !== "undefined") body.discount_amount = discount_amount;
   return api.post(`/apiv1/transactions`, body, {
     signal: controller?.signal,
     headers: { Authorization: `Bearer ${token}` },
@@ -36,6 +40,14 @@ export const createTransaction = (
 export const validateOrder = (products = [], token, controller) => {
   const body = { products };
   return api.post(`/apiv1/orders/validate`, body, {
+    signal: controller?.signal,
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+};
+
+// Validate discount code for current user and subtotal
+export const validateDiscount = (code, subtotal, token, controller) => {
+  return api.post(`/apiv1/orders/validate-discount`, { code, subtotal }, {
     signal: controller?.signal,
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });

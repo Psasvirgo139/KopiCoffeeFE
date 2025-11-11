@@ -42,6 +42,9 @@ function ProductDetail(props) {
   const [detail, setDetail] = useState({
     price: 0,
   });
+  const [dbSizes, setDbSizes] = useState([]);
+  const [dbAddOns, setDbAddOns] = useState([]);
+  const [selectedAddOnIds, setSelectedAddOnIds] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const { productId } = useParams();
@@ -61,7 +64,15 @@ function ProductDetail(props) {
     setIsLoading(true);
     getProductbyId(productId, controller)
       .then((response) => {
-        setDetail(response.data.data[0]);
+        const item = response.data.data[0] || {};
+        setDetail(item);
+        setDbSizes(Array.isArray(item.sizes) ? item.sizes : []);
+        setDbAddOns(Array.isArray(item.add_ons) ? item.add_ons : []);
+        // If DB provides sizes, default to the first
+        if (Array.isArray(item.sizes) && item.sizes.length > 0) {
+          const firstId = item.sizes[0]?.size_id;
+          if (firstId) setForm((prev) => ({ ...prev, size: String(firstId) }));
+        }
         setIsLoading(false);
       })
       .catch((error) => {
@@ -144,8 +155,8 @@ function ProductDetail(props) {
 
   const handleAddToCart = () => {
     const newItem = {
-      size: Number(form.size), // mengubah nilai form.size ke tipe data number
-      count: Number(form.count), // mengubah nilai form.count ke tipe data number
+      size: Number(form.size),
+      count: Number(form.count),
     };
     if (newItem.size < 1 || newItem.size > 3) {
       toast.error("Please choose size");
@@ -172,6 +183,20 @@ function ProductDetail(props) {
       }
     }
 
+    // compute unit price = base + sizeDelta + addOnSum
+    const base = Number(detail.price || 0);
+    const sizeDelta = Number(
+      (dbSizes.find((s) => String(s.size_id) === String(newItem.size))?.price_delta) || 0
+    );
+    const addonSum = dbAddOns
+      .filter((a) => selectedAddOnIds.includes(a.add_on_id))
+      .reduce((acc, cur) => acc + Number(cur.price || 0), 0);
+    const unitPrice = base + sizeDelta + addonSum;
+
+    const addOnsDetail = dbAddOns
+      .filter((a) => selectedAddOnIds.includes(a.add_on_id))
+      .map((a) => ({ id: a.add_on_id, name: a.name, price: a.price }));
+
     dispatch(
       cartActions.addtoCart({
         product_id: detail.id,
@@ -179,7 +204,9 @@ function ProductDetail(props) {
         qty: form.count,
         name: detail.name,
         img: detail.img,
-        price: detail.price,
+        price: unitPrice,
+        add_on_ids: selectedAddOnIds,
+        add_ons_detail: addOnsDetail,
       })
     );
 
@@ -203,6 +230,27 @@ function ProductDetail(props) {
       ? "This product does not have a description yet."
       : p.desc;
     useDocumentTitle(p.name);
+    const defaultSizeNames = ["Regular", "Large", "Xtra Large"]; // FE default
+    const dbSizeNames = (dbSizes || []).map((s) => String(s.name || "").trim().toLowerCase());
+    const useDbSizesUi = (() => {
+      if (!Array.isArray(dbSizes) || dbSizes.length === 0) return false;
+      const normDefault = defaultSizeNames.map((x) => x.toLowerCase());
+      if (dbSizeNames.length !== normDefault.length) return true;
+      // compare set-equal
+      const setA = new Set(dbSizeNames);
+      const setB = new Set(normDefault);
+      if (setA.size !== setB.size) return true;
+      for (const v of setA) if (!setB.has(v)) return true;
+      return false;
+    })();
+    const base = Number(p.price || 0);
+    const sizeDelta = Number(
+      (dbSizes.find((s) => String(s.size_id) === String(form.size))?.price_delta) || 0
+    );
+    const addonSum = dbAddOns
+      .filter((a) => selectedAddOnIds.includes(a.add_on_id))
+      .reduce((acc, cur) => acc + Number(cur.price || 0), 0);
+    const unitPrice = base + sizeDelta + addonSum;
     return (
       <main className="global-px py-10">
         <nav className="flex flex-row list-none gap-1">
@@ -233,63 +281,78 @@ function ProductDetail(props) {
             {/* Inline size selector (moved from below) */}
             <div className="font-bold mb-4">
               <p className="mb-2">Size</p>
-              <div className="flex justify-center md:justify-start gap-4 list-none">
-                <li>
-                  <input
-                    type="radio"
-                    id="size-r"
-                    name="size"
-                    value="1"
-                    className="hidden peer"
-                    checked={form.size === "1"}
-                    onChange={onChangeForm}
-                    required
-                  />
-                  <label
-                    htmlFor="size-r"
-                    className="inline-block bg-gray-400 rounded-full peer-checked:bg-secondary peer-checked:font-bold cursor-pointer"
-                  >
-                    <p className=" p-2 w-12 h-12 text-center ">R</p>
-                  </label>
-                </li>
-                <li>
-                  <input
-                    type="radio"
-                    id="size-l"
-                    name="size"
-                    value="2"
-                    className="hidden peer"
-                    checked={form.size === "2"}
-                    onChange={onChangeForm}
-                    required
-                  />
-                  <label
-                    htmlFor="size-l"
-                    className="inline-block bg-gray-400 rounded-full peer-checked:bg-secondary peer-checked:font-bold cursor-pointer"
-                  >
-                    <p className=" p-2 w-12 h-12 text-center ">L</p>
-                  </label>
-                </li>
-                <li>
-                  <input
-                    type="radio"
-                    id="size-xl"
-                    name="size"
-                    value="3"
-                    className="hidden peer"
-                    checked={form.size === "3"}
-                    onChange={onChangeForm}
-                    required
-                  />
-                  <label
-                    htmlFor="size-xl"
-                    className="inline-block bg-gray-400 rounded-full peer-checked:bg-secondary peer-checked:font-bold cursor-pointer"
-                  >
-                    <p className="p-2 w-12 h-12 text-center ">XL</p>
-                  </label>
-                </li>
-              </div>
+              {useDbSizesUi ? (
+                <div className="flex justify-center md:justify-start gap-4 list-none">
+                  {(dbSizes || []).map((s) => (
+                    <li key={s.size_id}>
+                      <input
+                        type="radio"
+                        id={`size-${s.size_id}`}
+                        name="size"
+                        value={String(s.size_id)}
+                        className="hidden peer"
+                        checked={String(form.size) === String(s.size_id)}
+                        onChange={onChangeForm}
+                        required
+                      />
+                      <label
+                        htmlFor={`size-${s.size_id}`}
+                        className="inline-block bg-gray-400 rounded-full peer-checked:bg-secondary peer-checked:font-bold cursor-pointer px-3"
+                      >
+                        <p className=" p-2 text-center ">{s.code || s.name}</p>
+                      </label>
+                    </li>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex justify-center md:justify-start gap-4 list-none">
+                  <li>
+                    <input type="radio" id="size-r" name="size" value="1" className="hidden peer" checked={form.size === "1"} onChange={onChangeForm} required />
+                    <label htmlFor="size-r" className="inline-block bg-gray-400 rounded-full peer-checked:bg-secondary peer-checked:font-bold cursor-pointer">
+                      <p className=" p-2 w-12 h-12 text-center ">R</p>
+                    </label>
+                  </li>
+                  <li>
+                    <input type="radio" id="size-l" name="size" value="2" className="hidden peer" checked={form.size === "2"} onChange={onChangeForm} required />
+                    <label htmlFor="size-l" className="inline-block bg-gray-400 rounded-full peer-checked:bg-secondary peer-checked:font-bold cursor-pointer">
+                      <p className=" p-2 w-12 h-12 text-center ">L</p>
+                    </label>
+                  </li>
+                  <li>
+                    <input type="radio" id="size-xl" name="size" value="3" className="hidden peer" checked={form.size === "3"} onChange={onChangeForm} required />
+                    <label htmlFor="size-xl" className="inline-block bg-gray-400 rounded-full peer-checked:bg-secondary peer-checked:font-bold cursor-pointer">
+                      <p className="p-2 w-12 h-12 text-center ">XL</p>
+                    </label>
+                  </li>
+                </div>
+              )}
             </div>
+            {/* Add-ons */}
+            {Array.isArray(dbAddOns) && dbAddOns.length > 0 && (
+              <div className="font-bold mb-4">
+                <p className="mb-2">Add-ons</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {dbAddOns.map((a) => (
+                    <label key={a.add_on_id} className="flex items-center gap-2 bg-white rounded-full px-3 py-2 shadow-sm">
+                      <input
+                        type="checkbox"
+                        className="accent-tertiary"
+                        checked={selectedAddOnIds.includes(a.add_on_id)}
+                        onChange={(e) => {
+                          setSelectedAddOnIds((prev) => {
+                            const set = new Set(prev);
+                            if (e.target.checked) set.add(a.add_on_id);
+                            else set.delete(a.add_on_id);
+                            return Array.from(set);
+                          });
+                        }}
+                      />
+                      <span className="text-sm font-normal">{a.name} (+{Number(a.price || 0).toLocaleString("vi-VN")} VND)</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="flex justify-between items-center">
               <div className="custom-number-input h-10 w-32">
                 <div className="flex flex-row h-10 w-full rounded-lg relative bg-transparent mt-1v text-tertiary font-bold">
@@ -391,6 +454,13 @@ function ProductDetail(props) {
                       <p>
                         x{item.qty} ({sizeName})
                       </p>
+                      {Array.isArray(item.add_ons_detail) && item.add_ons_detail.length > 0 && (
+                        <ul className="text-sm text-tertiary list-disc ml-5">
+                          {item.add_ons_detail.map((ao) => (
+                            <li key={ao.id}>{ao.name} (+{Number(ao.price || 0).toLocaleString("vi-VN")} VND)</li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                   );
                 })}
