@@ -27,6 +27,7 @@ import Employees from "./pages/Employees";
 import Customers from "./pages/Customers";
 import ScrollToTop from "./utils/scrollToTop";
 import ChangePassword from "./pages/Auth/ChangePassword";
+import ChatBox from "./components/ChatBox";
 
 import {
   CheckAuth,
@@ -47,6 +48,7 @@ const Routers = () => {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <ChatBox />
       <Routes>
         <Route path="/" element={<TokenHandler />}>
           {/* Public Route */}

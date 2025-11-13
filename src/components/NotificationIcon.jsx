@@ -9,10 +9,11 @@ function NotificationIcon() {
   const dropdownRef = useRef(null);
   const userInfo = useSelector((state) => state.userInfo);
   const intervalRef = useRef(null);
+  const disabledRef = useRef(false);
 
   // Load unread count
   const loadUnreadCount = async () => {
-    if (!userInfo.token) {
+    if (!userInfo.token || disabledRef.current) {
       setUnreadCount(0);
       return;
     }
@@ -21,8 +22,12 @@ function NotificationIcon() {
       const response = await getUnreadCount();
       setUnreadCount(response.data?.unreadCount || 0);
     } catch (error) {
-      // Silently fail - don't show error for notification count
-      console.error("Failed to load unread count:", error);
+      // Tắt polling nếu backend chưa hỗ trợ để tránh spam console
+      disabledRef.current = true;
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     }
   };
 
@@ -33,9 +38,11 @@ function NotificationIcon() {
     loadUnreadCount();
 
     // Polling every 30 seconds
-    intervalRef.current = setInterval(() => {
-      loadUnreadCount();
-    }, 30000);
+    if (!disabledRef.current) {
+      intervalRef.current = setInterval(() => {
+        loadUnreadCount();
+      }, 30000);
+    }
 
     return () => {
       if (intervalRef.current) {
