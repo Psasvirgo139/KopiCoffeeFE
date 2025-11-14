@@ -18,7 +18,7 @@ import Footer from '../../components/Footer';
 import Header from '../../components/Header';
 import Modal from '../../components/Modal';
 import { cartActions } from '../../redux/slices/cart.slice';
-import { createTransaction, validateDiscount } from '../../utils/dataProvider/transaction';
+import { createTransaction, validateDiscount, createVNPayUrl } from '../../utils/dataProvider/transaction';
 import useDocumentTitle from '../../utils/documentTitle';
 import { n_f } from '../../utils/helpers';
 import MapAddressModal from './MapAddressModal';
@@ -220,7 +220,7 @@ function Cart() {
         addressIdToUse = resp.data?.address_id;
       }
 
-      await createTransaction(
+      const txResp = await createTransaction(
         {
           payment_id: form.payment,
           delivery_id: 1,
@@ -233,9 +233,21 @@ function Cart() {
         userInfo.token,
         controller
       );
-      toast.success("Success create transaction");
-      dispatch(cartActions.resetCart());
-      navigate("/history");
+      const orderId = txResp?.data?.data?.id;
+      if (form.payment === "2") {
+        const pResp = await createVNPayUrl(orderId, userInfo.token, controller);
+        const url = pResp?.data?.data?.payment_url;
+        if (url) {
+          window.location.href = url;
+          return;
+        }
+        toast.error("Không tạo được liên kết VNPAY");
+        return;
+      } else {
+        toast.success("Success create transaction");
+        dispatch(cartActions.resetCart());
+        navigate("/history");
+      }
     } catch (err) {
       console.log(err);
       toast.error("An error ocurred, please check your internet connection");
@@ -552,7 +564,7 @@ function Cart() {
                         fill="white"
                       />
                     </svg>
-                    Bank account
+                    VNPAY
                   </label>
                 </div>
                 <hr />

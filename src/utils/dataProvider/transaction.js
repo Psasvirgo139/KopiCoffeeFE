@@ -36,6 +36,14 @@ export const createTransaction = (
   });
 };
 
+export const createVNPayUrl = (orderId, token, controller) => {
+  return api.get(`/apiv1/payment/vn-pay`, {
+    params: { orderId },
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    signal: controller?.signal,
+  });
+};
+
 // Validate order stock before proceeding (returns promise)
 export const validateOrder = (products = [], token, controller) => {
   const body = { products };

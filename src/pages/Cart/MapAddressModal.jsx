@@ -17,8 +17,14 @@ function MapAddressModal({ isOpen, onClose, onPick }) {
   const markerRef = useRef(null);
   const [picked, setPicked] = useState({ lat: null, lng: null, address: "", ward: "", district: "", city: "" });
 
-  const accessToken = "pk.eyJ1Ijoiam9obmJpZGF0IiwiYSI6ImNtZDJocDE2cTBheWYybHBxNDZxeDZ5YmkifQ.8HhkYUtlOo5UrZpguhMPrw";
-  const mapStyle = "mapbox://styles/johnbidat/cmhd7enbl003n01r465hv4xux";
+  const accessToken =
+    process.env.REACT_APP_MAPBOX_ACCESS_TOKEN ||
+    process.env.MAPBOX_ACCESS_TOKEN ||
+    "";
+  const mapStyle =
+    process.env.REACT_APP_MAPBOX_STYLE ||
+    process.env.MAPBOX_STYLE ||
+    "mapbox://styles/mapbox/streets-v11";
 
   const reverseGeocode = useCallback(async (lng, lat) => {
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${accessToken}`;

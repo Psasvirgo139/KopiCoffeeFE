@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const host = (
-  process.env.REACT_APP_BACKEND_HOST || "http://localhost:8080/Kopi"
+  process.env.REACT_APP_BACKEND_HOST || "https://web-kopicafebe.onrender.com/Kopi"
 ).replace(/\/$/, "");
 
 export function login(email, password, rememberMe, controller) {
