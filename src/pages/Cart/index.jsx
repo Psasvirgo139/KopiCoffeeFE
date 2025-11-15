@@ -674,7 +674,7 @@ function Cart() {
                         fill="white"
                       />
                     </svg>
-                    Chuyển khoản QR (PayOS)
+                    QR Bank Transfer (PayOS)
                   </label>
                 </div>
               </section>
