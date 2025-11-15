@@ -167,7 +167,6 @@ function NotificationPage() {
       console.log("[NotificationPage] Component unmounting, aborting request");
       abortController.abort();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleMarkAsRead = async (notificationId) => {

@@ -30,14 +30,23 @@ function ShippingTrack() {
   const watchIdRef = useRef(null);
   const pollingRef = useRef(null);
 
-  // Hardcode token/style to ensure it works (dev): mirrors testmap.html
-  const accessToken = "pk.eyJ1Ijoiam9obmJpZGF0IiwiYSI6ImNtZDJocDE2cTBheWYybHBxNDZxeDZ5YmkifQ.8HhkYUtlOo5UrZpguhMPrw";
-  const mapStyle = "mapbox://styles/johnbidat/cmhd7enbl003n01r465hv4xux";
-  // Keep env for Kopi address; support both CRA and non-CRA prefixes
-  const kopiAddress = process.env.KOPI_LOCATION;
-  //Hardcode Kopi coordinates
-  const envKopiLat = parseFloat(16.069960);
-  const envKopiLng = parseFloat(108.237757);
+  // Read Mapbox config from env (supports CRA and non-CRA prefixes)
+  const accessToken =
+    process.env.REACT_APP_MAPBOX_ACCESS_TOKEN ||
+    process.env.MAPBOX_ACCESS_TOKEN ||
+    "";
+  const mapStyle =
+    process.env.REACT_APP_MAPBOX_STYLE ||
+    process.env.MAPBOX_STYLE ||
+    "mapbox://styles/mapbox/streets-v11";
+  const kopiAddress =
+    process.env.REACT_APP_KOPI_LOCATION || process.env.KOPI_LOCATION || "";
+  const envKopiLat = parseFloat(
+    process.env.REACT_APP_KOPI_LAT || process.env.KOPI_LAT || "NaN"
+  );
+  const envKopiLng = parseFloat(
+    process.env.REACT_APP_KOPI_LNG || process.env.KOPI_LNG || "NaN"
+  );
   const isStaff = Number(userInfo?.role) === 2;
   const isCustomer = Number(userInfo?.role) === 3;
 
