@@ -83,7 +83,8 @@ const EditPromo = (props) => {
 
   useEffect(() => {
     setLoadings({ ...loadings, data: true });
-    getPromoById(promoId, controller)
+    const kindParam = matchEvent ? "EVENT" : (matchCode ? "CODE" : undefined);
+    getPromoById(promoId, controller, kindParam)
       .then((res) => res.data)
       .then((payload) => {
         const it = payload?.data || payload; // support either wrapping
