@@ -87,7 +87,8 @@ const EditPromo = (props) => {
 
   useEffect(() => {
     setLoadings({ ...loadings, data: true });
-    getPromoById(promoId, controller)
+    const routeKind = matchEvent ? "event" : matchCode ? "code" : undefined;
+    getPromoById(promoId, controller, routeKind)
       .then((res) => res.data)
       .then((payload) => {
         const it = payload?.data || payload; // support either wrapping
@@ -132,6 +133,21 @@ const EditPromo = (props) => {
   const controller = useMemo(() => new AbortController(), []);
   const formChangeHandler = (e) =>
     setForm({ ...form, [e.target.name]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
+
+  const computeDiscountedPrice = (price) => {
+    if (!price || Number(price) <= 0) return 0;
+    if (form.is_shipping_fee) return Number(price);
+    const type = (form.discount_type || "").toUpperCase();
+    const value = Number(form.discount_value || 0);
+    if (type === "PERCENT") {
+      const pct = Math.min(100, Math.max(0, value));
+      return Math.max(0, Math.round((Number(price) * (100 - pct)) / 100));
+    }
+    if (type === "AMOUNT") {
+      return Math.max(0, Number(price) - value);
+    }
+    return Number(price);
+  };
 
   const submitHandler = (e) => {
     e.preventDefault();
@@ -228,7 +244,7 @@ const EditPromo = (props) => {
               onSubmit={submitHandler}
               className="flex-[2_2_0%] md:pl-12 lg:pl-24 flex flex-col gap-4"
             >
-              {kind === "event" && (
+              {kind === "event" && !isViewOnly && (
                 <>
                   <label className="text-tertiary font-bold text-lg" htmlFor="search_product">Products (multiple) :</label>
                   <div className="relative flex flex-col">
@@ -273,6 +289,20 @@ const EditPromo = (props) => {
                         </li>
                       ))}
                     </div>
+                  )}
+                </>
+              )}
+              {kind === "event" && isViewOnly && (
+                <>
+                  <label className="text-tertiary font-bold text-lg mt-2">Included products :</label>
+                  {selectedProducts.length > 0 ? (
+                    <ul className="list-disc pl-5">
+                      {selectedProducts.map((p) => (
+                        <li key={p.id}>{p.name}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-gray-500">No products included.</p>
                   )}
                 </>
               )}

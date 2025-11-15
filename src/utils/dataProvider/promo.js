@@ -96,8 +96,10 @@ export const editPromoEntry = (
   });
 };
 
-export const getPromoById = (promoId, controller) => {
-  return api.get(`/apiv1/promo/${promoId}`, { signal: controller.signal });
+export const getPromoById = (promoId, controller, discount_kind) => {
+  const params = {};
+  if (discount_kind) params.discount_kind = discount_kind;
+  return api.get(`/apiv1/promo/${promoId}`, { signal: controller.signal, params });
 };
 
 export const deletePromoEntry = (promoId, token, controller) => {
