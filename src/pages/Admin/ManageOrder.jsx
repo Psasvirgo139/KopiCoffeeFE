@@ -1,266 +1,351 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+  import React, { useEffect, useMemo, useRef, useState } from "react";
 
-import axios from "axios";
-// import { toast } from "react-hot-toast";
-// import _ from "lodash";
-import { connect } from "react-redux";
+  import axios from "axios";
+  // import { toast } from "react-hot-toast";
+  // import _ from "lodash";
+  import { connect } from "react-redux";
 
-import loadingImage from "../../assets/images/loading.svg";
-import productPlaceholder from "../../assets/images/placeholder-image.webp";
-import Footer from "../../components/Footer";
-import Header from "../../components/Header";
-import Datepicker from "react-tailwindcss-datepicker";
-import Modal from "../../components/Modal";
-import { getTransactions, getTransactionDetail } from "../../utils/dataProvider/transaction";
-import useDocumentTitle from "../../utils/documentTitle";
-import { n_f, formatDateTime } from "../../utils/helpers";
+  import loadingImage from "../../assets/images/loading.svg";
+  import productPlaceholder from "../../assets/images/placeholder-image.webp";
+  import Footer from "../../components/Footer";
+  import Header from "../../components/Header";
+  import Datepicker from "react-tailwindcss-datepicker";
+  import Modal from "../../components/Modal";
+  import { getTransactions, getTransactionDetail } from "../../utils/dataProvider/transaction";
+  import useDocumentTitle from "../../utils/documentTitle";
+  import { n_f, formatDateTime } from "../../utils/helpers";
 
-const ManageOrder = (props) => {
-  const controller = useMemo(() => new AbortController(), []);
-  const [dateRange, setDateRange] = useState({ startDate: new Date(), endDate: new Date() });
-  const [statusTab, setStatusTab] = useState("ALL"); // ALL | PENDING | COMPLETED | CANCELLED
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [detailData, setDetailData] = useState({ isLoading: false, products: [] });
-  useDocumentTitle("Manage Order");
+  const ManageOrder = (props) => {
+    const controller = useMemo(() => new AbortController(), []);
+    const [dateRange, setDateRange] = useState({ startDate: new Date(), endDate: new Date() });
+    const [statusTab, setStatusTab] = useState("ALL"); // ALL | PENDING | COMPLETED | CANCELLED
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [detailOpen, setDetailOpen] = useState(false);
+    const initialDetailData = {
+      isLoading: false,
+      isError: false,
+      id: 0,
+      grand_total: 0,
+      subtotal: 0,
+      delivery_fee: 0,
+      discount: 0,
+      payment_name: "",
+      payment_id: 0,
+      delivery_name: "",
+      delivery_address: "",
+      notes: "",
+      status_name: "",
+      transaction_time: "",
+      table_number: "",
+      products: [],
+    };
+    const [detailData, setDetailData] = useState(initialDetailData);
+    useDocumentTitle("Manage Order");
 
-  const fetch = () => {
-    setLoading(true);
-    const statuses = statusTab === "ALL" ? ["PENDING", "COMPLETED", "CANCELLED"] : [statusTab];
-    Promise.all(statuses.map((s) => getTransactions({ status: s, page: 1, limit: 200 }, props.userInfo.token, controller)))
-      .then((results) => {
-        const merged = results.flatMap((r) => r.data?.data || []);
-        const from = new Date(dateRange.startDate || Date.now());
-        const to = new Date(dateRange.endDate || dateRange.startDate || Date.now());
-        // normalize to full-day inclusive range in local time
-        const fromStart = new Date(from);
-        fromStart.setHours(0, 0, 0, 0);
-        const toEnd = new Date(to);
-        toEnd.setHours(23, 59, 59, 999);
+    const fetch = () => {
+      setLoading(true);
+      const statuses = statusTab === "ALL" ? ["PENDING", "COMPLETED", "CANCELLED"] : [statusTab];
+      Promise.all(statuses.map((s) => getTransactions({ status: s, page: 1, limit: 200 }, props.userInfo.token, controller)))
+        .then((results) => {
+          const merged = results.flatMap((r) => r.data?.data || []);
+          const from = new Date(dateRange.startDate || Date.now());
+          const to = new Date(dateRange.endDate || dateRange.startDate || Date.now());
+          // normalize to full-day inclusive range in local time
+          const fromStart = new Date(from);
+          fromStart.setHours(0, 0, 0, 0);
+          const toEnd = new Date(to);
+          toEnd.setHours(23, 59, 59, 999);
 
-        const isSameDay = fromStart.toDateString() === new Date(toEnd).toDateString();
-        const filtered = merged
-          .filter((o) => {
-            const t = new Date(o.created_at);
-            if (isNaN(t.getTime())) return false;
-            if (isSameDay) {
+          const isSameDay = fromStart.toDateString() === new Date(toEnd).toDateString();
+          const filtered = merged
+            .filter((o) => {
+              const t = new Date(o.created_at);
+              if (isNaN(t.getTime())) return false;
+              if (isSameDay) {
+                return t >= fromStart && t <= toEnd;
+              }
               return t >= fromStart && t <= toEnd;
-            }
-            return t >= fromStart && t <= toEnd;
-          })
-          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        setOrders(filtered);
-      })
-      .catch((err) => {
-        if (!axios.isCancel(err)) console.log(err);
-        setOrders([]);
-      })
-      .finally(() => setLoading(false));
-  };
+            })
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          setOrders(filtered);
+        })
+        .catch((err) => {
+          if (!axios.isCancel(err)) console.log(err);
+          setOrders([]);
+        })
+        .finally(() => setLoading(false));
+    };
 
-  useEffect(() => {
-    fetch();
-    // eslint-disable-next-line
-  }, [dateRange, statusTab]);
+    useEffect(() => {
+      fetch();
+      // eslint-disable-next-line
+    }, [dateRange, statusTab]);
 
-  const openDetail = async (id) => {
-    setDetailOpen(true);
-    setDetailData({ isLoading: true, products: [] });
-    try {
-      const res = await getTransactionDetail(id, props.userInfo.token, controller);
-      setDetailData({ isLoading: false, ...res.data.data[0] });
-    } catch (e) {
-      setDetailData({ isLoading: false, isError: true, products: [] });
-    }
-  };
+    const openDetail = async (id) => {
+      setDetailOpen(true);
+      setDetailData({ ...initialDetailData, isLoading: true });
+      try {
+        const res = await getTransactionDetail(id, props.userInfo.token, controller);
+        setDetailData({ ...initialDetailData, isLoading: false, ...res.data.data[0], isError: false });
+      } catch (e) {
+        setDetailData({ ...initialDetailData, isLoading: false, isError: true });
+      }
+    };
 
-  const statusBadgeClass = (s) => {
-    if (s === "COMPLETED") return "bg-green-100 text-green-800 border border-green-200";
-    if (s === "CANCELLED") return "bg-red-100 text-red-800 border border-red-200";
-    return "bg-yellow-100 text-yellow-800 border border-yellow-200"; // PENDING / default
-  };
+    const statusBadgeClass = (s) => {
+      const statusUpper = String(s || "").toUpperCase();
+      if (["COMPLETED"].includes(statusUpper)) return "bg-green-100 text-green-800 border border-green-300";
+      if (["CANCELLED", "REJECTED"].includes(statusUpper)) return "bg-red-100 text-red-800 border border-red-300";
+      if (["PENDING", "PROCESSING", "PREPARING"].includes(statusUpper)) return "bg-yellow-100 text-yellow-800 border border-yellow-300";
+      if (["SHIPPING", "ON_THE_WAY"].includes(statusUpper)) return "bg-blue-100 text-blue-800 border border-blue-300";
+      return "bg-gray-100 text-gray-800 border border-gray-300";
+    };
 
-  return (
-    <>
-      <Modal isOpen={detailOpen} onClose={() => setDetailOpen(false)} className={"w-max max-w-md  md:max-w-none"}>
-        {detailData.isLoading ? (
-          <img src={loadingImage} alt="loading..." className="m-2 w-8 h-8" />
-        ) : (
-          <section className="flex flex-col-reverse md:flex-row gap-5 md:w-[80vw] duration-200">
-            <aside className="flex-[2_2_0%] space-y-3">
-              <p className="font-semibold">Products</p>
-              <div className="flex flex-col h-72 overflow-y-scroll pr-2">
-                {detailData.products?.map((item, idx) => (
-                  <div key={idx} className="flex justify-between text-sm md:text-base gap-2">
-                    <div>
-                      <div className="avatar">
-                        <div className="w-16 rounded-xl">
-                          <img src={item.product_img ? item.product_img : productPlaceholder} />
+    return (
+      <>
+        <Modal isOpen={detailOpen} onClose={() => setDetailOpen(false)} className={"w-max max-w-md md:max-w-5xl"}>
+          {detailData.isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <img src={loadingImage} alt="loading..." className="w-12 h-12" />
+            </div>
+          ) : detailData.isError ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <p className="text-red-500 font-semibold text-lg mb-2">Error loading details</p>
+              <p className="text-gray-600">Please try again later</p>
+            </div>
+          ) : (
+            <section className="flex flex-col md:flex-row gap-6 duration-200 p-2">
+              <aside className="flex-[2_2_0%] space-y-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-gray-800">Order Items</h3>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusBadgeClass(detailData.status_name)}`}>
+                    {detailData.status_name}
+                  </span>
+                </div>
+                <div className="flex flex-col max-h-96 overflow-y-auto pr-2 space-y-3 scrollbar-hide">
+                  {detailData.products && detailData.products.length > 0 ? (
+                    detailData.products.map((item, idx) => (
+                      <div key={idx} className="flex gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div className="flex-shrink-0">
+                          <img
+                            src={item.product_img || productPlaceholder}
+                            alt={item.product_name}
+                            className="w-20 h-20 rounded-lg object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-base text-gray-900 mb-1">
+                            {item.product_name} <span className="text-gray-500">x{item.qty}</span>
+                          </p>
+                          <p className="text-sm text-gray-600 mb-1">{item.size}</p>
+                          {Array.isArray(item.add_ons) && item.add_ons.length > 0 && (
+                            <ul className="text-xs text-gray-600 list-disc ml-4 mt-1 space-y-0.5">
+                              {item.add_ons.map((ao, i2) => (
+                                <li key={i2}>
+                                  {ao.name} <span className="text-gray-500">(+{n_f(Number(ao.price || 0))} VND)</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                        <div className="flex-shrink-0">
+                          <p className="font-bold text-base text-gray-900 whitespace-nowrap">
+                            {n_f(item.subtotal)} VND
+                          </p>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium">{item.product_name} x{item.qty}</p>
-                      <p>{item.size}</p>
-                      {Array.isArray(item.add_ons) && item.add_ons.length > 0 && (
-                        <ul className="text-xs text-gray-700 list-disc ml-4">
-                          {item.add_ons.map((ao, i2) => (
-                            <li key={i2}>{ao.name} (+{n_f(Number(ao.price || 0))} VND)</li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                    <div className="">
-                      <p className="">{n_f(item.subtotal)} VND</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </aside>
-            <aside className="flex-1 flex flex-col gap-1 text-sm">
-              <p className="font-bold mb-2">Detail Information</p>
-              <div className="flex justify-between">
-                <p className="font-semibold">Grand Total</p>
-                <p>{n_f(detailData.grand_total)} VND</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-semibold">Subtotal</p>
-                <p>{n_f(detailData.subtotal || 0)} VND</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-semibold">Shipping</p>
-                <p>{n_f(detailData.delivery_fee || 0)} VND</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-semibold">Discount</p>
-                <p>{n_f(detailData.discount || 0)} VND</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-semibold">Payment Method</p>
-                <p>{detailData.payment_name}</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-semibold">Status</p>
-                <p>{detailData.status_name}</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-semibold">Transaction at</p>
-                <p>{formatDateTime(detailData.transaction_time)}</p>
-              </div>
-              <div className="flex flex-col mt-1">
-                <p className="font-semibold">Delivery address</p>
-                <p className="break-words">{detailData.delivery_address || "no address"}</p>
-              </div>
-              <div className="flex flex-col mt-1">
-                <p className="font-semibold">Notes</p>
-                <p className="break-words">{detailData.notes || "no notes"}</p>
-              </div>
-            </aside>
-          </section>
-        )}
-      </Modal>
-      <Header />
-      {loading ? (
-        <>
-          <main className="py-7 flex flex-col gap-5 items-center justify-center bg-[#ddd]">
-            <img src={loadingImage} alt="Loading..." />
-            <p className="text-center">Please wait, fetching data...</p>
-          </main>
-        </>
-      ) : (
-        <main className="bg-cart bg-cover bg-center">
-          <div className="global-px space-y-4 py-10">
-            <section className="text-white lg:text-3xl text-2xl font-extrabold drop-shadow-lg text-center md:text-left">
-              Orders history of the store
-              <p className="text-white/90 text-base font-normal mt-1">
-                Showing {orders.length} order{orders.length !== 1 ? "s" : ""} in selected range
-              </p>
-            </section>
-            <div className="bg-white/95 backdrop-blur sticky top-16 z-10 inline-flex flex-wrap items-center gap-3 rounded-md p-3 shadow">
-              <label className="text-sm font-medium mr-2">Day range:</label>
-              <Datepicker
-                inputClassName="bg-white border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none min-w-[260px]"
-                value={dateRange}
-                popoverDirection="down"
-                separator="until"
-                onChange={(e) => {
-                  const start = e?.startDate ? new Date(e.startDate) : new Date();
-                  const end = e?.endDate ? new Date(e.endDate) : start; // single-day selection fallback
-                  setDateRange({ startDate: start, endDate: end });
-                }}
-              />
-              <div className="w-px h-8 bg-gray-200 mx-1" />
-              <div className="join">
-                {(["ALL", "PENDING", "COMPLETED", "CANCELLED"]).map((s) => (
-                  <button key={s} onClick={() => setStatusTab(s)} className={`join-item btn ${statusTab === s ? "btn-primary text-white" : ""}`}>{s}</button>
-                ))}
-              </div>
-            </div>
-            <section className="flex flex-col md:flex-row lg:gap-16 gap-10">
-              <aside className="flex-1 flex">
-                <section className="flex bg-white rounded-lg p-2 lg:p-7 flex-col w-full">
-                  {orders.length < 1 ? (
-                    <section className="flex flex-col items-center justify-center text-center text-gray-600 py-12">
-                      <img src={loadingImage} alt="Empty" className="w-10 h-10 invert mb-3" />
-                      <p>No orders found for the selected range/status.</p>
-                    </section>
+                    ))
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-black py-2">
-                      {orders.map((item, key) => (
-                        <div
-                          className="flex flex-col gap-3 px-4 py-4 bg-white hover:bg-gray-50 cursor-pointer duration-200 rounded-2xl border border-gray-100 shadow-sm"
-                          onClick={() => openDetail(item.id)}
-                          key={key}
-                        >
-                          <div className="flex items-center justify-between text-xs text-gray-500">
-                            <span>{formatDateTime(item.created_at)}</span>
-                            <span className={`px-2 py-0.5 rounded-full ${statusBadgeClass(item.status)}`}>{item.status}</span>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <img src={item.products?.[0]?.product_img ? item.products[0].product_img : productPlaceholder} alt="" width="64" height="64" className="rounded-full  aspect-square object-cover" />
-                            <div className="flex-1 min-w-0">
-                              <div className="font-extrabold text-base truncate">
-                                {item.products?.[0]?.product_name}
-                              </div>
-                              {item.products?.length > 1 && (
-                                <p className="text-xs text-gray-500">+ {item.products.length - 1} more</p>
-                              )}
-                              <div className="mt-1 text-sm text-gray-600 flex items-center gap-2">
-                                <span>Total:</span>
-                                <span className="font-semibold text-tertiary">{n_f(item.total)} VND</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between text-xs text-gray-500">
-                            <div className="flex items-center gap-2">
-                              {item.table_number ? (
-                                <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">Table {item.table_number}</span>
-                              ) : (
-                                <span className="px-2 py-0.5 rounded bg-gray-50 text-gray-600 border border-gray-200">Shipping</span>
-                              )}
-                            </div>
-                            <span className="text-primary hover:underline">View details »</span>
-                          </div>
-                        </div>
-                      ))}
+                    <div className="text-center py-8 text-gray-500">
+                      <p>No products found</p>
                     </div>
                   )}
-                </section>
+                </div>
+              </aside>
+              <aside className="flex-1 flex flex-col gap-4 bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl">
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Order Information</h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                    <p className="font-semibold text-gray-700">Grand Total</p>
+                    <p className="font-bold text-lg text-gray-900">{n_f(detailData.grand_total)} VND</p>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <p className="font-medium text-gray-600">Subtotal</p>
+                    <p className="text-gray-800">{n_f(detailData.subtotal || 0)} VND</p>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <p className="font-medium text-gray-600">Shipping Fee</p>
+                    <p className="text-gray-800">{n_f(detailData.delivery_fee || 0)} VND</p>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <p className="font-medium text-gray-600">Discount</p>
+                    <p className="text-gray-800">{n_f(detailData.discount || 0)} VND</p>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <p className="font-medium text-gray-600">Payment Method</p>
+                    <p className="text-gray-800">{detailData.payment_name || "N/A"}</p>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <p className="font-medium text-gray-600">Delivery Type</p>
+                    <p className="text-gray-800">{detailData.delivery_name || (detailData.table_number ? "Dine-in" : "N/A")}</p>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <p className="font-medium text-gray-600">Transaction Date</p>
+                    <p className="text-gray-800">{formatDateTime(detailData.transaction_time)}</p>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-gray-300 space-y-3">
+                  <div className="flex flex-col">
+                    <p className="font-semibold text-gray-700 mb-1">Delivery Address</p>
+                    <p className="text-sm text-gray-600 break-words bg-white p-2 rounded border border-gray-200">
+                      {detailData.delivery_address || "No address provided"}
+                    </p>
+                  </div>
+                  <div className="flex flex-col">
+                    <p className="font-semibold text-gray-700 mb-1">Notes</p>
+                    <p className="text-sm text-gray-600 break-words bg-white p-2 rounded border border-gray-200">
+                      {detailData.notes || "No notes"}
+                    </p>
+                  </div>
+                </div>
               </aside>
             </section>
-          </div>
-        </main>
-      )}
-      <Footer />
-    </>
-  );
-};
+          )}
+        </Modal>
+        <Header />
+        {loading ? (
+          <main className="py-12 flex flex-col gap-4 items-center justify-center bg-[#f3f4f6]">
+            <img src={loadingImage} alt="Loading..." className="w-12 h-12" />
+            <p className="text-center text-gray-600">Please wait, fetching data...</p>
+          </main>
+        ) : (
+          <main className="bg-history bg-cover bg-center py-6 md:py-12 lg:py-20 text-white">
+            <section className="global-px">
+              <div className="flex flex-col items-center p-3">
+                <h2 className="text-3xl drop-shadow-[0px_10px_10px_rgba(0,0,0,0.6)] font-extrabold mb-3 text-center">
+                  Store order history overview
+                </h2>
+                <p className="text-white/80 text-sm md:text-base">
+                  Showing {orders.length} order{orders.length !== 1 ? "s" : ""} in selected range
+                </p>
+              </div>
+              <section className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 md:p-5 mb-6 text-black shadow-lg">
+                <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {["ALL", "PENDING", "COMPLETED", "CANCELLED"].map((s) => (
+                      <button
+                        key={s}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                          statusTab === s
+                            ? "bg-primary text-white shadow-md"
+                            : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
+                        }`}
+                        onClick={() => setStatusTab(s)}
+                      >
+                        {s === "ALL" ? "All Orders" : s.charAt(0) + s.slice(1).toLowerCase()}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex-1" />
+                  <div className="min-w-[260px] w-full md:w-auto">
+                    <Datepicker
+                      value={dateRange}
+                      popoverDirection="down"
+                      separator="to"
+                      inputClassName="bg-white border-2 py-2.5 px-3 rounded-lg border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none w-full transition-all"
+                      onChange={(e) => {
+                        const start = e?.startDate ? new Date(e.startDate) : new Date();
+                        const end = e?.endDate ? new Date(e.endDate) : start;
+                        setDateRange({ startDate: start, endDate: end });
+                      }}
+                    />
+                  </div>
+                </div>
+              </section>
+              {orders.length > 0 ? (
+                <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 text-black py-4">
+                  {orders.map((item, key) => (
+                    <div
+                      className="bg-white rounded-2xl shadow-md hover:shadow-xl cursor-pointer transition-all duration-300 hover:-translate-y-1 overflow-hidden group"
+                      onClick={() => openDetail(item.id)}
+                      key={key}
+                    >
+                      <div className="flex flex-row p-5 gap-4 h-full">
+                        <div className="flex-shrink-0">
+                          <img
+                            src={item.products?.[0]?.product_img ? item.products[0].product_img : productPlaceholder}
+                            alt={item.products?.[0]?.product_name || "Product"}
+                            className="w-20 h-20 rounded-xl object-cover shadow-md group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                        {/* Phần nội dung bên phải, đã sửa lại cấu trúc */}
+    <div className="flex-1 flex flex-col justify-between min-w-0">
+      
+      {/* KHỐI 1: Tên + Giá */}
+      <div>
+        <div className="font-bold text-lg text-gray-900 mb-1 line-clamp-1">
+          {item.products?.[0]?.product_name || "Unknown Product"}
+          {item.products?.length > 1 && (
+            <span className="ml-2 text-sm font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+              +{item.products.length - 1}
+            </span>
+          )}
+        </div>
+        <p className="text-primary font-bold text-lg mb-2">
+          {n_f(item.total || item.grand_total)} VND
+        </p>
+      </div>
 
-const mapStateToProps = (state) => ({
-  userInfo: state.userInfo,
-});
+      {/* KHỐI 2: Status + Ngày + Loại (Đã gộp chung) */}
+      <div>
+        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${statusBadgeClass(item.status || item.status_name)}`}>
+          {item.status || item.status_name}
+        </span>
+        <div className="flex items-center justify-between mt-2 text-xs text-gray-500"> {/* Đổi mt-3 thành mt-2 */}
+          <span>{formatDateTime(item.created_at || item.transaction_time)}</span>
+          {item.table_number ? (
+            <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+              Table {item.table_number}
+            </span>
+          ) : (
+            <span className="px-2 py-0.5 rounded bg-gray-50 text-gray-600 border border-gray-200">
+              Shipping
+            </span>
+          )}
+        </div>
+      </div>
+      
+    </div>
+    {/* Hết phần nội dung bên phải */}
 
-const mapDispatchToProps = {};
+  </div>
+</div>
+                  ))}
+                </section>
+              ) : (
+                <section className="flex flex-col justify-center items-center py-16 text-center">
+                  <div className="mb-4">
+                    <svg className="w-24 h-24 mx-auto text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">No orders found</h3>
+                  <p className="text-white/80">Try adjusting your filters or date range</p>
+                </section>
+              )}
+            </section>
+          </main>
+        )}
+        <Footer />
+      </>
+    );
+  };
 
-export default connect(mapStateToProps, mapDispatchToProps)(ManageOrder);
+  const mapStateToProps = (state) => ({
+    userInfo: state.userInfo,
+  });
+
+  const mapDispatchToProps = {};
+
+  export default connect(mapStateToProps, mapDispatchToProps)(ManageOrder);

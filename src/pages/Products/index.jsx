@@ -3,6 +3,7 @@ import "react-loading-skeleton/dist/skeleton.css";
 /* eslint-disable react/prop-types */
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
+import dayjs from "dayjs";
 import _ from "lodash";
 import Skeleton from "react-loading-skeleton";
 import { connect, useSelector, useDispatch } from "react-redux";
@@ -157,11 +158,34 @@ function Products(props) {
     }
   };
 
+  const pickOngoingPromos = useCallback((items = []) => {
+    const now = dayjs();
+    return items.filter((item) => {
+      const status = String(item.status || "").toLowerCase();
+      if (status) {
+        if (status.includes("ongoing") || status.includes("current")) return true;
+        if (status.includes("ended") || status.includes("inactive") || status.includes("upcoming")) return false;
+      }
+
+      const active = item.active ?? item.is_active ?? true;
+      if (!active) return false;
+
+      const startsAt = item.startsAt || item.start_date || item.startDate || null;
+      const endsAt = item.endsAt || item.end_date || item.endDate || null;
+
+      if (startsAt && dayjs(startsAt).isAfter(now)) return false;
+      if (endsAt && dayjs(endsAt).isBefore(now)) return false;
+
+      return true;
+    });
+  }, []);
+
   const fetchPromo = async () => {
     try {
       setPromoLoad(true);
-      const result = await getPromos({ page: 1 }, controller);
-      setPromo(result.data.data);
+      const result = await getPromos({ page: 1, limit: 4, status: "current" }, controller);
+      const items = Array.isArray(result.data?.data) ? result.data.data : [];
+      setPromo(pickOngoingPromos(items));
       setPromoLoad(false);
     } catch (error) {
       setPromoLoad(false);
@@ -239,7 +263,12 @@ function Products(props) {
                     <p className="text-black font-medium text-sm">Dont worry, check tommorow</p>
                   </div>
                 ) : (
-                  promo.map((promo, idx) => (
+                  promo.map((promo, idx) => {
+                    const promoName = promo.name || promo.title || promo.promo_name || "Promo";
+                    const promoDesc = promo.desc || promo.description || promo.promo_desc || "";
+                    const promoImage = promo.img || promo.image_url || images;
+                    const promoKind = String(promo.kind || promo.type || "code").toLowerCase() === "event" ? "event" : "code";
+                    return (
                     <div
                       className="flex flex-row items-center bg-slate-300  rounded-xl gap-2 px-4 py-3 relative"
                       key={idx}
@@ -247,19 +276,20 @@ function Products(props) {
                       <div className="flex-1 flex justify-center py-1">
                         <div className="avatar">
                           <div className="w-24 rounded-xl">
-                            <img src={promo.img || images} className="mix-blend-multiply contrast-100" />
+                            <img src={promoImage} className="mix-blend-multiply contrast-100" />
                           </div>
                         </div>
                       </div>
                       <div className="flex-[2_2_0%]">
-                        <p className="font-bold">{promo.name}</p>
-                        <p className="text-sm">{promo.desc}</p>
+                        <p className="font-bold">{promoName}</p>
+                        <p className="text-sm">{promoDesc}</p>
                       </div>
-                      <NavLink to={`/promo/edit/${String(promo.kind || promo.type || "code").toLowerCase() === "event" ? "event" : "code"}/${promo.id}`} className="flex items-center gap-2 text-primary">
+                      <NavLink to={`/promo/edit/${promoKind}/${promo.id}`} className="flex items-center gap-2 text-primary">
                         Edit Promo
                       </NavLink>
                     </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
               <div className="mt-auto flex w-full">

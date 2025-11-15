@@ -112,6 +112,20 @@ function History() {
       });
   }, [page]);
 
+  const getStatusBadgeClass = (status) => {
+    const statusUpper = String(status || "").toUpperCase();
+    if (["COMPLETED"].includes(statusUpper)) {
+      return "bg-green-100 text-green-800 border-green-300";
+    } else if (["CANCELLED", "REJECTED"].includes(statusUpper)) {
+      return "bg-red-100 text-red-800 border-red-300";
+    } else if (["PENDING", "PROCESSING", "PREPARING"].includes(statusUpper)) {
+      return "bg-yellow-100 text-yellow-800 border-yellow-300";
+    } else if (["SHIPPING", "ON_THE_WAY"].includes(statusUpper)) {
+      return "bg-blue-100 text-blue-800 border-blue-300";
+    }
+    return "bg-gray-100 text-gray-800 border-gray-300";
+  };
+
   const filteredSorted = useMemo(() => {
     let items = Array.isArray(list) ? [...list] : [];
     // status filter
@@ -149,97 +163,114 @@ function History() {
       <Modal
         isOpen={detail !== ""}
         onClose={() => setDetail("")}
-        className={"w-max max-w-md  md:max-w-none"}
+        className={"w-max max-w-md md:max-w-5xl"}
       >
         {dataDetail.isLoading ? (
-          <img src={loadingImage} alt="loading..." className="m-2 w-8 h-8" />
+          <div className="flex justify-center items-center py-12">
+            <img src={loadingImage} alt="loading..." className="w-12 h-12" />
+          </div>
+        ) : dataDetail.isError ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-red-500 font-semibold text-lg mb-2">Error loading details</p>
+            <p className="text-gray-600">Please try again later</p>
+          </div>
         ) : (
-          <section className="flex flex-col-reverse md:flex-row gap-5 md:w-[80vw] duration-200">
-            <aside className="flex-[2_2_0%] space-y-3">
-              <p className="font-semibold">Products</p>
-              <div className="flex flex-col h-72 overflow-y-scroll pr-2">
-                {dataDetail.products.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex justify-between text-sm md:text-base gap-2"
-                  >
-                    <div>
-                      <div className="avatar">
-                        <div className="w-16 rounded-xl">
-                          <img
-                            src={
-                              item.product_img
-                                ? item.product_img
-                                : productPlaceholder
-                            }
-                          />
-                        </div>
+          <section className="flex flex-col md:flex-row gap-6 duration-200 p-2">
+            <aside className="flex-[2_2_0%] space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-800">Order Items</h3>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusBadgeClass(dataDetail.status_name)}`}>
+                  {dataDetail.status_name}
+                </span>
+              </div>
+              <div className="flex flex-col max-h-96 overflow-y-auto pr-2 space-y-3 scrollbar-hide">
+                {dataDetail.products && dataDetail.products.length > 0 ? (
+                  dataDetail.products.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex-shrink-0">
+                        <img
+                          src={item.product_img || productPlaceholder}
+                          alt={item.product_name}
+                          className="w-20 h-20 rounded-lg object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-base text-gray-900 mb-1">
+                          {item.product_name} <span className="text-gray-500">x{item.qty}</span>
+                        </p>
+                        <p className="text-sm text-gray-600 mb-1">{item.size}</p>
+                        {Array.isArray(item.add_ons) && item.add_ons.length > 0 && (
+                          <ul className="text-xs text-gray-600 list-disc ml-4 mt-1">
+                            {item.add_ons.map((ao, idx) => (
+                              <li key={idx} className="mb-0.5">
+                                {ao.name} <span className="text-gray-500">(+{n_f(Number(ao.price || 0))} VND)</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0">
+                        <p className="font-bold text-base text-gray-900 whitespace-nowrap">
+                          {n_f(item.subtotal)} VND
+                        </p>
                       </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium">
-                        {item.product_name} x{item.qty}
-                      </p>
-                      <p>{item.size}</p>
-                      {Array.isArray(item.add_ons) && item.add_ons.length > 0 && (
-                        <ul className="text-xs text-gray-700 list-disc ml-4">
-                          {item.add_ons.map((ao, idx) => (
-                            <li key={idx}>{ao.name} (+{n_f(Number(ao.price || 0))} VND)</li>
-                          ))}
-                        </ul>
-                      )}
-                      {/* <p>IDR {n_f(item.subtotal)}</p> */}
-                    </div>
-                    <div className="">
-                      <p className="">{n_f(item.subtotal)} VND</p>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No products found</p>
                   </div>
-                ))}
+                )}
               </div>
             </aside>
-            <aside className="flex-1 flex flex-col gap-1 text-sm">
-              <p className="font-bold mb-2">Detail Information</p>
-              <div className="flex justify-between">
-                <p className="font-semibold">Grand Total</p>
-                <p>{n_f(dataDetail.grand_total)} VND</p>
+            <aside className="flex-1 flex flex-col gap-4 bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl">
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Order Information</h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                  <p className="font-semibold text-gray-700">Grand Total</p>
+                  <p className="font-bold text-lg text-gray-900">{n_f(dataDetail.grand_total)} VND</p>
+                </div>
+                <div className="flex justify-between py-1">
+                  <p className="font-medium text-gray-600">Subtotal</p>
+                  <p className="text-gray-800">{n_f(dataDetail.subtotal || 0)} VND</p>
+                </div>
+                <div className="flex justify-between py-1">
+                  <p className="font-medium text-gray-600">Shipping Fee</p>
+                  <p className="text-gray-800">{n_f(dataDetail.delivery_fee || 0)} VND</p>
+                </div>
+                <div className="flex justify-between py-1">
+                  <p className="font-medium text-gray-600">Discount</p>
+                  <p className="text-gray-800">{n_f(dataDetail.discount || 0)} VND</p>
+                </div>
+                <div className="flex justify-between py-1">
+                  <p className="font-medium text-gray-600">Payment Method</p>
+                  <p className="text-gray-800">{dataDetail.payment_name || "N/A"}</p>
+                </div>
+                <div className="flex justify-between py-1">
+                  <p className="font-medium text-gray-600">Delivery Type</p>
+                  <p className="text-gray-800">{dataDetail.delivery_name || "N/A"}</p>
+                </div>
+                <div className="flex justify-between py-1">
+                  <p className="font-medium text-gray-600">Transaction Date</p>
+                  <p className="text-gray-800">{formatDateTime(dataDetail.transaction_time)}</p>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <p className="font-semibold">Subtotal</p>
-                <p>{n_f(dataDetail.subtotal || 0)} VND</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-semibold">Shipping</p>
-                <p>{n_f(dataDetail.delivery_fee || 0)} VND</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-semibold">Discount</p>
-                <p>{n_f(dataDetail.discount || 0)} VND</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-semibold">Payment Method</p>
-                <p>{dataDetail.payment_name}</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-semibold">Status</p>
-                <p>{dataDetail.status_name}</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-semibold">Delivery Type</p>
-                <p>{dataDetail.delivery_name}</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-semibold">Transaction at</p>
-                <p>{formatDateTime(dataDetail.transaction_time)}</p>
-              </div>
-              <div className="flex flex-col mt-1">
-                <p className="font-semibold">Delivery address</p>
-                <p className="break-words">
-                  {dataDetail.delivery_address || "no address"}
-                </p>
-              </div>
-              <div className="flex flex-col mt-1">
-                <p className="font-semibold">Notes</p>
-                <p className="break-words">{dataDetail.notes || "no notes"}</p>
+              <div className="mt-4 pt-4 border-t border-gray-300 space-y-3">
+                <div className="flex flex-col">
+                  <p className="font-semibold text-gray-700 mb-1">Delivery Address</p>
+                  <p className="text-sm text-gray-600 break-words bg-white p-2 rounded border border-gray-200">
+                    {dataDetail.delivery_address || "No address provided"}
+                  </p>
+                </div>
+                <div className="flex flex-col">
+                  <p className="font-semibold text-gray-700 mb-1">Notes</p>
+                  <p className="text-sm text-gray-600 break-words bg-white p-2 rounded border border-gray-200">
+                    {dataDetail.notes || "No notes"}
+                  </p>
+                </div>
               </div>
             </aside>
           </section>
@@ -266,98 +297,152 @@ function History() {
           </nav> */}
           {!isLoading ? (
             <>
-              <section className="bg-white/70 rounded-xl p-3 mb-4 text-black flex flex-col md:flex-row gap-3 items-start md:items-center">
-                <div className="flex gap-2 items-center">
-                  <button className={`btn btn-sm ${filter === "ALL" ? "btn-primary text-white" : ""}`} onClick={() => setFilter("ALL")}>All</button>
-                  <button className={`btn btn-sm ${filter === "PENDING" ? "btn-primary text-white" : ""}`} onClick={() => setFilter("PENDING")}>Pending orders</button>
-                  <button className={`btn btn-sm ${filter === "COMPLETED" ? "btn-primary text-white" : ""}`} onClick={() => setFilter("COMPLETED")}>Completed orders</button>
-                </div>
-                <div className="flex-1" />
-                <div className="min-w-[260px] w-full md:w-auto">
-                  <Datepicker
-                    value={dateRange}
-                    popoverDirection="down"
-                    separator="to"
-                    inputClassName={"bg-white border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none w-full"}
-                    onChange={(val) => setDateRange({ startDate: val?.startDate, endDate: val?.endDate })}
-                  />
+              <section className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 md:p-5 mb-6 text-black shadow-lg">
+                <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <button 
+                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                        filter === "ALL" 
+                          ? "bg-primary text-white shadow-md" 
+                          : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
+                      }`} 
+                      onClick={() => setFilter("ALL")}
+                    >
+                      All Orders
+                    </button>
+                    <button 
+                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                        filter === "PENDING" 
+                          ? "bg-primary text-white shadow-md" 
+                          : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
+                      }`} 
+                      onClick={() => setFilter("PENDING")}
+                    >
+                      Pending
+                    </button>
+                    <button 
+                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                        filter === "COMPLETED" 
+                          ? "bg-primary text-white shadow-md" 
+                          : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
+                      }`} 
+                      onClick={() => setFilter("COMPLETED")}
+                    >
+                      Completed
+                    </button>
+                  </div>
+                  <div className="flex-1" />
+                  <div className="min-w-[260px] w-full md:w-auto">
+                    <Datepicker
+                      value={dateRange}
+                      popoverDirection="down"
+                      separator="to"
+                      placeholder="Select date range"
+                      inputClassName="bg-white border-2 py-2.5 px-3 rounded-lg border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none w-full transition-all"
+                      onChange={(val) => setDateRange({ startDate: val?.startDate, endDate: val?.endDate })}
+                    />
+                  </div>
                 </div>
               </section>
-              <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 text-black py-7">
-                {filteredSorted.map((item, key) => (
-                  <div
-                    className="history-card  flex flex-row px-4 py-5 bg-white hover:bg-gray-200 cursor-pointer duration-200 rounded-2xl gap-5 relative group"
-                    onClick={() => setDetail(item.id)}
-                    key={key}
-                  >
-                    <div className="">
-                      <img
-                        src={
-                          item.products[0].product_img
-                            ? item.products[0].product_img
-                            : productPlaceholder
-                        }
-                        alt=""
-                        width="100px"
-                        className="rounded-full  aspect-square object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 flex flex-col justify-center w-auto">
-                      <div className="font-extrabold text-lg relative w-full">
-                        {item.products[0].product_name}
-                        {item.products.length > 1 && (
-                          <p className="absolute text-sm font-medium top-1 right-0 bg-white duration-200 group-hover:bg-gray-200">
-                            + {item.products.length - 1} more
-                          </p>
+              {filteredSorted.length > 0 ? (
+                <>
+                  <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 text-black py-4">
+                    {filteredSorted.map((item, key) => (
+                      <div
+                        className="bg-white rounded-2xl shadow-md hover:shadow-xl cursor-pointer transition-all duration-300 hover:-translate-y-1 overflow-hidden group h-full"
+                        onClick={() => setDetail(item.id)}
+                        key={key}
+                      >
+                       <div className="flex flex-row p-5 gap-4 h-full">
+                        <div className="flex-shrink-0">
+                        <img
+                         src={
+                          item.products && item.products[0] && item.products[0].product_img
+                          ? item.products[0].product_img
+                          : productPlaceholder
+                              }
+                            alt={item.products && item.products[0] ? item.products[0].product_name : "Product"}
+                            className="w-20 h-20 rounded-xl object-cover shadow-md group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                        <div className="flex-1 flex flex-col min-w-0">
+                          <div className="flex-1">
+                            <div className="font-bold text-lg text-gray-900 mb-1 line-clamp-1 overflow-hidden">
+                              {item.products && item.products[0] ? item.products[0].product_name : "Unknown Product"}
+                              {item.products && item.products.length > 1 && (
+                                <span className="ml-2 text-sm font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                                  +{item.products.length - 1}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-primary font-bold text-lg">
+                              {n_f(item.grand_total)} VND
+                            </p>
+                                                </div>
+                          <div className="mt-auto pt-2">
+                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${getStatusBadgeClass(item.status_name)}`}>
+                              {item.status_name}
+                            </span>
+                            {item.transaction_time && (
+                              <p className="text-xs text-gray-500 mt-2">
+                                {formatDateTime(item.transaction_time)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      </div>
+                    ))}
+                  </section>
+                  {listMeta.totalPage > 1 && (
+                    <section className="flex justify-center mt-8">
+                      <div className="join bg-white/90 backdrop-blur-sm rounded-xl shadow-md p-1">
+                        {listMeta.prev && (
+                          <button
+                            onClick={() => {
+                              setSearchParams({
+                                page: Number(listMeta.currentPage) - 1,
+                              });
+                            }}
+                            className="join-item btn btn-sm btn-primary text-white hover:bg-primary/90"
+                          >
+                            «
+                          </button>
+                        )}
+                        <button className="join-item btn btn-sm btn-primary text-white pointer-events-none">
+                          Page {listMeta.currentPage} of {listMeta.totalPage}
+                        </button>
+                        {listMeta.next && (
+                          <button
+                            onClick={() => {
+                              setSearchParams({
+                                page: Number(listMeta.currentPage) + 1,
+                              });
+                            }}
+                            className="join-item btn btn-sm btn-primary text-white hover:bg-primary/90"
+                          >
+                            »
+                          </button>
                         )}
                       </div>
-                      <p className="text-tertiary">
-                        {n_f(item.grand_total)} VND
-                      </p>
-                      <p className="text-tertiary">{item.status_name}</p>
-                    </div>
-                    {/* <input
-                  type="checkbox"
-                  className="checkbox-history absolute bottom-4 right-4 delete-checkbox border-secondary bg-secondary rounded h-5 w-5"
-                /> */}
+                    </section>
+                  )}
+                </>
+              ) : (
+                <section className="flex flex-col justify-center items-center py-16 text-center">
+                  <div className="mb-4">
+                    <svg className="w-24 h-24 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
                   </div>
-                ))}
-              </section>
-              <section className="flex justify-center">
-                <div className="join">
-                  {listMeta.prev && (
-                    <button
-                      onClick={() => {
-                        setSearchParams({
-                          page: Number(listMeta.currentPage) - 1,
-                        });
-                      }}
-                      className="join-item btn btn-primary text-white"
-                    >
-                      «
-                    </button>
-                  )}
-                  <button className="join-item btn btn-primary text-white">
-                    Page {listMeta.currentPage}
-                  </button>
-                  {listMeta.next && (
-                    <button
-                      onClick={() => {
-                        setSearchParams({
-                          page: Number(listMeta.currentPage) + 1,
-                        });
-                      }}
-                      className="join-item btn btn-primary text-white"
-                    >
-                      »
-                    </button>
-                  )}
-                </div>
-              </section>
+                  <h3 className="text-xl font-semibold text-white mb-2">No orders found</h3>
+                  <p className="text-white/80">Try adjusting your filters or date range</p>
+                </section>
+              )}
             </>
           ) : (
-            <section className="flex justify-center items-center py-7">
-              <img src={loadingImage} className="invert" />
+            <section className="flex justify-center items-center py-16">
+              <img src={loadingImage} className="invert w-16 h-16" alt="Loading..." />
             </section>
           )}
         </section>

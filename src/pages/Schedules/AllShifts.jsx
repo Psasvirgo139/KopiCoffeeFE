@@ -22,6 +22,8 @@ function AllShifts() {
   const [sortBy, setSortBy] = useState("name");
   const controller = useMemo(() => new AbortController(), []);
   const [rulesByShift, setRulesByShift] = useState({});
+  const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+  const [shiftToDelete, setShiftToDelete] = useState(null);
   // map shiftId -> boolean (exists on any date)
   const [occurrencesMap, setOccurrencesMap] = useState({});
   const controller2 = useMemo(() => new AbortController(), []);
@@ -99,28 +101,52 @@ function AllShifts() {
     return 0;
   });
 
+  // Hàm này để định dạng thời gian (HH:mm)
+  const formatTime = (timeStr) => {
+    if (!timeStr || timeStr === "--") return "--";
+    return timeStr.substring(0, 5);
+  };
+
+  // Hàm này xử lý logic xóa (copy từ nút "Delete" cũ)
+  const handleConfirmDelete = async () => {
+    if (!shiftToDelete) return;
+    try {
+      await deleteShift(shiftToDelete.shiftId, userInfo.token);
+      toast.success("Deleted");
+      load(); // Tải lại danh sách
+    } catch {
+      toast.error("Delete failed");
+    } finally {
+      setIsConfirmDeleteOpen(false);
+      setShiftToDelete(null);
+    }
+  };
+
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-base-200">
+      {/* Cập nhật: Layout & Theme */}
+      <div className="min-h-screen bg-slate-50">
         <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-between mb-6">
+          {/* Cập nhật: Header của trang */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
             <div>
-              <h1 className="text-2xl font-bold">All Shifts</h1>
-              <p className="text-sm text-gray-500">
-                {shifts.length} total shifts
+              <h1 className="text-3xl font-semibold text-slate-900">
+                All Shifts
+              </h1>
+              <p className="text-sm text-slate-500 mt-1">
+                {shifts.length} total shift templates
               </p>
             </div>
-            <div className="flex gap-2 items-center">
-              {/* date picker removed: All Shifts are templates (no date selection here) */}
+            <div className="flex flex-wrap gap-2 items-center">
               <input
-                className="input input-bordered"
-                placeholder="Search shifts"
+                className="input input-bordered input-sm w-full md:w-auto"
+                placeholder="Search shifts..."
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
               />
               <select
-                className="select select-bordered"
+                className="select select-bordered select-sm w-full md:w-auto"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
               >
@@ -128,13 +154,13 @@ function AllShifts() {
                 <option value="start">Sort: Start time</option>
               </select>
               <button
-                className="btn"
+                className="btn btn-sm"
                 onClick={() => navigate("/admin/schedules")}
               >
                 Back to Schedules
               </button>
               <button
-                className="btn btn-primary"
+                className="btn btn-sm btn-primary"
                 onClick={() => navigate("/admin/schedules/new")}
               >
                 Create New Shift
@@ -147,34 +173,42 @@ function AllShifts() {
               <span className="loading loading-spinner loading-lg"></span>
             </div>
           ) : sorted.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64">
+            <div className="flex flex-col items-center justify-center h-64 text-center">
               <img src={emptyBox} alt="No shifts" className="w-24 h-24 mb-4" />
-              <p className="text-lg text-gray-600">No shifts found</p>
+              <p className="text-lg font-semibold text-slate-700">
+                No shifts found
+              </p>
+              <p className="text-sm text-slate-500">
+                {q
+                  ? "Try adjusting your search."
+                  : "Get started by creating a new shift."}
+              </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            // --- THAY ĐỔI: TỪ GRID SANG LIST ---
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
               {sorted.map((s) => {
                 const hasOccurrence = occurrencesMap[s.shiftId] === true;
-                // show green background for shifts that have been added to any date
-                // (override canceled styling so used templates are obvious)
-                // stronger green treatment for used templates: left accent + stronger background
-                const cardClass = hasOccurrence
-                  ? "card bg-green-100 border-l-4 border-green-600 shadow hover:shadow-lg transition-shadow duration-200"
-                  : !s.isActive
-                  ? "card bg-red-50 shadow hover:shadow-lg transition-shadow duration-200"
-                  : "card bg-base-100 shadow hover:shadow-lg transition-shadow duration-200";
+                // Tô màu nền hàng (row) dựa trên trạng thái
+                const rowClass = !s.isActive // ƯU TIÊN 1: Nếu bị hủy
+                  ? "bg-rose-50" // Luôn là màu đỏ
+                  : hasOccurrence // ƯU TIÊN 2: Nếu đã được thêm
+                  ? "bg-emerald-50" // Thì màu xanh
+                  : "bg-slate-100"; // CÒN LẠI: Màu xám (mới, chưa dùng)
+
                 return (
-                  <div key={s.shiftId} className={cardClass}>
-                    <div className="card-body flex flex-col min-h-[240px]">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h2 className="card-title text-lg font-semibold">
-                            {s.shiftName}
-                          </h2>
-                          <div className="text-xs text-gray-500">
-                            ID: {s.shiftId}
-                          </div>
-                        </div>
+                  // --- Đây là một hàng (list item) ---
+                  <div
+                    key={s.shiftId}
+                    className={`${rowClass} flex flex-col md:flex-row gap-4 p-4 border-b border-slate-200 last:border-b-0`}
+                  >
+                    {/* --- Cột 1: Thông tin Ca --- */}
+                    <div className="flex-grow">
+                      <div className="flex items-center gap-3">
+                        <h2 className="text-lg font-semibold text-slate-800">
+                          {s.shiftName}
+                        </h2>
+                        {/* Status Badge */}
                         <div>
                           {!s.isActive ? (
                             <span className="badge badge-error">Canceled</span>
@@ -185,85 +219,116 @@ function AllShifts() {
                           )}
                         </div>
                       </div>
-                      <div className="mt-2 text-sm flex items-center gap-2">
-                        <span className="px-2 py-1 rounded-md bg-white border border-gray-200 text-sm text-gray-700">
-                          {s.startTime}
-                        </span>
-                        <span className="px-2 py-1 rounded-md bg-white border border-gray-200 text-sm text-gray-700">
-                          {s.endTime}
-                        </span>
+
+                      <div className="text-sm font-medium text-slate-600 mt-1">
+                        {formatTime(s.startTime)} - {formatTime(s.endTime)}
                       </div>
+
                       {s.description && (
-                        <p className="mt-2 text-sm line-clamp-2">
+                        <p className="text-sm text-slate-500 mt-1 line-clamp-2">
                           {s.description}
                         </p>
                       )}
 
-                      <div className="mt-3">
-                        <div className="text-sm font-semibold mb-1">
-                          Required
-                        </div>
-                        <div className="flex flex-wrap gap-2 min-h-[48px] items-start content-start">
-                          {Array.isArray(rulesByShift[s.shiftId]) &&
-                          rulesByShift[s.shiftId].length > 0 ? (
-                            rulesByShift[s.shiftId]
-                              .filter(
-                                (r) => r.isAllowed && (r.requiredCount || 0) > 0
-                              )
-                              .map((r) => (
-                                <span
-                                  key={`${s.shiftId}-${r.positionId}`}
-                                  className="badge badge-md bg-gray-200 text-gray-800 px-3 py-2"
-                                >
-                                  {r.positionName}: {r.requiredCount}
-                                </span>
-                              ))
-                          ) : (
-                            <span className="text-sm text-gray-600">-</span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="card-actions justify-end items-center mt-auto pt-4 border-t">
-                        <div className="flex gap-2">
-                          {/* hide Edit when shift has occurrences; allow Delete in all cases */}
-                          {!hasOccurrence && (
-                            <button
-                              className="btn btn-xs btn-outline"
-                              onClick={() =>
-                                navigate(`/admin/shifts/${s.shiftId}/edit`)
-                              }
-                            >
-                              Edit
-                            </button>
-                          )}
-
-                          <button
-                            className="btn btn-xs btn-error"
-                            onClick={async () => {
-                              if (!window.confirm("Delete this shift?")) return;
-                              try {
-                                await deleteShift(s.shiftId, userInfo.token);
-                                toast.success("Deleted");
-                                load();
-                              } catch {
-                                toast.error("Delete failed");
-                              }
-                            }}
-                          >
-                            Delete
-                          </button>
-                        </div>
+                      <div className="text-xs font-mono text-slate-400 mt-1">
+                        ID: {s.shiftId}
                       </div>
                     </div>
+
+                    {/* --- Cột 2: Chức vụ yêu cầu --- */}
+                    <div className="flex-shrink-0 w-full md:w-auto md:max-w-xs">
+                      <div className="text-xs font-semibold text-slate-600 mb-2">
+                        REQUIRED POSITIONS
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {Array.isArray(rulesByShift[s.shiftId]) &&
+                        rulesByShift[s.shiftId].length > 0 &&
+                        rulesByShift[s.shiftId].some(r => r.isAllowed && (r.requiredCount || 0) > 0) ? (
+                          rulesByShift[s.shiftId]
+                            .filter(
+                              (r) => r.isAllowed && (r.requiredCount || 0) > 0
+                            )
+                            .map((r) => (
+                              <span
+                                key={`${s.shiftId}-${r.positionId}`}
+                                className="badge badge-sm badge-info badge-outline"
+                              >
+                                {r.positionName}: {r.requiredCount}
+                              </span>
+                            ))
+                        ) : (
+                          <span className="text-xs text-slate-500 italic">
+                            None
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* --- Cột 3: Nút bấm --- */}
+                    <div className="flex-shrink-0 flex flex-row md:flex-col gap-2 items-start md:items-end justify-start pt-2 md:pt-0">
+                      {!hasOccurrence && (
+                        <button
+                          className="btn btn-xs btn-outline"
+                          onClick={() =>
+                            navigate(`/admin/shifts/${s.shiftId}/edit`)
+                          }
+                        >
+                          Edit
+                        </button>
+                      )}
+                      <button
+                        className="btn btn-xs btn-error"
+                        // Cập nhật: Mở modal thay vì window.confirm
+                        onClick={() => {
+                          setShiftToDelete(s);
+                          setIsConfirmDeleteOpen(true);
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
+                  // --- Hết một hàng ---
                 );
               })}
             </div>
+            // --- KẾT THÚC LIST ---
           )}
         </div>
       </div>
       <Footer />
+
+      {/* --- THÊM MODAL XÁC NHẬN XÓA --- */}
+      {isConfirmDeleteOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg text-error">
+              Confirm Shift Deletion
+            </h3>
+            <p className="py-4">
+              Are you sure you want to delete this shift template? This action
+              cannot be undone.
+            </p>
+            <div className="modal-action">
+              <button
+                className="btn"
+                onClick={() => {
+                  setIsConfirmDeleteOpen(false);
+                  setShiftToDelete(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-error"
+                onClick={handleConfirmDelete} // Gọi hàm xử lý xóa
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

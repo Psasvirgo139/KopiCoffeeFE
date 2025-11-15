@@ -19,6 +19,7 @@ import emptyBox from "../../assets/images/empty.svg";
 import loadingImage from "../../assets/images/loading.svg";
 import toast from "react-hot-toast";
 
+
 function Schedules() {
   const navigate = useNavigate();
   const userInfo = useSelector((state) => state.userInfo);
@@ -37,6 +38,8 @@ function Schedules() {
   const [selectedShift, setSelectedShift] = useState(null);
   const [pendingShiftId, setPendingShiftId] = useState(null);
   const [highlightShiftId, setHighlightShiftId] = useState(null);
+  const [isConfirmRemoveOpen, setIsConfirmRemoveOpen] = useState(false);
+  const [shiftToRemove, setShiftToRemove] = useState(null);
   const [constraints, setConstraints] = useState({});
   const [lastError, setLastError] = useState(null);
 
@@ -46,7 +49,6 @@ function Schedules() {
   const [isReasonViewerOpen, setIsReasonViewerOpen] = useState(false);
 
   const controller = useMemo(() => new AbortController(), [selectedDate]);
-
   useEffect(() => {
     loadShifts();
   }, []);
@@ -458,6 +460,8 @@ function Schedules() {
               >
                 Add Employees
               </button>
+              
+              {/* --- NÚT ĐÃ ĐƯỢC SỬA --- */}
               <button
                 className="btn btn-error btn-sm"
                 disabled={status === "past"}
@@ -466,37 +470,10 @@ function Schedules() {
                     ? "Cannot remove past shift"
                     : "Remove shift for this date (does not affect other dates)"
                 }
-                onClick={async () => {
-                  if (
-                    !window.confirm(
-                      "Remove shift for this date? All assignments will be cancelled."
-                    )
-                  )
-                    return;
-                  try {
-                    const res = await removeShiftSlotForDate(
-                      selectedDate,
-                      shift.shiftId,
-                      userInfo.token,
-                      controller
-                    );
-                    // backend returns { canceled: true } when current active occurrence is canceled
-                    if (res?.data?.canceled) {
-                      toast.success("Shift occurrence canceled (in-progress)");
-                    } else if (res?.data?.removed) {
-                      toast.success("Shift removed for this date");
-                    } else {
-                      toast.success("Operation completed");
-                    }
-                    await loadEmployeeShifts();
-                  } catch (e) {
-                    const msg =
-                      e?.response?.data?.error ||
-                      e?.response?.data?.message ||
-                      e?.message ||
-                      "Failed to remove shift for this date";
-                    toast.error(msg);
-                  }
+                // SỬA Ở ĐÂY: onClick chỉ mở modal
+                onClick={() => {
+                  setShiftToRemove(shift); // 'shift' là biến từ vòng lặp .map() của bạn
+                  setIsConfirmRemoveOpen(true);
                 }}
               >
                 REMOVE
@@ -508,61 +485,99 @@ function Schedules() {
     );
   };
 
+  const formatTime = (timeStr) => {
+    if (!timeStr || timeStr === "--") return "--";
+    // Đảm bảo chỉ lấy 5 ký tự đầu (HH:mm)
+    return timeStr.substring(0, 5);
+  };
+
+  const handleConfirmRemove = async () => {
+    if (!shiftToRemove) return; // Không có ca nào được chọn để xóa
+
+    try {
+      // Đây là logic bạn copy từ nút REMOVE
+      const res = await removeShiftSlotForDate(
+        selectedDate, // Đảm bảo biến này có trong scope
+        shiftToRemove.shiftId, // Lấy ID từ state
+        userInfo.token, // Đảm bảo biến này có trong scope
+        controller // Đảm bảo biến này có trong scope
+      );
+      
+      if (res?.data?.canceled) {
+        toast.success("Shift occurrence canceled (in-progress)");
+      } else if (res?.data?.removed) {
+        toast.success("Shift removed for this date");
+      } else {
+        toast.success("Operation completed");
+      }
+      await loadEmployeeShifts(); // Đảm bảo hàm này có trong scope
+    } catch (e) {
+      const msg =
+        e?.response?.data?.error ||
+        e?.response?.data?.message ||
+        e?.message ||
+        "Failed to remove shift for this date";
+      toast.error(msg);
+    } finally {
+      // Đóng modal và reset state sau khi hoàn tất
+      setIsConfirmRemoveOpen(false);
+      setShiftToRemove(null);
+    }
+  };
+  
   return (
     <>
       <Header />
 
       <div className="min-h-screen bg-base-200">
         <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-6">
-            <h1
-              role="button"
-              tabIndex={0}
-              title="Open Weekly Timetable"
-              onClick={() => navigate(`/admin/timetable`)}
-              onKeyDown={(e) =>
-                e.key === "Enter" && navigate(`/admin/timetable`)
-              }
-              className="text-3xl font-bold cursor-pointer"
-            >
-              Schedule Management
-            </h1>
-            <div className="flex gap-4">
-              <input
-                type="date"
-                className="input input-bordered"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-              />
-              <button
-                className="btn btn-primary"
-                onClick={() => navigate(`/admin/schedules/new`)}
-              >
-                Create New Shift
-              </button>
-              <button className="btn" onClick={() => setIsAddModalOpen(true)}>
-                Add Shift to this day
-              </button>
-              {/* Weekly Timetable navigation moved to clickable page title */}
-              <button
-                className="btn"
-                onClick={() => navigate(`/admin/recurrence-patterns`)}
-              >
-                Recurrence Patterns
-              </button>
-              <button
-                className="btn"
-                onClick={() => navigate(`/admin/schedules/generate`)}
-              >
-                Generation schedules
-              </button>
-              {/* Generate From Pattern button removed per request */}
-              <button className="btn" onClick={() => navigate(`/admin/shifts`)}>
-                All Shifts
-              </button>
-              {/* Copy assignments button removed for cleanup */}
-            </div>
-          </div>
+          <h1
+  role="button"
+  tabIndex={0}
+  title="Open Weekly Timetable"
+  onClick={() => navigate(`/admin/timetable`)}
+  onKeyDown={(e) =>
+    e.key === "Enter" && navigate(`/admin/timetable`)
+  }
+  className="text-3xl font-bold cursor-pointer mb-4">
+  Schedule Management
+</h1>
+{/* KHỐI 2: THANH CÔNG CỤ (Các nút) */}
+<div className="flex gap-4 flex-wrap justify-end mb-6"> {/* Thêm flex-wrap và justify-end */}
+  <input
+    type="date"
+    className="input input-bordered"
+    value={selectedDate}
+    onChange={(e) => setSelectedDate(e.target.value)}
+  />
+  <button
+    className="btn btn-primary"
+    onClick={() => navigate(`/admin/schedules/new`)}
+  >
+    Create New Shift
+  </button>
+  <button className="btn" onClick={() => setIsAddModalOpen(true)}>
+    Add Shift to this day
+  </button>
+  {/* Weekly Timetable navigation moved to clickable page title */}
+  <button
+    className="btn"
+    onClick={() => navigate(`/admin/recurrence-patterns`)}
+  >
+    Recurrence Patterns
+  </button>
+  <button
+    className="btn"
+    onClick={() => navigate(`/admin/schedules/generate`)}
+  >
+    Generation schedules
+  </button>
+  {/* Generate From Pattern button removed per request */}
+  <button className="btn" onClick={() => navigate(`/admin/shifts`)}>
+    All Shifts
+  </button>
+  {/* Copy assignments button removed for cleanup */}
+</div>
 
           {isLoading || isLoadingEmployeeShifts ? (
             <div className="flex justify-center items-center h-64">
@@ -594,196 +609,238 @@ function Schedules() {
             </div>
           )}
 
-          {selectedShift && (
-            <div className="modal modal-open">
-              <div className="modal-box">
-                <h3 className="font-bold text-lg mb-4">
-                  Shift Details - {selectedShift.shiftName}
-                </h3>
+         {selectedShift && (
+        <div className="modal modal-open">
+          {/* Cập nhật: Thêm max-w-3xl để rộng hơn */}
+          <div className="modal-box max-w-3xl">
+            {/* Thêm nút X */}
+            <button
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              onClick={() => setSelectedShift(null)}
+            >
+              ✕
+            </button>
+            <h3 className="font-bold text-lg mb-4">
+              Shift Details - {selectedShift.shiftName}
+            </h3>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="label">
-                      <span className="label-text">Time</span>
-                    </label>
-                    <p>
-                      {selectedShift.startTime} - {selectedShift.endTime}
-                    </p>
-                    {/* show shift description and metadata */}
-                    {selectedShift.description && (
-                      <div className="mt-2">
-                        <div className="text-sm font-medium">Description</div>
-                        <p className="text-sm text-gray-700">
-                          {selectedShift.description}
-                        </p>
-                      </div>
-                    )}
-                    <div className="mt-2 text-xs text-gray-500">
-                      <div>ID: {selectedShift.shiftId}</div>
-                      <div>
-                        Status:{" "}
-                        {selectedShift.isActive ? (
-                          <span className="badge badge-success">Active</span>
-                        ) : (
-                          <span className="badge">Inactive</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+            {/* --- KHỐI THÔNG TIN MỚI (LAYOUT 2 CỘT) --- */}
+            {/* LƯU Ý: Đang dùng 'selectedDate' từ scope cha. 
+              Nếu 'selectedDate' không có sẵn, hãy thay 'dayjs(selectedDate).format(...)' 
+              bằng ngày bạn muốn hiển thị.
+            */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+              {/* Cột 1: Ngày & Giờ & Trạng thái */}
+              <div>
+                <div className="text-xs font-medium text-slate-500 uppercase">
+                  Date
+                </div>
+                <div className="text-base font-semibold text-slate-800">
+                  {dayjs(selectedDate).format("dddd, MMMM D, YYYY")}
+                </div>
 
-                  {/* Assigned employees list: show names + positions */}
-                  <div>
-                    <div className="text-sm font-medium mb-1">
-                      Assigned Employees
-                    </div>
-                    <div className="max-h-48 overflow-auto border rounded">
+                <div className="text-xs font-medium text-slate-500 uppercase mt-2">
+                  Time
+                </div>
+                <div className="text-base font-semibold text-slate-800">
+                  {formatTime(selectedShift.startTime)} -{" "}
+                  {formatTime(selectedShift.endTime)}
+                </div>
+                
+                <div className="text-xs font-medium text-slate-500 uppercase mt-2">
+                  Status
+                </div>
+                <div className="text-base font-semibold text-slate-800">
+                  {selectedShift.isActive ? (
+                    <span className="badge badge-success">Active</span>
+                  ) : (
+                    <span className="badge">Inactive</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Cột 2: Mô tả & ID */}
+              <div>
+                <div className="text-xs font-medium text-slate-500 uppercase">
+                  Description
+                </div>
+                <p className="text-sm text-slate-700">
+                  {selectedShift.description || "(No description)"}
+                </p>
+
+                <div className="text-xs font-medium text-slate-500 uppercase mt-2">
+                  Shift ID
+                </div>
+                <p className="text-sm text-slate-700 font-mono">
+                  {selectedShift.shiftId}
+                </p>
+              </div>
+            </div>
+            {/* --- KẾT THÚC KHỐI THÔNG TIN MỚI --- */}
+
+
+            <div className="space-y-4">
+              {/* --- BẢNG NHÂN VIÊN ĐƯỢC CẬP NHẬT --- */}
+              <div>
+                <div className="text-base font-semibold mb-2 text-slate-800">
+                  Assigned Employees
+                </div>
+                
+                {/* Tạo biến để kiểm tra empty state */}
+                {(function() {
+                  const filteredEmployees = (employeeShifts || []).filter(
+                    (es) => es.shiftId === selectedShift.shiftId
+                  );
+
+                  return (
+                    <div className="max-h-60 overflow-auto border border-slate-200 rounded-lg relative">
                       <table className="table w-full">
-                        <thead>
+                        {/* Header (sticky) - đổi bg-white -> bg-slate-50 */}
+                        <thead className="sticky top-0 bg-slate-50 z-10">
                           <tr>
-                            <th className="text-left sticky top-0 bg-white z-10">
-                              Name
-                            </th>
-                            <th className="text-left sticky top-0 bg-white z-10">
-                              Position
-                            </th>
-                            <th className="text-left sticky top-0 bg-white z-10">
-                              Status
-                            </th>
-                            <th className="text-left sticky top-0 bg-white z-10">
-                              Delay
-                            </th>
-                            <th className="text-left sticky top-0 bg-white z-10">
-                              Overtime
-                            </th>
-                            <th className="text-left sticky top-0 bg-white z-10">
-                              Reason
-                            </th>
+                            <th className="text-left text-xs font-semibold text-slate-600 uppercase">Name</th>
+                            <th className="text-left text-xs font-semibold text-slate-600 uppercase">Position</th>
+                            <th className="text-left text-xs font-semibold text-slate-600 uppercase">Status</th>
+                            <th className="text-left text-xs font-semibold text-slate-600 uppercase">Delay</th>
+                            <th className="text-left text-xs font-semibold text-slate-600 uppercase">Overtime</th>
+                            <th className="text-left text-xs font-semibold text-slate-600 uppercase">Reason</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {(employeeShifts || [])
-                            .filter(
-                              (es) => es.shiftId === selectedShift.shiftId
-                            )
-                            .map((es) => {
-                              const emp = employees.find(
-                                (e) =>
-                                  String(e.userId) === String(es.employeeId)
-                              );
-                              const name =
-                                es.employeeName ||
-                                (emp && (emp.fullName || emp.username)) ||
-                                `#${es.employeeId}`;
-                              const pos =
-                                es.employeePositionName ||
-                                (emp &&
-                                  (emp.position?.positionName ||
-                                    emp.position ||
-                                    emp.positionName)) ||
-                                "No Position";
-                              const delayMins = computeDelayMinutes(
-                                es,
-                                selectedShift.startTime
-                              );
-                              const overtime =
-                                es.overtimeMinutes ||
-                                es.overtime_minutes ||
-                                null;
-                              return (
-                                <tr
-                                  key={
-                                    es.employeeShiftId ||
-                                    `${selectedShift.shiftId}-${es.employeeId}`
-                                  }
-                                >
-                                  <td className="py-2">{name}</td>
-                                  <td className="py-2">{pos}</td>
-                                  <td className="py-2">
-                                    {es.status || "assigned"}
-                                  </td>
-                                  <td className="py-2">
-                                    {formatMinutes(delayMins)}
-                                  </td>
-                                  <td className="py-2">
-                                    {overtime != null
-                                      ? overtime > 0
-                                        ? `+${formatMinutes(overtime)}`
-                                        : formatMinutes(overtime)
-                                      : "-"}
-                                  </td>
-                                  <td className="py-2">
-                                    {es.reason ? (
-                                      <button
-                                        className="btn btn-ghost btn-xs"
-                                        onClick={() =>
-                                          openReasonViewer(es.reason)
-                                        }
-                                      >
-                                        View
-                                      </button>
-                                    ) : (
-                                      "-"
-                                    )}
-                                  </td>
-                                </tr>
-                              );
-                            })}
+                          {/* Thêm: Trạng thái rỗng */}
+                          {filteredEmployees.length === 0 && (
+                            <tr>
+                              <td colSpan={6} className="text-center text-slate-500 py-4 italic">
+                                No employees assigned to this shift.
+                              </td>
+                            </tr>
+                          )}
+                          
+                          {filteredEmployees.map((es) => {
+                            const emp = employees.find(
+                              (e) => String(e.userId) === String(es.employeeId)
+                            );
+                            const name =
+                              es.employeeName ||
+                              (emp && (emp.fullName || emp.username)) ||
+                              `#${es.employeeId}`;
+                            const pos =
+                              es.employeePositionName ||
+                              (emp &&
+                                (emp.position?.positionName ||
+                                  emp.position ||
+                                  emp.positionName)) ||
+                              "No Position";
+                            const delayMins = computeDelayMinutes(
+                              es,
+                              selectedShift.startTime
+                            );
+                            const overtime =
+                              es.overtimeMinutes ||
+                              es.overtime_minutes ||
+                              null;
+                            return (
+                              // Thêm: hover effect
+                              <tr
+                                key={
+                                  es.employeeShiftId ||
+                                  `${selectedShift.shiftId}-${es.employeeId}`
+                                }
+                                className="hover:bg-slate-50"
+                              >
+                                <td className="py-2">{name}</td>
+                                <td className="py-2">{pos}</td>
+                                <td className="py-2">{es.status || "assigned"}</td>
+                                <td className="py-2">{formatMinutes(delayMins)}</td>
+                                <td className="py-2">
+                                  {overtime != null
+                                    ? overtime > 0
+                                      ? `+${formatMinutes(overtime)}`
+                                      : formatMinutes(overtime)
+                                    : "-"}
+                                </td>
+                                <td className="py-2">
+                                  {es.reason ? (
+                                    <button
+                                      className="btn btn-ghost btn-xs"
+                                      onClick={() =>
+                                        openReasonViewer(es.reason)
+                                      }
+                                    >
+                                      View
+                                    </button>
+                                  ) : (
+                                    "-"
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
-                  </div>
-
-                  {/* show per-position required/current counts in the modal too */}
-                  {Array.isArray(rulesByShift[selectedShift.shiftId]) &&
-                    rulesByShift[selectedShift.shiftId].length > 0 && (
-                      <div className="mt-4">
-                        <div className="text-sm font-medium mb-1">
-                          Positions
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {rulesByShift[selectedShift.shiftId]
-                            .filter(
-                              (r) => r.isAllowed && (r.requiredCount || 0) > 0
-                            )
-                            .map((r) => {
-                              const cur = getEmployeeCountByPosition(
-                                selectedShift.shiftId,
-                                r.positionName
-                              );
-                              return (
-                                <span
-                                  key={`modal-${selectedShift.shiftId}-${r.positionId}`}
-                                  className={`badge badge-md ${
-                                    cur >= (r.requiredCount || 0)
-                                      ? "badge-success"
-                                      : "badge-outline"
-                                  }`}
-                                >
-                                  {r.positionName}: {cur}/{r.requiredCount || 0}
-                                </span>
-                              );
-                            })}
-                        </div>
-                      </div>
-                    )}
-
-                  {constraints.message && (
-                    <div className="alert alert-info">
-                      <span>{constraints.message}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="modal-action">
-                  <button
-                    className="btn"
-                    onClick={() => setSelectedShift(null)}
-                  >
-                    Close
-                  </button>
-                </div>
+                  );
+                })()}
               </div>
+
+              {/* --- KHỐI CHỨC VỤ ĐƯỢC CẬP NHẬT --- */}
+              {(function() {
+                const rules = (rulesByShift[selectedShift.shiftId] || []).filter(
+                  (r) => r.isAllowed && (r.requiredCount || 0) > 0
+                );
+                
+                if (rules.length === 0) return null;
+
+                return (
+                  <div className="mt-4">
+                    <div className="text-base font-semibold mb-2 text-slate-800">
+                      Positions Required
+                    </div>
+                    {/* Thêm: Bọc trong box có style */}
+                    <div className="flex flex-wrap gap-2 p-4 border border-slate-200 rounded-lg bg-slate-50">
+                      {rules.map((r) => {
+                        const cur = getEmployeeCountByPosition(
+                          selectedShift.shiftId,
+                          r.positionName
+                        );
+                        const req = r.requiredCount || 0;
+                        return (
+                          <span
+                            key={`modal-${selectedShift.shiftId}-${r.positionId}`}
+                            // Cập nhật: badge-lg và badge-warning
+                            className={`badge badge-lg ${
+                              cur >= req ? "badge-success" : "badge-warning"
+                            }`}
+                          >
+                            {r.positionName}: {cur}/{req}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Khối Constraints (giữ nguyên) */}
+              {constraints.message && (
+                <div className="alert alert-info">
+                  <span>{constraints.message}</span>
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Nút Đóng (giữ nguyên) */}
+            <div className="modal-action">
+              <button
+                className="btn"
+                onClick={() => setSelectedShift(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
         </div>
       </div>
 
@@ -814,25 +871,46 @@ function Schedules() {
 
       {isAddModalOpen && (
         <div className="modal modal-open">
-          <div className="modal-box">
+          {/* Cập nhật: Thêm max-w-xl để rộng hơn */}
+          <div className="modal-box max-w-xl">
+            {/* Thêm nút X */}
+            <button
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              onClick={() => setIsAddModalOpen(false)}
+            >
+              ✕
+            </button>
             <h3 className="font-bold text-lg mb-4">
-              Add Shift to {selectedDate}
+              {/* Định dạng lại tiêu đề */}
+              Add/Remove Shifts for {dayjs(selectedDate).format("dddd, MM/DD")}
             </h3>
-            <div className="max-h-72 overflow-auto space-y-2">
+            
+            {/* Cập nhật: Container của danh sách */}
+            <div className="max-h-80 overflow-auto bg-slate-50 border border-slate-200 rounded-lg">
+              {/* Thêm: Trạng thái rỗng */}
+              {shifts.length === 0 && (
+                  <div className="p-4 text-center text-slate-500 italic">
+                    No shifts available to add.
+                  </div>
+              )}
+
               {shifts.map((s) => {
                 const alreadyOnDate = employeeShifts.some(
                   (es) => es.shiftId === s.shiftId
                 );
                 const sStatus = computeStatusForDate(selectedDate, s);
                 return (
+                  // Cập nhật: Kiểu của một hàng (row)
                   <div
                     key={s.shiftId}
-                    className="flex items-center justify-between p-2 border rounded"
+                    className="flex items-center justify-between p-4 border-b border-slate-200 last:border-b-0"
                   >
                     <div>
-                      <div className="font-medium">{s.shiftName}</div>
-                      <div className="text-xs text-gray-600">
-                        {s.startTime} - {s.endTime}
+                      {/* Cập nhật: Kiểu chữ */}
+                      <div className="font-semibold text-slate-800">{s.shiftName}</div>
+                      <div className="text-sm text-slate-500">
+                        {/* Cập nhật: Dùng formatTime */}
+                        {formatTime(s.startTime)} - {formatTime(s.endTime)}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -840,33 +918,12 @@ function Schedules() {
                         // Allow remove for future shifts and active (will cancel current occurrence)
                         sStatus === "future" || sStatus === "active" ? (
                           <button
-                            className="btn btn-sm btn-ghost"
-                            onClick={async () => {
-                              try {
-                                const res = await removeShiftSlotForDate(
-                                  selectedDate,
-                                  s.shiftId,
-                                  userInfo.token,
-                                  controller
-                                );
-                                if (res?.data?.canceled) {
-                                  toast.success(
-                                    "Shift occurrence canceled (in-progress)"
-                                  );
-                                } else if (res?.data?.removed) {
-                                  toast.success("Removed shift from this day");
-                                } else {
-                                  toast.success("Operation completed");
-                                }
-                                loadEmployeeShifts();
-                              } catch (e) {
-                                const msg =
-                                  e?.response?.data?.error ||
-                                  e?.response?.data?.message ||
-                                  e?.message ||
-                                  "Failed to remove shift";
-                                toast.error(msg);
-                              }
+                            // Cập nhật: Style và onClick
+                            className="btn btn-sm btn-error btn-ghost"
+                            onClick={() => {
+                              // Mở modal xác nhận thay vì xóa ngay
+                              setShiftToRemove(s);
+                              setIsConfirmRemoveOpen(true);
                             }}
                           >
                             Remove
@@ -886,7 +943,8 @@ function Schedules() {
                         )
                       ) : (
                         <button
-                          className="btn btn-sm"
+                          // Cập nhật: Style
+                          className="btn btn-sm btn-primary"
                           onClick={async () => {
                             try {
                               await addOpenShiftSlot(
@@ -922,8 +980,43 @@ function Schedules() {
               })}
             </div>
             <div className="modal-action">
-              <button className="btn" onClick={() => setIsAddModalOpen(false)}>
+              <button
+                className="btn"
+                onClick={() => setIsAddModalOpen(false)}
+              >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL XÁC NHẬN XÓA --- */}
+      {isConfirmRemoveOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg text-error">
+              Confirm Shift Removal
+            </h3>
+            <p className="py-4">
+              Are you sure you want to remove this shift for this date? 
+              All assignments will be cancelled. This action cannot be undone.
+            </p>
+            <div className="modal-action">
+              <button
+                className="btn"
+                onClick={() => {
+                  setIsConfirmRemoveOpen(false);
+                  setShiftToRemove(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-error"
+                onClick={handleConfirmRemove} // Gọi hàm xử lý xóa
+              >
+                Yes, Remove
               </button>
             </div>
           </div>
