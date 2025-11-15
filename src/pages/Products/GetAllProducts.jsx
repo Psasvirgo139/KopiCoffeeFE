@@ -171,7 +171,14 @@ function GetAllProducts(props) {
         {/* Giá và nút edit */}
         <div className="flex items-center justify-between mt-4">
           <span className="text-xl font-bold text-tertiary">
-             {n_f(product.price)} VND
+            {product.discountedPrice !== undefined && product.discountedPrice !== null && product.discountedPrice !== product.price ? (
+              <span className="flex flex-col leading-5">
+                <span className="line-through text-gray-400 text-base font-normal">{n_f(product.originalPrice ?? product.price)} VND</span>
+                <span className="text-xl font-bold text-tertiary">{n_f(product.discountedPrice)} VND</span>
+              </span>
+            ) : (
+              <span>{n_f(product.originalPrice ?? product.price)} VND</span>
+            )}
           </span>
           {Number(userInfo.role) === 1 && (
             <NavLink
