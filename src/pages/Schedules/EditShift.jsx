@@ -26,6 +26,7 @@ function EditShift() {
   });
   const [positions, setPositions] = useState([]);
   const [requiredCounts, setRequiredCounts] = useState({});
+  const [isConfirmUpdateOpen, setIsConfirmUpdateOpen] = useState(false);
 
   useEffect(() => {
     loadShiftData();
@@ -80,9 +81,11 @@ function EditShift() {
     }));
   };
 
+// THAY THẾ HÀM handleSubmit CŨ BẰNG HÀM NÀY
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // 1. Giữ lại toàn bộ phần kiểm tra (validation)
     if (!formData.shiftName || !formData.startTime || !formData.endTime) {
       toast.error("Please fill in all required fields");
       return;
@@ -93,46 +96,18 @@ function EditShift() {
       return;
     }
 
-    try {
-      setIsLoading(true);
-      const totalRequired = Object.values(requiredCounts || {}).reduce(
-        (a, b) => a + (Number(b) || 0),
-        0
-      );
-      if (totalRequired < 1) {
-        toast.error("Shift must have at least one employee");
-        setIsLoading(false);
-        return;
-      }
-      if (!window.confirm("Are you sure you want to update this shift?")) {
-        setIsLoading(false);
-        return;
-      }
-      // include positionRules in the update payload so only one request is needed
-      const payload = {
-        ...formData,
-        positionRules: Object.entries(requiredCounts || {}).map(
-          ([positionId, count]) => ({
-            positionId: Number(positionId),
-            requiredCount: Number(count || 0),
-          })
-        ),
-      };
-      await updateShift(shiftId, payload, userInfo.token);
-      toast.success("Shift updated successfully");
-      navigate("/admin/shifts");
-    } catch (err) {
-      // Show server-provided error message when available to aid debugging
-      console.error("Update shift error:", err);
-      const serverMsg =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        (typeof err?.response?.data === "string" ? err.response.data : null) ||
-        err?.message;
-      toast.error(serverMsg || "Failed to update shift");
-    } finally {
-      setIsLoading(false);
+    const totalRequired = Object.values(requiredCounts || {}).reduce(
+      (a, b) => a + (Number(b) || 0),
+      0
+    );
+    if (totalRequired < 1) {
+      toast.error("Shift must have at least one employee");
+      return;
     }
+
+    // 2. Xóa bỏ window.confirm và logic 'try...catch'
+    // Thay vào đó, chỉ cần mở modal
+    setIsConfirmUpdateOpen(true);
   };
 
   if (isLoadingData) {
@@ -146,6 +121,40 @@ function EditShift() {
       </>
     );
   }
+
+  const handleConfirmUpdate = async () => {
+    // Đóng modal và bật loading
+    setIsConfirmUpdateOpen(false);
+    setIsLoading(true);
+
+    try {
+      // --- Logic này được copy từ handleSubmit ---
+      const payload = {
+        ...formData,
+        positionRules: Object.entries(requiredCounts || {}).map(
+          ([positionId, count]) => ({
+            positionId: Number(positionId),
+            requiredCount: Number(count || 0),
+          })
+        ),
+      };
+      await updateShift(shiftId, payload, userInfo.token);
+      toast.success("Shift updated successfully");
+      navigate("/admin/shifts");
+      // --- Kết thúc logic copy ---
+
+    } catch (err) {
+      console.error("Update shift error:", err);
+      const serverMsg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        (typeof err?.response?.data === "string" ? err.response.data : null) ||
+        err?.message;
+      toast.error(serverMsg || "Failed to update shift");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <>
@@ -271,7 +280,32 @@ function EditShift() {
           </div>
         </div>
       </div>
-
+{/* --- THÊM MODAL XÁC NHẬN TẠI ĐÂY --- */}
+    {isConfirmUpdateOpen && (
+      <div className="modal modal-open">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">Confirm Update</h3>
+          <p className="py-4">
+            Are you sure you want to update this shift?
+          </p>
+          <div className="modal-action">
+            <button
+              className="btn btn-ghost"
+              onClick={() => setIsConfirmUpdateOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={handleConfirmUpdate} // Gọi hàm update
+            >
+              Yes, Update
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    {/* --- KẾT THÚC MODAL --- */}
       <Footer />
     </>
   );
