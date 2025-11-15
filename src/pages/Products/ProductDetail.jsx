@@ -23,6 +23,7 @@ import Header from '../../components/Header';
 import { cartActions } from '../../redux/slices/cart.slice';
 import { getProductbyId } from '../../utils/dataProvider/products';
 import useDocumentTitle from '../../utils/documentTitle';
+import { n_f } from '../../utils/helpers';
 
 function ProductDetail(props) {
   // Helper to read stock from various possible backend field names
@@ -184,7 +185,7 @@ function ProductDetail(props) {
     }
 
     // compute unit price = base + sizeDelta + addOnSum
-    const base = Number(detail.price || 0);
+    const base = Number((detail.discountedPrice ?? detail.originalPrice ?? detail.price) || 0);
     const sizeDelta = Number(
       (dbSizes.find((s) => String(s.size_id) === String(newItem.size))?.price_delta) || 0
     );
@@ -243,7 +244,7 @@ function ProductDetail(props) {
       for (const v of setA) if (!setB.has(v)) return true;
       return false;
     })();
-    const base = Number(p.price || 0);
+    const base = Number((p.discountedPrice ?? p.originalPrice ?? p.price) || 0);
     const sizeDelta = Number(
       (dbSizes.find((s) => String(s.size_id) === String(form.size))?.price_delta) || 0
     );
@@ -380,7 +381,18 @@ function ProductDetail(props) {
               </div>
               <div className="text-right">
                 <p className="font-bold text-xl text-tertiary">
-                 {p.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}  VND 
+                  {(() => {
+                    const hasDiscount = typeof p.discountedPrice !== "undefined" && p.discountedPrice !== null && Number(p.discountedPrice) !== Number(p.originalPrice ?? p.price);
+                    if (hasDiscount) {
+                      return (
+                        <span className="flex flex-col leading-5 items-end">
+                          <span className="line-through text-gray-400 text-base font-normal">{n_f(Number(p.originalPrice ?? p.price))} VND</span>
+                          <span className="text-xl font-bold text-tertiary">{n_f(Number(p.discountedPrice))} VND</span>
+                        </span>
+                      );
+                    }
+                    return <span>{n_f(Number(p.originalPrice ?? p.price))} VND</span>;
+                  })()}
                 </p>
                 <p className="text-sm mt-1">Stock: {(() => { const s = getAvailableStock(p); return typeof s === "number" ? s : "-"; })()}</p>
               </div>

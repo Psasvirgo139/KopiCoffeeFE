@@ -36,6 +36,7 @@ function Cart() {
   const [discountCode, setDiscountCode] = useState("");
   const [appliedCode, setAppliedCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState(0);
+  const [discountApplyToShipping, setDiscountApplyToShipping] = useState(false);
   const [discountMsg, setDiscountMsg] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -218,16 +219,18 @@ function Cart() {
     setDiscountMsg("");
     setAppliedDiscount(0);
     setAppliedCode("");
+    setDiscountApplyToShipping(false);
     const code = (discountCode || "").trim();
     if (!code) {
       setDiscountMsg("Vui lòng nhập mã giảm giá");
       return;
     }
     try {
-      const res = await validateDiscount(code, subtotal, userInfo.token, controller);
+      const res = await validateDiscount(code, subtotal, shipFee, userInfo.token, controller);
       const data = res.data || {};
       setAppliedDiscount(Number(data.discount_amount || 0));
       setAppliedCode(String(data.coupon_code || code));
+      setDiscountApplyToShipping(Boolean(data.applies_to_shipping));
       setDiscountMsg(data.message || "Áp dụng mã thành công");
       toast.success("Applied discount");
     } catch (e) {
@@ -449,54 +452,53 @@ function Cart() {
                       </div>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex flex-row justify-between items-center text-base lg:text-lg">
-                      <p className="text-gray-600">Subtotal</p>
-                      <p className="font-semibold text-gray-800">
-                        {n_f(subtotal)} VND
-                      </p>
-                    </div>
-                    {appliedDiscount > 0 && (
-                      <div className="flex flex-row justify-between items-center text-base lg:text-lg text-green-600">
-                        <p>Discount ({appliedCode})</p>
-                        <p className="font-semibold">- {n_f(appliedDiscount)} VND</p>
-                      </div>
-                    )}
-                    <div className="flex flex-row justify-between items-center text-base lg:text-lg">
-                      <p className="text-gray-600">Shipping</p>
-                      <p className="font-semibold text-gray-800">
-                        {shipLoading ? (
-                          <span className="inline-flex items-center">
-                            <svg className="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Calculating...
-                          </span>
-                        ) : (
-                          n_f(shipFee) + " VND"
-                        )}
-                      </p>
-                    </div>
-                    {!shipLoading && shipDistance !== null && (
-                      <div className="flex flex-row justify-between items-center text-sm text-gray-500">
-                        <p>Distance</p>
-                        <p>
-                          {shipDistance >= 1000
-                            ? `${(shipDistance / 1000).toFixed(2)} km`
-                            : `${Math.round(shipDistance)} m`}
-                        </p>
-                      </div>
-                    )}
-                    {shipError && (
-                      <div className="text-red-500 text-sm mt-2 bg-red-50 p-2 rounded">{shipError}</div>
-                    )}
+                  <div className="flex flex-row uppercase lg:text-lg">
+                    <p className="flex-[2_2_0%]">Subtotal</p>
+                    <p className="flex-1 lg:flex-none text-right">
+                      {" "}
+                      {n_f(subtotal)} VND
+                    </p>
                   </div>
-                  <hr className="my-2 border-2 border-gray-200" />
-                  <div className="flex flex-row justify-between items-center text-xl lg:text-2xl font-bold my-4">
-                    <p className="text-gray-800">Total</p>
-                    <p className="text-tertiary text-2xl lg:text-3xl">
-                      {n_f(Math.max(0, subtotal - Number(appliedDiscount || 0)) + Number(shipFee || 0))} VND
+                  {appliedDiscount > 0 && !discountApplyToShipping && (
+                    <div className="flex flex-row uppercase lg:text-lg text-green-700">
+                      <p className="flex-[2_2_0%]">Discount ({appliedCode})</p>
+                      <p className="flex-1 lg:flex-none text-right">- {n_f(appliedDiscount)} VND</p>
+                    </div>
+                  )}
+                  <div className="flex flex-row uppercase lg:text-lg">
+                    <p className="flex-[2_2_0%]">Shipping</p>
+                    <p className="flex-1 lg:flex-none text-right">
+                      {shipLoading ? "..." : n_f(shipFee)} VND
+                    </p>
+                  </div>
+                  {!shipLoading && shipDistance !== null && (
+                    <div className="flex flex-row text-sm text-gray-500">
+                      <p className="flex-[2_2_0%]">Distance</p>
+                      <p className="flex-1 lg:flex-none text-right">
+                        {shipDistance >= 1000
+                          ? `${(shipDistance / 1000).toFixed(2)} km`
+                          : `${Math.round(shipDistance)} m`}
+                      </p>
+                    </div>
+                  )}
+                  {appliedDiscount > 0 && discountApplyToShipping && (
+                    <div className="flex flex-row uppercase lg:text-lg text-green-700">
+                      <p className="flex-[2_2_0%]">Discount ({appliedCode})</p>
+                      <p className="flex-1 lg:flex-none text-right">- {n_f(appliedDiscount)} VND</p>
+                    </div>
+                  )}
+                  {shipError && (
+                    <div className="text-red-500 text-sm mt-2">{shipError}</div>
+                  )}
+                  <div className="flex flex-row uppercase  lg:text-xl font-bold my-10">
+                    <p className="flex-[2_2_0%]">Total</p>
+                    <p className="flex-initial lg:flex-none">
+                      {" "}
+                      {n_f(
+                        discountApplyToShipping
+                          ? (Number(subtotal || 0) + Math.max(0, Number(shipFee || 0) - Number(appliedDiscount || 0)))
+                          : (Math.max(0, Number(subtotal || 0) - Number(appliedDiscount || 0)) + Number(shipFee || 0))
+                      )} VND
                     </p>
                   </div>
                 </section>
