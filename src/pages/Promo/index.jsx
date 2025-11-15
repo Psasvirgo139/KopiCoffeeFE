@@ -148,20 +148,42 @@ function PromoList() {
                     End: {it.endsAt ? dayjs(it.endsAt).format("YYYY-MM-DD HH:mm") : "-"}
                   </p>
                 </div>
-                <div className="mt-3 flex gap-2">
-                  <button
-                    className="btn btn-sm"
-                    onClick={() => navigate(`/promo/edit/${String(it.kind || it.type || "code").toLowerCase() === "event" ? "event" : "code"}/${it.id}`)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="btn btn-sm btn-error"
-                    onClick={() => handleDelete(it.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
+                {(() => {
+                  const now = dayjs();
+                  const start = it.startsAt ? dayjs(it.startsAt) : null;
+                  const end = it.endsAt ? dayjs(it.endsAt) : null;
+                  const active = it.active;
+                  const isUpcoming = !!active && !!start && start.isAfter(now);
+                  const canModify = isUpcoming;
+                  const editPath = `/promo/edit/${String(it.kind || it.type || "code").toLowerCase() === "event" ? "event" : "code"}/${it.id}`;
+                  return (
+                    <div className="mt-3 flex gap-2">
+                      {canModify ? (
+                        <>
+                          <button
+                            className="btn btn-sm"
+                            onClick={() => navigate(editPath)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="btn btn-sm btn-error"
+                            onClick={() => handleDelete(it.id)}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          className="btn btn-sm"
+                          onClick={() => navigate(editPath + "?view=1")}
+                        >
+                          View detail
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             ))}
           </div>
