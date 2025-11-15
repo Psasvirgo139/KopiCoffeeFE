@@ -30,6 +30,7 @@ const EditPromo = (props) => {
     discount_value: "",
     min_order_amount: "",
     total_usage_limit: "",
+    per_user_limit: "",
     start_date: "",
     end_date: "",
     startDate: "",
@@ -37,6 +38,7 @@ const EditPromo = (props) => {
     // event-only
     search_product: "",
     product_ids: [],
+    is_shipping_fee: false,
   };
   const [notFound, setNotFound] = useState(false);
   const [form, setForm] = useState({ ...initialState });
@@ -98,11 +100,13 @@ const EditPromo = (props) => {
           discount_value: it.discountValue ?? it.discount_value ?? "",
           min_order_amount: it.minOrderAmount ?? it.min_order_amount ?? "",
           total_usage_limit: it.totalUsageLimit ?? it.total_usage_limit ?? "",
+          per_user_limit: it.perUserLimit ?? "",
           start_date: it.startsAt || it.start_date || "",
           end_date: it.endsAt || it.end_date || "",
           startDate: it.startsAt || it.start_date || "",
           endDate: it.endsAt || it.end_date || "",
           product_ids: Array.isArray(it.productIds) ? it.productIds : [],
+          is_shipping_fee: !!(it.shippingFee ?? it.is_shipping_fee),
         };
         setForm(next);
         setSelectedProducts(it.products || []);
@@ -125,7 +129,7 @@ const EditPromo = (props) => {
   const [isLoading, setLoading] = useState("");
   const controller = useMemo(() => new AbortController(), []);
   const formChangeHandler = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({ ...form, [e.target.name]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
 
   const submitHandler = (e) => {
     e.preventDefault();
@@ -270,21 +274,25 @@ const EditPromo = (props) => {
                   )}
                 </>
               )}
-              <label
-                className="text-tertiary font-bold text-lg"
-                htmlFor="product_name"
-              >
-                {kind === "event" ? "Event name :" : "Title :"}
-              </label>
-              <input
-                placeholder="Type promo title max. 50 characters"
-                name="name"
-                id="product_name"
-                value={form.name}
-                onChange={formChangeHandler}
-                maxLength={50}
-                className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
-              ></input>
+              {kind === "event" && (
+                <>
+                  <label
+                    className="text-tertiary font-bold text-lg"
+                    htmlFor="product_name"
+                  >
+                    Event name :
+                  </label>
+                  <input
+                    placeholder="Type event name max. 50 characters"
+                    name="name"
+                    id="product_name"
+                    value={form.name}
+                    onChange={formChangeHandler}
+                    maxLength={50}
+                    className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
+                  ></input>
+                </>
+              )}
               <label className="text-tertiary font-bold text-lg">Discount type :</label>
               <select
                 name="discount_type"
@@ -307,6 +315,18 @@ const EditPromo = (props) => {
                 onChange={formChangeHandler}
                 className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
               />
+
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  id="is_shipping_fee"
+                  name="is_shipping_fee"
+                  type="checkbox"
+                  checked={!!form.is_shipping_fee}
+                  onChange={formChangeHandler}
+                  className="checkbox checkbox-sm"
+                />
+                <label htmlFor="is_shipping_fee" className="text-sm">Apply discount to shipping fee</label>
+              </div>
 
               <label
                 className="text-tertiary font-bold text-lg"
@@ -358,6 +378,17 @@ const EditPromo = (props) => {
                     id="total_usage_limit"
                     min={1}
                     value={form.total_usage_limit}
+                    onChange={formChangeHandler}
+                    className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
+                  />
+
+                  <label className="text-tertiary font-bold text-lg" htmlFor="per_user_limit">Per-user usage limit :</label>
+                  <input
+                    type="number"
+                    name="per_user_limit"
+                    id="per_user_limit"
+                    min={1}
+                    value={form.per_user_limit}
                     onChange={formChangeHandler}
                     className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
                   />

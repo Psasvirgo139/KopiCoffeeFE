@@ -9,8 +9,10 @@ export const createPromoEntry = (
     discount_value = "",
     min_order_amount = "",
     total_usage_limit = "",
+    per_user_limit = "",
     start_date = "",
     end_date = "",
+    is_shipping_fee = false,
   },
   token,
   controller
@@ -23,8 +25,10 @@ export const createPromoEntry = (
     discount_value,
     min_order_amount,
     total_usage_limit,
+    per_user_limit,
     start_date,
     end_date,
+    is_shipping_fee,
   };
   return api.post("/apiv1/promo", payload, {
     signal: controller.signal,
@@ -63,9 +67,11 @@ export const editPromoEntry = (
     coupon_code = "",
     min_order_amount = "",
     total_usage_limit = "",
+    per_user_limit = "",
     product_ids = [],
     start_date = "",
     end_date = "",
+    is_shipping_fee = undefined,
   },
   token,
   controller
@@ -78,9 +84,11 @@ export const editPromoEntry = (
     coupon_code,
     min_order_amount,
     total_usage_limit,
+    per_user_limit,
     product_ids,
     start_date,
     end_date,
+    is_shipping_fee,
   };
   return api.patch(`/apiv1/promo/${promoId}`, payload, {
     signal: controller.signal,
@@ -110,6 +118,7 @@ export const createPromoEvent = (
     start_date = "",
     end_date = "",
     product_ids = [],
+    is_shipping_fee = false,
   },
   token,
   controller
@@ -122,6 +131,7 @@ export const createPromoEvent = (
     start_date,
     end_date,
     product_ids,
+    is_shipping_fee,
   };
   return api.post("/apiv1/promo/events", payload, {
     signal: controller.signal,
