@@ -88,12 +88,8 @@ export const editPromoEntry = (
   });
 };
 
-export const getPromoById = (promoId, controller, kind) => {
-  const config = { signal: controller.signal };
-  if (kind) {
-    config.params = { kind };
-  }
-  return api.get(`/apiv1/promo/${promoId}`, config);
+export const getPromoById = (promoId, controller) => {
+  return api.get(`/apiv1/promo/${promoId}`, { signal: controller.signal });
 };
 
 export const deletePromoEntry = (promoId, token, controller) => {
