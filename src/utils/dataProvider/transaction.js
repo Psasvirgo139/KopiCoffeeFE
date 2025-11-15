@@ -53,9 +53,9 @@ export const validateOrder = (products = [], token, controller) => {
   });
 };
 
-// Validate discount code for current user and subtotal
-export const validateDiscount = (code, subtotal, token, controller) => {
-  return api.post(`/apiv1/orders/validate-discount`, { code, subtotal }, {
+// Validate discount code for current user with subtotal and shipping
+export const validateDiscount = (code, subtotal, shipping, token, controller) => {
+  return api.post(`/apiv1/orders/validate-discount`, { code, subtotal, shipping }, {
     signal: controller?.signal,
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });

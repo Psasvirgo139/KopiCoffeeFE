@@ -35,6 +35,7 @@ function Cart() {
   const [discountCode, setDiscountCode] = useState("");
   const [appliedCode, setAppliedCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState(0);
+  const [discountApplyToShipping, setDiscountApplyToShipping] = useState(false);
   const [discountMsg, setDiscountMsg] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -165,16 +166,18 @@ function Cart() {
     setDiscountMsg("");
     setAppliedDiscount(0);
     setAppliedCode("");
+    setDiscountApplyToShipping(false);
     const code = (discountCode || "").trim();
     if (!code) {
       setDiscountMsg("Vui lòng nhập mã giảm giá");
       return;
     }
     try {
-      const res = await validateDiscount(code, subtotal, userInfo.token, controller);
+      const res = await validateDiscount(code, subtotal, shipFee, userInfo.token, controller);
       const data = res.data || {};
       setAppliedDiscount(Number(data.discount_amount || 0));
       setAppliedCode(String(data.coupon_code || code));
+      setDiscountApplyToShipping(Boolean(data.applies_to_shipping));
       setDiscountMsg(data.message || "Áp dụng mã thành công");
       toast.success("Applied discount");
     } catch (e) {
@@ -353,7 +356,7 @@ function Cart() {
                       {n_f(subtotal)} VND
                     </p>
                   </div>
-                  {appliedDiscount > 0 && (
+                  {appliedDiscount > 0 && !discountApplyToShipping && (
                     <div className="flex flex-row uppercase lg:text-lg text-green-700">
                       <p className="flex-[2_2_0%]">Discount ({appliedCode})</p>
                       <p className="flex-1 lg:flex-none text-right">- {n_f(appliedDiscount)} VND</p>
@@ -375,6 +378,12 @@ function Cart() {
                       </p>
                     </div>
                   )}
+                  {appliedDiscount > 0 && discountApplyToShipping && (
+                    <div className="flex flex-row uppercase lg:text-lg text-green-700">
+                      <p className="flex-[2_2_0%]">Discount ({appliedCode})</p>
+                      <p className="flex-1 lg:flex-none text-right">- {n_f(appliedDiscount)} VND</p>
+                    </div>
+                  )}
                   {shipError && (
                     <div className="text-red-500 text-sm mt-2">{shipError}</div>
                   )}
@@ -382,7 +391,11 @@ function Cart() {
                     <p className="flex-[2_2_0%]">Total</p>
                     <p className="flex-initial lg:flex-none">
                       {" "}
-                      {n_f(Math.max(0, subtotal - Number(appliedDiscount || 0)) + Number(shipFee || 0))} VND
+                      {n_f(
+                        discountApplyToShipping
+                          ? (Number(subtotal || 0) + Math.max(0, Number(shipFee || 0) - Number(appliedDiscount || 0)))
+                          : (Math.max(0, Number(subtotal || 0) - Number(appliedDiscount || 0)) + Number(shipFee || 0))
+                      )} VND
                     </p>
                   </div>
                 </section>
