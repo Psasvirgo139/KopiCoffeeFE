@@ -36,6 +36,7 @@ import GenerateFromPattern from "./pages/Schedules/GenerateFromPattern";
 import StaffSchedule from "./pages/Staff/StaffSchedule";
 import ScrollToTop from "./utils/scrollToTop";
 import ChangePassword from "./pages/Auth/ChangePassword";
+import ChatBox from "./components/ChatBox";
 
 import {
   CheckAuth,
@@ -56,6 +57,7 @@ const Routers = () => {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <ChatBox />
       <Routes>
         <Route path="/" element={<TokenHandler />}>
           {/* Public Route */}
