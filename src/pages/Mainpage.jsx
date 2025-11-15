@@ -4,6 +4,7 @@ import React, {
 } from 'react';
 
 import { Link } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 import ngockhoiImage from '../assets/images/ourteam/ngockhoi.png';
 import quanghuyImage from '../assets/images/ourteam/quanghuy.png';
