@@ -174,7 +174,7 @@ const EditPromo = (props) => {
     }
 
     setLoading(true);
-    editPromoEntry(promoId, form, props.userInfo.token, controller)
+    editPromoEntry(promoId, form, props.userInfo.token, controller, kind)
       .then((result) => {
         navigate(`/products/`, {
           replace: true,
@@ -182,11 +182,8 @@ const EditPromo = (props) => {
         toast.success("Discount updated");
       })
       .catch((err) => {
-        if (err.response?.data?.msg) {
-          toast.error(err.response?.data?.msg);
-          return;
-        }
-        toast.error(err.message);
+        const apiMsg = err.response?.data?.message || err.response?.data?.msg;
+        toast.error(apiMsg || err.message || "Update failed");
       })
       .finally(() => setLoading(false));
   };

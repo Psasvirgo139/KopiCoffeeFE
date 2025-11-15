@@ -60,6 +60,8 @@ const NewPromo = (props) => {
     search: false,
   });
   const [selectedProducts, setSelectedProducts] = useState([]); // for event
+  const [invalidProducts, setInvalidProducts] = useState([]);
+  const [showInvalidModal, setShowInvalidModal] = useState(false);
 
   // create a preview as a side effect, whenever selected file is changed
   useEffect(() => {
@@ -164,8 +166,15 @@ const NewPromo = (props) => {
           toast.success("Discount event added");
         })
         .catch((err) => {
-          if (err.response?.data?.msg) return toast.error(err.response.data.msg);
-          toast.error(err.message);
+          const apiMsg = err.response?.data?.message || err.response?.data?.msg;
+          const invalids = err.response?.data?.invalid_products;
+          if (Array.isArray(invalids) && invalids.length > 0) {
+            setInvalidProducts(invalids);
+            setShowInvalidModal(true);
+            return;
+          }
+          if (apiMsg) return toast.error(apiMsg);
+          return toast.error(err.message || "Create failed");
         })
         .finally(() => setLoading(false));
     }
@@ -206,6 +215,22 @@ const NewPromo = (props) => {
         </section>
       </Modal>
       <Header />
+      <Modal isOpen={showInvalidModal} onClose={() => setShowInvalidModal(false)}>
+        <div className="space-y-3">
+          <p className="font-bold text-lg text-tertiary">Create failed</p>
+          <p className="text-sm">Some products already belong to active discount events:</p>
+          <ul className="list-disc pl-5 text-sm">
+            {invalidProducts.map((it, idx) => (
+              <li key={idx}>
+                {it.product_name ? `${it.product_name}` : `Product #${it.product_id}`} {it.event_name ? `(in event: ${it.event_name})` : ""}
+              </li>
+            ))}
+          </ul>
+          <div className="flex justify-end">
+            <button className="btn" onClick={() => setShowInvalidModal(false)}>Close</button>
+          </div>
+        </div>
+      </Modal>
       <main className="global-px py-6">
         <nav className="flex flex-row list-none gap-1">
           <li className="after:content-['>'] after:font-semibold text-primary">

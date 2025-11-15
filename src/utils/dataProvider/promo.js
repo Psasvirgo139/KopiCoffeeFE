@@ -74,7 +74,8 @@ export const editPromoEntry = (
     is_shipping_fee = undefined,
   },
   token,
-  controller
+  controller,
+  discount_kind
 ) => {
   const payload = {
     name,
@@ -90,8 +91,11 @@ export const editPromoEntry = (
     end_date,
     is_shipping_fee,
   };
+  const params = {};
+  if (discount_kind) params.discount_kind = discount_kind;
   return api.patch(`/apiv1/promo/${promoId}`, payload, {
     signal: controller.signal,
+    params,
     headers: { Authorization: `Bearer ${token}` },
   });
 };
