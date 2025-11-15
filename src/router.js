@@ -51,6 +51,7 @@ import TableOrder from "./pages/TableOrder";
 import ShippingOrder from "./pages/ShippingOrder";
 import ShippingTrack from "./pages/ShippingTrack";
 import GuestTableOrder from "./pages/GuestTableOrder";
+import ThankYou from "./pages/ThankYou";
 
 const Routers = () => {
   return (
@@ -90,6 +91,9 @@ const Routers = () => {
             {/* removed duplicate change-password route */}
           </Route>
 
+          {/* Public thank-you page (after payment redirect) */}
+          <Route path="thank-you" element={<ThankYou />} />
+          
           {/* Route must be logged in */}
           <Route element={<CheckAuth />}>
             <Route path="cart" element={<Cart />} />
