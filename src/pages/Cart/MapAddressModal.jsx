@@ -45,55 +45,155 @@ function MapAddressModal({ isOpen, onClose, onPick }) {
   }, [accessToken]);
 
   useEffect(() => {
-    if (!isOpen) return;
-    if (!mapboxgl || mapRef.current) return;
-    mapboxgl.accessToken = accessToken;
-    mapRef.current = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: mapStyle,
-      center: [108.2237436, 16.0648953],
-      zoom: 13,
-      attributionControl: false,
-    });
-    const nav = new mapboxgl.NavigationControl();
-    mapRef.current.addControl(nav, "top-right");
-    // ensure proper sizing similar to ShippingTrack
-    mapRef.current.once("load", () => {
-      try { mapRef.current.resize(); } catch {}
-    });
-    mapRef.current.on("click", async (e) => {
-      const { lng, lat } = e.lngLat;
-      if (!markerRef.current) {
-        markerRef.current = new mapboxgl.Marker().setLngLat([lng, lat]).addTo(mapRef.current);
-      } else {
-        markerRef.current.setLngLat([lng, lat]);
-      }
-      const info = await reverseGeocode(lng, lat);
-      const address = info.placeName;
-      setPicked({ lng, lat, address, ward: info.ward || "", district: info.district || "", city: info.city || "" });
-      try { mapRef.current.flyTo({ center: [lng, lat], zoom: 16 }); } catch {}
-    });
-    mapRef.current.on("error", () => {
-      try {
-        if (mapRef.current?.getStyle()?.sprite == null) {
-          mapRef.current.setStyle("mapbox://styles/mapbox/streets-v11");
-        }
-      } catch {}
-    });
-    return () => {
+    if (!isOpen) {
+      // Cleanup khi modal đóng
       if (mapRef.current) {
-        mapRef.current.remove();
+        try {
+          mapRef.current.remove();
+        } catch (e) {
+          console.error("Error removing map:", e);
+        }
         mapRef.current = null;
       }
       markerRef.current = null;
-      setPicked({ lat: null, lng: null, address: "" });
+      setPicked({ lat: null, lng: null, address: "", ward: "", district: "", city: "" });
+      return;
+    }
+    
+    if (!mapboxgl) {
+      console.error("Mapbox GL is not available");
+      return;
+    }
+    
+    mapboxgl.accessToken = accessToken;
+    
+    // Đảm bảo container có kích thước trước khi tạo map
+    if (!mapContainerRef.current) {
+      console.error("Map container ref is not available");
+      return;
+    }
+    
+    // Nếu map đã tồn tại, chỉ cần resize và reset
+    if (mapRef.current) {
+      try {
+        mapRef.current.resize();
+        // Reset picked state khi mở lại
+        setPicked({ lat: null, lng: null, address: "", ward: "", district: "", city: "" });
+        if (markerRef.current) {
+          markerRef.current.remove();
+          markerRef.current = null;
+        }
+      } catch (e) {
+        console.error("Error resizing existing map:", e);
+      }
+      return;
+    }
+    
+    try {
+      mapRef.current = new mapboxgl.Map({
+        container: mapContainerRef.current,
+        style: mapStyle,
+        center: [108.2237436, 16.0648953],
+        zoom: 13,
+        attributionControl: false,
+        interactive: true,
+      });
+      
+      const nav = new mapboxgl.NavigationControl();
+      mapRef.current.addControl(nav, "top-right");
+      
+      // Đảm bảo map resize đúng sau khi load
+      mapRef.current.once("load", () => {
+        try { 
+          mapRef.current.resize(); 
+        } catch (e) {
+          console.error("Error resizing map:", e);
+        }
+      });
+      
+      // Xử lý click trên map - đảm bảo event listener luôn hoạt động
+      const clickHandler = async (e) => {
+        try {
+          const { lng, lat } = e.lngLat;
+          
+          // Tạo hoặc cập nhật marker
+          if (!markerRef.current) {
+            markerRef.current = new mapboxgl.Marker({ draggable: false })
+              .setLngLat([lng, lat])
+              .addTo(mapRef.current);
+          } else {
+            markerRef.current.setLngLat([lng, lat]);
+          }
+          
+          // Reverse geocode để lấy địa chỉ
+          const info = await reverseGeocode(lng, lat);
+          const address = info.placeName;
+          setPicked({ 
+            lng, 
+            lat, 
+            address, 
+            ward: info.ward || "", 
+            district: info.district || "", 
+            city: info.city || "" 
+          });
+          
+          // Zoom vào vị trí đã chọn
+          try { 
+            mapRef.current.flyTo({ center: [lng, lat], zoom: 16 }); 
+          } catch (e) {
+            console.error("Error flying to location:", e);
+          }
+        } catch (error) {
+          console.error("Error handling map click:", error);
+        }
+      };
+      
+      mapRef.current.on("click", clickHandler);
+      
+      // Xử lý lỗi map
+      mapRef.current.on("error", (e) => {
+        console.error("Map error:", e);
+        try {
+          if (mapRef.current?.getStyle()?.sprite == null) {
+            mapRef.current.setStyle("mapbox://styles/mapbox/streets-v11");
+          }
+        } catch (err) {
+          console.error("Error setting fallback style:", err);
+        }
+      });
+      
+    } catch (error) {
+      console.error("Error initializing map:", error);
+    }
+    
+    return () => {
+      if (mapRef.current) {
+        try {
+          mapRef.current.remove();
+        } catch (e) {
+          console.error("Error removing map:", e);
+        }
+        mapRef.current = null;
+      }
+      markerRef.current = null;
+      setPicked({ lat: null, lng: null, address: "", ward: "", district: "", city: "" });
     };
   }, [isOpen, accessToken, mapStyle, reverseGeocode]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="flex flex-col gap-4 w-[95vw] max-w-[840px]">
       <div className="text-lg font-semibold">Pick address from map</div>
-      <div ref={mapContainerRef} style={{ width: "100%", height: "min(60vh, 520px)", borderRadius: 12, overflow: "hidden" }} />
+      <div 
+        ref={mapContainerRef} 
+        style={{ 
+          width: "100%", 
+          height: "min(60vh, 520px)", 
+          borderRadius: 12, 
+          overflow: "hidden",
+          position: "relative",
+          cursor: "crosshair" // Hiển thị cursor để người dùng biết có thể click
+        }} 
+      />
       <input
         className="bg-gray-100 border border-gray-300 text-black text-sm rounded-lg block w-full p-2.5"
         value={picked.address}
@@ -118,5 +218,6 @@ function MapAddressModal({ isOpen, onClose, onPick }) {
 }
 
 export default MapAddressModal;
+
 
 

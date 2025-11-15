@@ -10,7 +10,7 @@ import {
   useDispatch,
   useSelector,
 } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import loadingImage from '../../assets/images/loading.svg';
 import productPlaceholder from '../../assets/images/placeholder-image.webp';
@@ -19,6 +19,7 @@ import Header from '../../components/Header';
 import Modal from '../../components/Modal';
 import { cartActions } from '../../redux/slices/cart.slice';
 import { createTransaction, validateDiscount, createVNPayUrl } from '../../utils/dataProvider/transaction';
+import { createPayOSPayment } from '../../utils/dataProvider/payment';
 import useDocumentTitle from '../../utils/documentTitle';
 import { n_f } from '../../utils/helpers';
 import MapAddressModal from './MapAddressModal';
@@ -38,9 +39,21 @@ function Cart() {
   const [discountMsg, setDiscountMsg] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const cart = cartRedux.list;
   const [result, setResult] = useState("");
   const [showMapModal, setShowMapModal] = useState(false);
+  
+  // Kiểm tra lỗi thanh toán từ query params
+  useEffect(() => {
+    const error = searchParams.get("error");
+    const payment = searchParams.get("payment");
+    if (error === "payment_failed" || payment === "cancelled") {
+      toast.error("Payment failed. Please try again.");
+      // Xóa query params sau khi hiển thị thông báo
+      navigate("/cart", { replace: true });
+    }
+  }, [searchParams, navigate]);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [newAddressText, setNewAddressText] = useState("");
@@ -220,39 +233,72 @@ function Cart() {
         addressIdToUse = resp.data?.address_id;
       }
 
-      const txResp = await createTransaction(
-        {
-          payment_id: form.payment,
-          delivery_id: 1,
-          address_id: addressIdToUse,
-          notes: form.notes,
-          discount_code: appliedCode || undefined,
-          discount_amount: appliedDiscount || undefined,
-        },
-        cart,
-        userInfo.token,
-        controller
-      );
-      const orderId = txResp?.data?.data?.id;
-      if (form.payment === "2") {
-        const pResp = await createVNPayUrl(orderId, userInfo.token, controller);
-        const url = pResp?.data?.data?.payment_url;
-        if (url) {
-          window.location.href = url;
-          return;
+        // CREATE TRANSACTION
+        const txResp = await createTransaction(
+            {
+                payment_id: form.payment === "4" ? 2 : form.payment,
+                delivery_id: 1,
+                address_id: addressIdToUse,
+                notes: form.notes,
+                discount_code: appliedCode || undefined,
+                discount_amount: appliedDiscount || undefined,
+            },
+            cart,
+            userInfo.token,
+            controller
+        );
+
+        const orderId = txResp?.data?.data?.id;
+        if (!orderId) {
+            toast.error("Không tạo được đơn hàng");
+            return;
         }
-        toast.error("Không tạo được liên kết VNPAY");
-        return;
-      } else {
+
+        // CASE 1: VNPAY (payment === 2)
+        if (form.payment === "2") {
+            const vnPayResp = await createVNPayUrl(orderId, userInfo.token, controller);
+            const url = vnPayResp?.data?.data?.payment_url;
+
+            if (url) {
+                window.location.href = url;
+                return;
+            }
+            toast.error("Không tạo được liên kết VNPAY");
+            return;
+        }
+
+        // CASE 2: PayOS (payment === 4)
+        if (form.payment === "4") {
+            try {
+                const payOSResp = await createPayOSPayment(orderId, userInfo.token, controller);
+                const payUrl = payOSResp?.data?.data?.payment_url;
+
+                if (payUrl) {
+                    dispatch(cartActions.resetCart());
+                    window.location.href = payUrl;
+                    return;
+                }
+
+                toast.error("Không thể tạo link thanh toán PayOS");
+                return;
+
+            } catch (e) {
+                console.error("PayOS error:", e);
+                toast.error("Không thể tạo link thanh toán PayOS. Vui lòng thử lại.");
+                return;
+            }
+        }
+
+        // CASE 3: các phương thức khác như COD
         toast.success("Success create transaction");
         dispatch(cartActions.resetCart());
         navigate("/history");
-      }
+
     } catch (err) {
-      console.log(err);
-      toast.error("An error ocurred, please check your internet connection");
+        console.log(err);
+        toast.error("An error ocurred, please check your internet connection");
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   };
   return (
@@ -597,6 +643,38 @@ function Cart() {
                     />
                     </svg>
                     Cash on delivery
+                  </label>
+                </div>
+                <hr />
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="radio"
+                    className="accent-tertiary w-4 h-4"
+                    name="payment"
+                    value="4"
+                    id="paymentPayOS"
+                    checked={form.payment === "4"}
+                    onChange={onChangeForm}
+                  />
+                  <label
+                    htmlFor="paymentPayOS"
+                    className="flex items-center gap-2"
+                  >
+                    <svg
+                      width="40"
+                      height="40"
+                      viewBox="0 0 40 40"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <rect width="40" height="40" rx="10" fill="#C4C4C4" />
+                      <rect width="40" height="40" rx="10" fill="#1E88E5" />
+                      <path
+                        d="M20 12C15.58 12 12 15.58 12 20C12 24.42 15.58 28 20 28C24.42 28 28 24.42 28 20C28 15.58 24.42 12 20 12ZM20 26C16.69 26 14 23.31 14 20C14 16.69 16.69 14 20 14C23.31 14 26 16.69 26 20C26 23.31 23.31 26 20 26ZM20 16C18.9 16 18 16.9 18 18V20C18 21.1 18.9 22 20 22C21.1 22 22 21.1 22 20V18C22 16.9 21.1 16 20 16Z"
+                        fill="white"
+                      />
+                    </svg>
+                    Chuyển khoản QR (PayOS)
                   </label>
                 </div>
               </section>
