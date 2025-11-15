@@ -120,7 +120,6 @@ export const createPromoEvent = (
     start_date = "",
     end_date = "",
     product_ids = [],
-    is_shipping_fee = false,
   },
   token,
   controller
@@ -133,7 +132,6 @@ export const createPromoEvent = (
     start_date,
     end_date,
     product_ids,
-    is_shipping_fee,
   };
   return api.post("/apiv1/promo/events", payload, {
     signal: controller.signal,

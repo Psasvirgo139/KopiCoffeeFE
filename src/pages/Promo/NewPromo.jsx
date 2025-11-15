@@ -339,17 +339,19 @@ const NewPromo = (props) => {
               className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
             />
 
-            <div className="flex items-center gap-2 mt-2">
-              <input
-                id="is_shipping_fee"
-                name="is_shipping_fee"
-                type="checkbox"
-                checked={!!form.is_shipping_fee}
-                onChange={formChangeHandler}
-                className="checkbox checkbox-sm"
-              />
-              <label htmlFor="is_shipping_fee" className="text-sm">Apply discount to shipping fee</label>
-            </div>
+            {mode === "code" && (
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  id="is_shipping_fee"
+                  name="is_shipping_fee"
+                  type="checkbox"
+                  checked={!!form.is_shipping_fee}
+                  onChange={formChangeHandler}
+                  className="checkbox checkbox-sm"
+                />
+                <label htmlFor="is_shipping_fee" className="text-sm">Apply discount to shipping fee</label>
+              </div>
+            )}
 
             <label
               className="text-tertiary font-bold text-lg"
