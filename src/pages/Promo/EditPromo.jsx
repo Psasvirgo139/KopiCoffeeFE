@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import _ from "lodash";
 import { toast } from "react-hot-toast";
 import { connect } from "react-redux";
-import { NavLink, useMatch, useNavigate, useParams } from "react-router-dom";
+import { NavLink, useMatch, useNavigate, useParams, useLocation } from "react-router-dom";
 import Datepicker from "react-tailwindcss-datepicker";
 import closeIcon from "../../assets/icons/close.svg";
 import loadingImage from "../../assets/images/loading.svg";
@@ -52,6 +52,8 @@ const EditPromo = (props) => {
     desc: "",
   });
   const navigate = useNavigate();
+  const location = useLocation();
+  const isViewOnly = new URLSearchParams(location.search).get("view") === "1";
   const [cancel, setCancel] = useState(false);
   const [loadings, setLoadings] = useState({
     search: false,
@@ -422,14 +424,16 @@ const EditPromo = (props) => {
                 }
               />
 
-              <button
-                type="submit"
-                className={`${
-                  isLoading && "loading"
-                } btn btn-block btn-lg normal-case mt-2 btn-primary text-white shadow-lg rounded-2xl`}
-              >
-                Update Discount Information
-              </button>
+              {!isViewOnly && (
+                <button
+                  type="submit"
+                  className={`${
+                    isLoading && "loading"
+                  } btn btn-block btn-lg normal-case mt-2 btn-primary text-white shadow-lg rounded-2xl`}
+                >
+                  Update Discount Information
+                </button>
+              )}
               {/* <button
               type="reset"
               onClick={() => setCancel(true)}
