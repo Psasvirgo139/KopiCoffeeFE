@@ -27,12 +27,14 @@ const NewPromo = (props) => {
     discount_value: "",
     min_order_amount: "",
     total_usage_limit: "",
+    per_user_limit: "",
     start_date: "",
     end_date: "",
     startDate: "",
     endDate: "",
     // event-only
     product_ids: [],
+    is_shipping_fee: false,
   };
   const [mode, setMode] = useState("code"); // code | event
   const [selectedProduct, setSelectedProduct] = useState({
@@ -58,6 +60,8 @@ const NewPromo = (props) => {
     search: false,
   });
   const [selectedProducts, setSelectedProducts] = useState([]); // for event
+  const [invalidProducts, setInvalidProducts] = useState([]);
+  const [showInvalidModal, setShowInvalidModal] = useState(false);
 
   // create a preview as a side effect, whenever selected file is changed
   useEffect(() => {
@@ -109,7 +113,7 @@ const NewPromo = (props) => {
   const [isLoading, setLoading] = useState("");
   const controller = useMemo(() => new AbortController(), []);
   const formChangeHandler = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({ ...form, [e.target.name]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
 
   const submitHandler = (e) => {
     e.preventDefault();
@@ -162,8 +166,15 @@ const NewPromo = (props) => {
           toast.success("Discount event added");
         })
         .catch((err) => {
-          if (err.response?.data?.msg) return toast.error(err.response.data.msg);
-          toast.error(err.message);
+          const apiMsg = err.response?.data?.message || err.response?.data?.msg;
+          const invalids = err.response?.data?.invalid_products;
+          if (Array.isArray(invalids) && invalids.length > 0) {
+            setInvalidProducts(invalids);
+            setShowInvalidModal(true);
+            return;
+          }
+          if (apiMsg) return toast.error(apiMsg);
+          return toast.error(err.message || "Create failed");
         })
         .finally(() => setLoading(false));
     }
@@ -204,6 +215,22 @@ const NewPromo = (props) => {
         </section>
       </Modal>
       <Header />
+      <Modal isOpen={showInvalidModal} onClose={() => setShowInvalidModal(false)}>
+        <div className="space-y-3">
+          <p className="font-bold text-lg text-tertiary">Create failed</p>
+          <p className="text-sm">Some products already belong to active discount events:</p>
+          <ul className="list-disc pl-5 text-sm">
+            {invalidProducts.map((it, idx) => (
+              <li key={idx}>
+                {it.product_name ? `${it.product_name}` : `Product #${it.product_id}`} {it.event_name ? `(in event: ${it.event_name})` : ""}
+              </li>
+            ))}
+          </ul>
+          <div className="flex justify-end">
+            <button className="btn" onClick={() => setShowInvalidModal(false)}>Close</button>
+          </div>
+        </div>
+      </Modal>
       <main className="global-px py-6">
         <nav className="flex flex-row list-none gap-1">
           <li className="after:content-['>'] after:font-semibold text-primary">
@@ -295,21 +322,25 @@ const NewPromo = (props) => {
                 )}
               </>
             )}
-            <label
-              className="text-tertiary font-bold text-lg"
-              htmlFor="product_name"
-            >
-              {mode === "event" ? "Event name :" : "Title :"}
-            </label>
-            <input
-              placeholder="Type promo title max. 50 characters"
-              name="name"
-              id="product_name"
-              value={form.name}
-              onChange={formChangeHandler}
-              maxLength={50}
-              className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
-            ></input>
+            {mode === "event" && (
+              <>
+                <label
+                  className="text-tertiary font-bold text-lg"
+                  htmlFor="product_name"
+                >
+                  Event name :
+                </label>
+                <input
+                  placeholder="Type event name max. 50 characters"
+                  name="name"
+                  id="product_name"
+                  value={form.name}
+                  onChange={formChangeHandler}
+                  maxLength={50}
+                  className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
+                ></input>
+              </>
+            )}
             <label className="text-tertiary font-bold text-lg">Discount type :</label>
             <select
               name="discount_type"
@@ -332,6 +363,20 @@ const NewPromo = (props) => {
               onChange={formChangeHandler}
               className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
             />
+
+            {mode === "code" && (
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  id="is_shipping_fee"
+                  name="is_shipping_fee"
+                  type="checkbox"
+                  checked={!!form.is_shipping_fee}
+                  onChange={formChangeHandler}
+                  className="checkbox checkbox-sm"
+                />
+                <label htmlFor="is_shipping_fee" className="text-sm">Apply discount to shipping fee</label>
+              </div>
+            )}
 
             <label
               className="text-tertiary font-bold text-lg"
@@ -389,6 +434,19 @@ const NewPromo = (props) => {
                   id="total_usage_limit"
                   min={1}
                   value={form.total_usage_limit}
+                  onChange={formChangeHandler}
+                  className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
+                />
+
+                <label className="text-tertiary font-bold text-lg" htmlFor="per_user_limit">
+                  Per-user usage limit :
+                </label>
+                <input
+                  type="number"
+                  name="per_user_limit"
+                  id="per_user_limit"
+                  min={1}
+                  value={form.per_user_limit}
                   onChange={formChangeHandler}
                   className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
                 />
