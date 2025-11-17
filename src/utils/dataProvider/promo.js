@@ -9,8 +9,10 @@ export const createPromoEntry = (
     discount_value = "",
     min_order_amount = "",
     total_usage_limit = "",
+    per_user_limit = "",
     start_date = "",
     end_date = "",
+    is_shipping_fee = false,
   },
   token,
   controller
@@ -23,8 +25,10 @@ export const createPromoEntry = (
     discount_value,
     min_order_amount,
     total_usage_limit,
+    per_user_limit,
     start_date,
     end_date,
+    is_shipping_fee,
   };
   return api.post("/apiv1/promo", payload, {
     signal: controller.signal,
@@ -63,12 +67,15 @@ export const editPromoEntry = (
     coupon_code = "",
     min_order_amount = "",
     total_usage_limit = "",
+    per_user_limit = "",
     product_ids = [],
     start_date = "",
     end_date = "",
+    is_shipping_fee = undefined,
   },
   token,
-  controller
+  controller,
+  discount_kind
 ) => {
   const payload = {
     name,
@@ -78,18 +85,25 @@ export const editPromoEntry = (
     coupon_code,
     min_order_amount,
     total_usage_limit,
+    per_user_limit,
     product_ids,
     start_date,
     end_date,
+    is_shipping_fee,
   };
+  const params = {};
+  if (discount_kind) params.discount_kind = discount_kind;
   return api.patch(`/apiv1/promo/${promoId}`, payload, {
     signal: controller.signal,
+    params,
     headers: { Authorization: `Bearer ${token}` },
   });
 };
 
-export const getPromoById = (promoId, controller) => {
-  return api.get(`/apiv1/promo/${promoId}`, { signal: controller.signal });
+export const getPromoById = (promoId, controller, discount_kind) => {
+  const params = {};
+  if (discount_kind) params.discount_kind = discount_kind;
+  return api.get(`/apiv1/promo/${promoId}`, { signal: controller.signal, params });
 };
 
 export const deletePromoEntry = (promoId, token, controller) => {

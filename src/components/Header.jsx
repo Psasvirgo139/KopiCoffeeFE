@@ -153,8 +153,12 @@ class Header extends Component {
   }
 
   render() {
-    const posId = Number(this.props?.profile?.data?.position_id ?? this.props?.profile?.data?.positionId);
+    const posId = Number(
+      this.props?.profile?.data?.position_id ??
+        this.props?.profile?.data?.positionId
+    );
     const isShipper = posId === 4;
+    const role = Number(this.props.userInfo.role);
     return (
       <>
         <Logout />
@@ -219,7 +223,7 @@ class Header extends Component {
               </button>
             </div>
             <nav className="py-6 hidden lg:flex flex-row gap-8 justify-center">
-              {Number(this.props.userInfo.role) === 2 ? (
+              {role === 2 ? (
                 <>
                   <li className="list-none" key="Home Page">
                     <NavLink
@@ -272,6 +276,69 @@ class Header extends Component {
                       }
                     >
                       Schedules
+                    </NavLink>
+                  </li>
+                </>
+              ) : role === 1 ? (
+                <>
+                  <li className="list-none" key="Home Page">
+                    <NavLink
+                      to="/"
+                      className={({ isActive }) =>
+                        isActive ? "font-bold text-[#6A4029]" : ""
+                      }
+                    >
+                      Home
+                    </NavLink>
+                  </li>
+                  <li className="list-none" key="Product">
+                    <NavLink
+                      to="/products"
+                      className={({ isActive }) =>
+                        isActive ? "font-bold text-[#6A4029]" : ""
+                      }
+                    >
+                      Products
+                    </NavLink>
+                  </li>
+                  <li className="list-none" key="Dashboard">
+                    <NavLink
+                      to="/admin"
+                      className={({ isActive }) =>
+                        isActive ? "font-bold text-[#6A4029]" : ""
+                      }
+                    >
+                      Dashboard
+                    </NavLink>
+                  </li>
+                  <li className="list-none" key="ManageSchedules">
+                    <NavLink
+                      to="/schedules"
+                      className={({ isActive }) =>
+                        isActive ? "font-bold text-[#6A4029]" : ""
+                      }
+                    >
+                      Manage Schedules
+                    </NavLink>
+                  </li>
+                  <li className="list-none" key="ManageUsers">
+                    <NavLink
+                      to="/customers"
+                      className={({ isActive }) =>
+                        isActive ? "font-bold text-[#6A4029]" : ""
+                      }
+                    >
+                      Manage Users
+                    </NavLink>
+                  </li>
+                  <li className="list-none" key="ManageOrders">
+                    <NavLink
+                      to="/manage-order"
+                      className={({ isActive }) =>
+                        isActive ? "font-bold text-[#6A4029]" : ""
+                      }
+                    >
+                      Manage Orders
                     </NavLink>
                   </li>
                 </>
@@ -474,31 +541,13 @@ class Header extends Component {
                           My Cart
                         </a> */}
                         </div>
-                        {Number(this.props.userInfo.role) === 1 && (
+                        {role === 1 && (
                           <div className="py-1">
-                            <NavLink
-                              className="block px-4 py-2 hover:bg-gray-100  duration-200"
-                              to="/admin"
-                            >
-                              Admin Dashboard
-                            </NavLink>
-                            <NavLink
-                              className="block px-4 py-2 hover:bg-gray-100  duration-200"
-                              to="/schedules"
-                            >
-                              Manage Schedules
-                            </NavLink>
                             <NavLink
                               className="block px-4 py-2 hover:bg-gray-100  duration-200"
                               to="/employees"
                             >
                               Manage Staffs
-                            </NavLink>
-                            <NavLink
-                              className="block px-4 py-2 hover:bg-gray-100  duration-200"
-                              to="/customers"
-                            >
-                              Manage Users
                             </NavLink>
                             <li>
                               <NavLink
@@ -507,28 +556,16 @@ class Header extends Component {
                               >
                                 AI Product Suggestions
                               </NavLink>
-                            </li>
-                            <NavLink
-                              className="block px-4 py-2 hover:bg-gray-100  duration-200"
-                              to="/products/new"
-                            >
-                              Add Product
-                            </NavLink>
+                            </li>          
                             <NavLink
                               className="block px-4 py-2 hover:bg-gray-100  duration-200"
                               to="/promo"
                             >
                               Manage Promo
                             </NavLink>
-                            <NavLink
-                              className="block px-4 py-2 hover:bg-gray-100  duration-200"
-                              to="/manage-order"
-                            >
-                              Manage Orders
-                            </NavLink>
                           </div>
                         )}
-                        {Number(this.props.userInfo.role) === 2 && (
+                        {role === 2 && (
                           <div className="py-1">
                             <NavLink
                               className="block px-4 py-2 hover:bg-gray-100  duration-200"
