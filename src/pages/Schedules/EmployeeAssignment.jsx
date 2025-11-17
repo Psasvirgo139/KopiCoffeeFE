@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react"; // Thêm useMemo
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Header from "../../components/Header";
@@ -32,9 +32,40 @@ function EmployeeAssignment() {
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [notes, setNotes] = useState("");
 
+  // --- THÊM STATE CHO MODAL XÁC NHẬN ---
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [confirmProps, setConfirmProps] = useState({
+    title: "Confirm Action",
+    message: "Are you sure?",
+    onConfirm: () => {},
+    confirmText: "Confirm",
+    confirmClass: "btn-primary",
+  });
+  // --- KẾT THÚC STATE MODAL ---
+
+  // Thêm controller (dù không dùng nhiều, nhưng là good practice)
+  const controller = useMemo(() => new AbortController(), [shiftId, selectedDate]);
+
   useEffect(() => {
     loadData();
-  }, [shiftId, selectedDate]);
+    // Thêm cleanup
+    return () => {
+      controller.abort();
+    }
+  }, [shiftId, selectedDate, controller]); // Thêm controller vào dependencies
+
+  // --- THÊM HÀM MỞ MODAL ---
+  const openConfirmModal = ({
+    title,
+    message,
+    onConfirm,
+    confirmText = "Confirm",
+    confirmClass = "btn-primary",
+  }) => {
+    setConfirmProps({ title, message, onConfirm, confirmText, confirmClass });
+    setIsConfirmOpen(true);
+  };
+  // --- KẾT THÚC HÀM MỞ MODAL ---
 
   const loadData = async () => {
     try {
@@ -43,17 +74,19 @@ function EmployeeAssignment() {
       // Load employee shifts for the selected date and shift
       const shiftsResponse = await getEmployeeShiftsByShiftAndDate(
         selectedDate,
-        shiftId
+        shiftId,
+        controller.signal // Pass signal
       );
       const empList = shiftsResponse.data || [];
 
       // Load all employees (admin endpoint requires token)
       let empArray = [];
       try {
-        const employeesResponse = await getEmployees(userInfo?.token);
+        const employeesResponse = await getEmployees(userInfo?.token, controller.signal);
         empArray = employeesResponse.data || [];
         setEmployees(empArray);
       } catch (e) {
+        if (e.name === 'CanceledError') return;
         empArray = [];
         setEmployees([]);
       }
@@ -76,19 +109,22 @@ function EmployeeAssignment() {
 
       // Load position rules for this shift so we can show required counts
       try {
-        const pr = await getPositionRules(shiftId);
+        const pr = await getPositionRules(shiftId, controller.signal);
         setPositionRules(pr?.data || []);
       } catch (e) {
+        if (e.name === 'CanceledError') return;
         setPositionRules([]);
       }
 
       // Validate constraints
       const constraintsResponse = await validateShiftConstraints(
         selectedDate,
-        shiftId
+        shiftId,
+        controller.signal
       );
       setConstraints(constraintsResponse.data);
     } catch (err) {
+      if (err.name === 'CanceledError') return; // Bỏ qua lỗi do hủy request
       console.error("loadData error:", err);
       let msg =
         err?.response?.data?.message ||
@@ -183,31 +219,36 @@ function EmployeeAssignment() {
     }
   };
 
+  // --- HÀM ĐÃ CẬP NHẬT: handleRemoveEmployee ---
   const handleRemoveEmployee = async (employeeShiftId) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to remove this employee from the shift?"
-      )
-    )
-      return;
+    // 1. Tách logic xóa ra
+    const doRemove = async () => {
+      try {
+        await removeEmployeeFromShift(employeeShiftId, userInfo.token);
+        toast.success("Employee removed from shift successfully");
+        loadData();
+      } catch (err) {
+        toast.error("Failed to remove employee from shift");
+      }
+    };
 
-    try {
-      await removeEmployeeFromShift(employeeShiftId, userInfo.token);
-      toast.success("Employee removed from shift successfully");
-      loadData();
-    } catch (err) {
-      toast.error("Failed to remove employee from shift");
-    }
+    // 2. Mở modal để xác nhận
+    openConfirmModal({
+      title: "Remove Employee?",
+      message: "Are you sure you want to remove this employee from the shift?",
+      onConfirm: doRemove,
+      confirmText: "Yes, Remove",
+      confirmClass: "btn-error",
+    });
   };
 
   const getPositionCounts = () => {
+    // ... (code giữ nguyên)
     const counts = {};
     const normalize = (s) => (s || "").toString().trim().toLowerCase();
     employeeShifts.forEach((es) => {
-      // prefer position info attached to the employeeShift optimistic entry
       let pos = es.employeePositionName || null;
       if (!pos) {
-        // Compare as strings to avoid type mismatches between userId and employeeId
         const employee = employees.find(
           (emp) => String(emp.userId) === String(es.employeeId)
         );
@@ -224,6 +265,7 @@ function EmployeeAssignment() {
   };
 
   const getAvailableEmployees = () => {
+    // ... (code giữ nguyên)
     const assignedEmployeeIds = employeeShifts.map((es) =>
       String(es.employeeId)
     );
@@ -234,18 +276,17 @@ function EmployeeAssignment() {
 
   const positionCounts = getPositionCounts();
   const availableEmployees = getAvailableEmployees();
-  // helper to normalize position name keys (trim + lowercase)
   const normalizePos = (s) => (s || "").toString().trim().toLowerCase();
 
-  // map of required counts per position from positionRules for quick lookup
   const requiredByPosition = (positionRules || []).reduce((acc, r) => {
+    // ... (code giữ nguyên)
     if (r && r.positionName)
       acc[normalizePos(r.positionName)] = r.requiredCount || 0;
     return acc;
   }, {});
 
-  // determine whether the selected employee's position is already at capacity
   const isSelectedAtCapacity = () => {
+    // ... (code giữ nguyên)
     if (!selectedEmployee) return false;
     const emp = employees.find(
       (e) => String(e.userId) === String(selectedEmployee)
@@ -254,13 +295,11 @@ function EmployeeAssignment() {
     const posName =
       emp.position.positionName || emp.position || emp.positionName;
     const norm = normalizePos(posName);
-    // Prefer authoritative positionRules requiredCount
     if (requiredByPosition && requiredByPosition[norm] != null) {
       const req = requiredByPosition[norm] || 0;
       const curLocal = positionCounts[norm] || 0;
       return curLocal >= req;
     }
-    // fallback to server-provided constraints structure
     if (constraints && Array.isArray(constraints.positions)) {
       const rule = constraints.positions.find(
         (p) => p.positionName === posName
@@ -275,6 +314,7 @@ function EmployeeAssignment() {
   };
 
   if (isLoadingData) {
+    // ... (code giữ nguyên)
     return (
       <>
         <Header />
@@ -318,7 +358,6 @@ function EmployeeAssignment() {
                   <label className="label">
                     <span className="label-text">Date</span>
                   </label>
-                  {/* show date plainly without bordered input to remove the box/frame */}
                   <div className="bg-base-100">
                     <span className="text-lg font-medium">{selectedDate}</span>
                   </div>
@@ -515,6 +554,40 @@ function EmployeeAssignment() {
           </div>
         </div>
       </div>
+
+      {/* --- THÊM MODAL XÁC NHẬN CHUNG --- */}
+      {isConfirmOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3
+              className={`font-bold text-lg ${
+                confirmProps.confirmClass === "btn-error" ? "text-error" : ""
+              }`}
+            >
+              {confirmProps.title}
+            </h3>
+            <p className="py-4">{confirmProps.message}</p>
+            <div className="modal-action">
+              <button
+                className="btn"
+                onClick={() => setIsConfirmOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className={`btn ${confirmProps.confirmClass}`}
+                onClick={() => {
+                  confirmProps.onConfirm();
+                  setIsConfirmOpen(false);
+                }}
+              >
+                {confirmProps.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* --- KẾT THÚC MODAL --- */}
 
       <Footer />
     </>
