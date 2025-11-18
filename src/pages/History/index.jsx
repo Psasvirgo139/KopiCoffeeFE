@@ -7,7 +7,7 @@ import Datepicker from "react-tailwindcss-datepicker";
 
 import axios from 'axios';
 import { useSelector } from 'react-redux';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import loadingImage from '../../assets/images/loading.svg';
 import productPlaceholder from '../../assets/images/placeholder-image.webp';
@@ -26,6 +26,7 @@ import {
 
 function History() {
   const authInfo = useSelector((state) => state.userInfo);
+  const navigate = useNavigate();
   const controller = useMemo(() => new AbortController(), []);
   const [searchParams, setSearchParams] = useSearchParams();
   const page = searchParams.get("page");
@@ -114,14 +115,14 @@ function History() {
 
   const getStatusBadgeClass = (status) => {
     const statusUpper = String(status || "").toUpperCase();
-    if (["COMPLETED"].includes(statusUpper)) {
-      return "bg-green-100 text-green-800 border-green-300";
-    } else if (["CANCELLED", "REJECTED"].includes(statusUpper)) {
+    if (["CANCELLED", "REJECTED"].includes(statusUpper)) {
       return "bg-red-100 text-red-800 border-red-300";
-    } else if (["PENDING", "PROCESSING", "PREPARING"].includes(statusUpper)) {
-      return "bg-yellow-100 text-yellow-800 border-yellow-300";
-    } else if (["SHIPPING", "ON_THE_WAY"].includes(statusUpper)) {
+    } else if (["COMPLETED"].includes(statusUpper)) {
+      return "bg-green-100 text-green-800 border-green-300";
+    } else if (["SHIPPING", "ON_THE_WAY", "DELIVERED"].includes(statusUpper)) {
       return "bg-blue-100 text-blue-800 border-blue-300";
+    } else if (["PENDING", "PROCESSING", "PREPARING", "ACCEPTED", "READY", "PAID"].includes(statusUpper)) {
+      return "bg-yellow-100 text-yellow-800 border-yellow-300";
     }
     return "bg-gray-100 text-gray-800 border-gray-300";
   };
@@ -350,7 +351,7 @@ function History() {
                     {filteredSorted.map((item, key) => (
                       <div
                         className="bg-white rounded-2xl shadow-md hover:shadow-xl cursor-pointer transition-all duration-300 hover:-translate-y-1 overflow-hidden group h-full"
-                        onClick={() => setDetail(item.id)}
+                        onClick={() => navigate(`/history/${item.id}`)}
                         key={key}
                       >
                        <div className="flex flex-row p-5 gap-4 h-full">
