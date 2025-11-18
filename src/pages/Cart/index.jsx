@@ -203,7 +203,7 @@ function Cart() {
         setShipFee(Number(data?.shipping_fee || 0));
         setShipError("");
       } catch (e) {
-        const msg = e?.response?.data?.message || "Không thể ước tính phí ship";
+        const msg = e?.response?.data?.message || "Unable to estimate shipping costs";
         setShipError(msg);
         setShipFee(0);
         setShipDistance(null);
@@ -222,7 +222,7 @@ function Cart() {
     setDiscountApplyToShipping(false);
     const code = (discountCode || "").trim();
     if (!code) {
-      setDiscountMsg("Vui lòng nhập mã giảm giá");
+      setDiscountMsg("Please enter discount code");
       return;
     }
     try {
@@ -231,10 +231,10 @@ function Cart() {
       setAppliedDiscount(Number(data.discount_amount || 0));
       setAppliedCode(String(data.coupon_code || code));
       setDiscountApplyToShipping(Boolean(data.applies_to_shipping));
-      setDiscountMsg(data.message || "Áp dụng mã thành công");
+      setDiscountMsg(data.message || "Code applied successfully");
       toast.success("Applied discount");
     } catch (e) {
-      const msg = e?.response?.data?.message || "Mã giảm giá không hợp lệ";
+      const msg = e?.response?.data?.message || "Invalid coupon code";
       setDiscountMsg(msg);
       setAppliedDiscount(0);
       setAppliedCode("");
@@ -244,15 +244,15 @@ function Cart() {
 
   const payHandler = async () => {
     if (missingAddress) {
-      toast.error("Vui lòng nhập địa chỉ giao hàng");
+      toast.error("Please enter shipping address");
       return;
     }
     if (missingPhone || phoneError) {
-      toast.error("Vui lòng nhập số điện thoại hợp lệ (10 chữ số) trước khi thanh toán");
+      toast.error("Please enter a valid phone number (10 digits) before payment");
       return;
     }
     if (form.payment === "") {
-      toast.error("Vui lòng chọn phương thức thanh toán");
+      toast.error("Please select payment method");
       return;
     }
     if (userInfo.token === "") {
@@ -293,7 +293,7 @@ function Cart() {
 
         const orderId = txResp?.data?.data?.id;
         if (!orderId) {
-            toast.error("Không tạo được đơn hàng");
+            toast.error("Unable to create order");
             return;
         }
 
@@ -306,7 +306,7 @@ function Cart() {
                 window.location.href = url;
                 return;
             }
-            toast.error("Không tạo được liên kết VNPAY");
+            toast.error("Unable to create VNPAY link");
             return;
         }
 
@@ -322,12 +322,12 @@ function Cart() {
                     return;
                 }
 
-                toast.error("Không thể tạo link thanh toán PayOS");
+                toast.error("Unable to generate PayOS payment link");
                 return;
 
             } catch (e) {
                 console.error("PayOS error:", e);
-                toast.error("Không thể tạo link thanh toán PayOS. Vui lòng thử lại.");
+                toast.error("Unable to generate PayOS payment link. Please try again.");
                 return;
             }
         }
@@ -425,7 +425,7 @@ function Cart() {
                 <section className="flex flex-col w-full space-y-3">
                   <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-4 mb-4">
                     <label className="text-sm font-semibold mb-2 block text-gray-700">Discount code</label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="text"
                         value={discountCode}
@@ -862,25 +862,26 @@ function Cart() {
   </div>
 
   {/* Confirm Button */}
-  <button
-    disabled={disabled}
-    onClick={payHandler}
-    className={`${
-      isLoading && "loading"
-    } btn btn-block btn-primary text-white py-4 font-bold rounded-xl text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg`}
-  >
-    {isLoading ? (
-      <span className="flex items-center justify-center gap-2">
-        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        Processing...
-      </span>
-    ) : (
-      "Confirm and Pay"
-    )}
-  </button>
+{/* Confirm Button */}
+<button
+  disabled={disabled}
+  onClick={payHandler}
+  className={`${
+    isLoading && "loading"
+  } btn btn-block btn-primary text-white font-bold rounded-xl text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg flex justify-center items-center h-16`} // <--- Thay 'py-4' bằng 'h-16'
+>
+  {isLoading ? (
+    <span className="flex items-center justify-center gap-2">
+      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      Processing...
+    </span>
+  ) : (
+    "Confirm and Pay"
+  )}
+</button>
 </aside>
           </section>
         </div>
