@@ -12,7 +12,7 @@ const AuthFooter = () => {
     <>
       <footer className="bg-[#F8F8F8] text-[#4f5665]">
         <div className="global-px lg:px-16">
-          <div className="py-5  md:py-10"></div>
+          <div className="py-5  md:py-10"></div>
           <div className="flex flex-col-reverse gap-12 md:flex-row">
             <div className="flex flex-col gap-4 md:max-w-[50%]">
               <Link to="/">
@@ -26,59 +26,68 @@ const AuthFooter = () => {
                 coffee. We provide high quality beans
               </div>
               <div className="flex flex-row gap-5">
+                {/* === SỬA ĐỔI 1: Thêm target và link thật === */}
                 <a
-                  href="#"
+                  href="https://www.facebook.com/kopi.coffeeworkspace" 
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="bg-tertiary h-[35px] w-[35px] flex items-center justify-center rounded-full"
                   aria-label="Facebook"
                 >
-                  <img src={fbLogo} alt="" />
+                  <img src={fbLogo} alt="Facebook" />
                 </a>
                 <a
-                  href="#"
+                  href="https://www.facebook.com/kopi.coffeeworkspace" 
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="bg-tertiary h-[35px] w-[35px] flex items-center justify-center rounded-full"
                   aria-label="Instagram"
                 >
-                  <img src={igLogo} alt="" />
+                  <img src={igLogo} alt="Instagram" />
                 </a>
                 <a
-                  href="#"
+                  href="https://www.facebook.com/kopi.coffeeworkspace" 
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="bg-tertiary h-[35px] w-[35px] flex items-center justify-center rounded-full"
                   aria-label="Twitter"
                 >
-                  <img src={twLogo} alt="" width="120%" className="w-16" />
+                  <img src={twLogo} alt="Twitter" className="w-16" />
                 </a>
               </div>
               <div className="copyright">(c) 2025 Kopi</div>
             </div>
+            
+            {/* === SỬA ĐỔI 2: Xóa target="_blank" khỏi các link bên dưới === */}
             <nav className="flex flex-row lg:flex-col gap-10 md:flex-1">
               <div className="flex-1 flex flex-col gap-5">
                 <div className="grid-item">
                   <p className="font-bold">Product</p>
                 </div>
-                <div className="flex flex-col gap-2  lg:flex-row lg:gap-x-10 lg:gap-y-4 flex-wrap w-full">
+                <div className="flex flex-col gap-2  lg:flex-row lg:gap-x-10 lg:gap-y-4 flex-wrap w-full">
                   <div className="grid-item flex-1">
-                    <a href="#" target="_blank" rel="noopener noreferrer">
+                    <a href="#"> 
                       {" "}
                       Download
                     </a>
                   </div>
                   <div className="grid-item flex-1">
-                    <a href="#" target="_blank" rel="noopener noreferrer">
+                    <a href="#"> 
                       Pricing
                     </a>
                   </div>
                   <div className="grid-item flex-1">
-                    <a href="#" target="_blank" rel="noopener noreferrer">
+                    <a href="#"> 
                       Locations
                     </a>
                   </div>
                   <div className="grid-item flex-1">
-                    <a href="#" target="_blank" rel="noopener noreferrer">
+                    <a href="#"> 
                       Countries
                     </a>
                   </div>
                   <div className="grid-item flex-1">
-                    <a href="#" target="_blank" rel="noopener noreferrer">
+                    <a href="#"> 
                       Blog
                     </a>
                   </div>
@@ -88,29 +97,28 @@ const AuthFooter = () => {
                 <div className="grid-item">
                   <p className="font-bold">Engage</p>
                 </div>
-                <div className="flex flex-col gap-2  lg:flex-row lg:gap-x-10 lg:gap-y-4 flex-wrap w-full text-base">
+                <div className="flex flex-col gap-2  lg:flex-row lg:gap-x-10 lg:gap-y-4 flex-wrap w-full text-base">
                   <div className="grid-item flex-1 min-w-[5rem]">
-                    <a href="#" target="_blank" rel="noopener noreferrer">
+                    <a href="#"> 
                       Coffee Shop?
                     </a>
                   </div>
                   <div className="grid-item flex-1 min-w-[5rem]">
-                    <a href="#" target="_blank" rel="noopener noreferrer">
-                      FAQ
+                    <a href="#"> 
                     </a>
                   </div>
                   <div className="grid-item flex-1">
-                    <a href="#" target="_blank" rel="noopener noreferrer">
+                    <a href="#"> 
                       About Us
                     </a>
                   </div>
                   <div className="grid-item flex-1">
-                    <a href="#" target="_blank" rel="noopener noreferrer">
+                    <a href="#"> 
                       Privacy Policy
                     </a>
                   </div>
                   <div className="grid-item flex-1">
-                    <a href="#" target="_blank" rel="noopener noreferrer">
+                    <a href="#"> 
                       Terms of Services
                     </a>
                   </div>
