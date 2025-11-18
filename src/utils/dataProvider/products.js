@@ -24,7 +24,7 @@ export function getProductbyId(productId, controller) {
 }
 
 export const createProductEntry = (
-  { name = "", price = "", category_id = "", desc = "", image = "" },
+  { name = "", price = "", category_id = "", desc = "", stock = "", image = "" },
   token,
   controller
 ) => {
@@ -41,6 +41,7 @@ export const createProductEntry = (
   bodyForm.append("category_id", category_id);
   bodyForm.append("desc", desc);
   bodyForm.append("price", price);
+  if (stock !== "") bodyForm.append("stock_qty", String(stock));
 
   // const body = {
   //   name,
@@ -60,7 +61,7 @@ export const createProductEntry = (
 };
 
 export const editProductEntry = (
-  { name = "", price = "", category_id = "", desc = "", image = "" },
+  { name = "", price = "", category_id = "", desc = "", stock = "", image = "" },
   productId,
   token,
   controller
@@ -76,6 +77,7 @@ export const editProductEntry = (
   bodyForm.append("category_id", category_id);
   bodyForm.append("desc", desc);
   bodyForm.append("price", price);
+  if (stock !== "") bodyForm.append("stock_qty", String(stock));
 
   // const body = {
   //   name,

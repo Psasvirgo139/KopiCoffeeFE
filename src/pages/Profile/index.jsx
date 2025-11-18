@@ -13,6 +13,7 @@ import { profileAction } from "../../redux/slices/profile.slice";
 import { editProfile, listAddresses, createAddress, setDefaultAddress } from "../../utils/dataProvider/profile";
 import useDocumentTitle from "../../utils/documentTitle";
 import EditPassword from "./EditPassword";
+import MapAddressModal from "../Cart/MapAddressModal";
 
 function Profile() {
   const dispatch = useDispatch();
@@ -44,6 +45,7 @@ function Profile() {
   const [addresses, setAddresses] = useState([]);
   const [selectedUserAddressId, setSelectedUserAddressId] = useState(null);
   const [newProfileAddressText, setNewProfileAddressText] = useState("");
+  const [showMapModal, setShowMapModal] = useState(false);
 
   const controller = useMemo(() => new AbortController(), []);
   useDocumentTitle("Profile");
@@ -189,18 +191,29 @@ function Profile() {
                 {/* Right column */}
                 <section className="flex-[2_2_0%] p-4 md:p-10 lg:pl-0">
                   <form className="bg-white drop-shadow-2xl rounded-xl border-b-[6px] border-solid border-[#6a4029] px-5 py-3 relative">
-                    <button
-                      className={`${
-                        editMode ? "bg-secondary" : "bg-tertiary"
-                      } absolute top-3 p-2 rounded-full right-3 cursor-pointer select-none`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setForm(data);
-                        setEditMode((v) => !v);
-                      }}
-                    >
-                      <img src={iconPen} alt="" />
-                    </button>
+                    <div className="absolute top-3 right-3 flex items-center gap-2">
+                      {editMode && (
+                        <button
+                          className="text-sm bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors font-medium"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setShowMapModal(true);
+                          }}
+                        >
+                          Use Map
+                        </button>
+                      )}
+                      <button
+                        className={`${editMode ? "bg-secondary" : "bg-tertiary"} p-2 rounded-full cursor-pointer select-none`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setForm(data);
+                          setEditMode((v) => !v);
+                        }}
+                      >
+                        <img src={iconPen} alt="" />
+                      </button>
+                    </div>
 
                     <p className="text-primary text-xl font-bold">Contacts</p>
                     <div className="grid lg:grid-cols-[55%_35%] gap-x-5 gap-y-8 py-5">
@@ -349,6 +362,35 @@ function Profile() {
         </>
       )}
       <Footer />
+      <MapAddressModal
+        isOpen={showMapModal}
+        onClose={() => setShowMapModal(false)}
+        onPick={async (picked) => {
+          try {
+            const resp = await createAddress(
+              userInfo.token,
+              {
+                address_line: picked.address || "",
+                ward: picked.ward || "",
+                district: picked.district || "",
+                city: picked.city || "",
+                latitude: picked.lat,
+                longitude: picked.lng,
+                set_default: (addresses.length === 0),
+              },
+              controller
+            );
+            const newId = resp.data?.user_address_id || resp.data?.address_id || null;
+            const res2 = await listAddresses(userInfo.token, controller);
+            const data2 = res2.data?.data || [];
+            setAddresses(data2);
+            if (newId) setSelectedUserAddressId(newId);
+            toast.success("Address saved from map");
+          } catch {
+            toast.error("Failed to save address, please try again");
+          }
+        }}
+      />
     </>
   );
 }

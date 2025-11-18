@@ -195,8 +195,13 @@ function Products(props) {
   };
 
   useEffect(() => {
-    fetchPromo();
-  }, []);
+    if (Number(userInfo.role) === 1) {
+      fetchPromo();
+    } else {
+      setPromoLoad(false);
+      setPromo([]);
+    }
+  }, [userInfo.role]);
 
   useEffect(() => {
     const c = new AbortController();

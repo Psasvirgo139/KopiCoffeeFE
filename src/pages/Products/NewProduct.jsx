@@ -19,6 +19,7 @@ export const NewProduct = (props) => {
     price: "",
     category_id: "",
     desc: "",
+    stock: "",
     image: "",
   };
   const [form, setForm] = useState({
@@ -26,6 +27,7 @@ export const NewProduct = (props) => {
     price: "",
     category_id: "",
     desc: "",
+    stock: "",
     image: "",
   });
   const [error, setError] = useState({
@@ -84,7 +86,8 @@ export const NewProduct = (props) => {
       form.category_id === "" ||
       form.desc === "" ||
       form.name === "" ||
-      form.price === ""
+      form.price === "" ||
+      form.stock === ""
     ) {
       return toast.error("Input required form");
     }
@@ -168,6 +171,23 @@ export const NewProduct = (props) => {
               accept="image/png, image/webp, image/jpeg"
               className="hidden"
               onChange={onSelectFile}
+            />
+
+            <label
+              className="text-tertiary font-bold text-lg"
+              htmlFor="product_stock"
+            >
+              Stock :
+            </label>
+            <input
+              placeholder="Type initial stock quantity"
+              name="stock"
+              type="number"
+              min="0"
+              id="product_stock"
+              value={form.stock}
+              onChange={formChangeHandler}
+              className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
             />
             <label
               className="text-tertiary font-bold text-lg"

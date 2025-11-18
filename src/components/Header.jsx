@@ -563,6 +563,12 @@ class Header extends Component {
                             >
                               Manage Promo
                             </NavLink>
+                          <NavLink
+                            className="block px-4 py-2 hover:bg-gray-100  duration-200"
+                            to="/admin/tables"
+                          >
+                            Manage Tables
+                          </NavLink>
                           </div>
                         )}
                         {role === 2 && (
