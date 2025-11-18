@@ -67,16 +67,19 @@ function ShippingOrder() {
   useEffect(() => { isShipperRef.current = !!isShipper; }, [isShipper]);
 
   const getStatusBadge = (status) => {
-    const statusConfig = {
-      PENDING: { bg: "bg-yellow-100", text: "text-yellow-800", border: "border-yellow-300" },
-      ACCEPTED: { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-300" },
-      READY: { bg: "bg-purple-100", text: "text-purple-800", border: "border-purple-300" },
-      SHIPPING: { bg: "bg-indigo-100", text: "text-indigo-800", border: "border-indigo-300" },
-      PAID: { bg: "bg-green-100", text: "text-green-800", border: "border-green-300" },
-      COMPLETED: { bg: "bg-emerald-100", text: "text-emerald-800", border: "border-emerald-300" },
-      REJECTED: { bg: "bg-red-100", text: "text-red-800", border: "border-red-300" },
-    };
-    const config = statusConfig[status] || { bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-300" };
+    const statusUpper = String(status || "").toUpperCase();
+    let config;
+    if (["CANCELLED", "REJECTED"].includes(statusUpper)) {
+      config = { bg: "bg-red-100", text: "text-red-800", border: "border-red-300" };
+    } else if (["COMPLETED"].includes(statusUpper)) {
+      config = { bg: "bg-green-100", text: "text-green-800", border: "border-green-300" };
+    } else if (["SHIPPING", "ON_THE_WAY", "DELIVERED"].includes(statusUpper)) {
+      config = { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-300" };
+    } else if (["PENDING", "PROCESSING", "PREPARING", "ACCEPTED", "READY", "PAID"].includes(statusUpper)) {
+      config = { bg: "bg-yellow-100", text: "text-yellow-800", border: "border-yellow-300" };
+    } else {
+      config = { bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-300" };
+    }
     return (
       <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${config.bg} ${config.text} ${config.border} border`}>
         {status}

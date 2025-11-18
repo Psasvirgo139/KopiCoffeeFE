@@ -335,7 +335,8 @@ function Cart() {
         // CASE 3: các phương thức khác như COD
         toast.success("Success create transaction");
         dispatch(cartActions.resetCart());
-        navigate("/history");
+        // Redirect to order detail page after successful payment
+        navigate(`/history/${orderId}`);
 
     } catch (err) {
         console.log(err);
