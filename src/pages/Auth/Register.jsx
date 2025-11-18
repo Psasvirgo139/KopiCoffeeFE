@@ -3,7 +3,7 @@ import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 
 import useDocumentTitle from "../../utils/documentTitle";
-import icon from "../../assets/jokopi.svg";
+// import icon from "../../assets/jokopi.svg"; // Bỏ import vì không dùng nữa
 import { registerWithUsername } from "../../utils/dataProvider/auth";
 import OtpModal from "../../components/otp/OtpModal";
 
@@ -123,18 +123,16 @@ const Register = () => {
 
   return (
     <>
+      {/* === BỎ HEADER ===
       <header className="flex justify-between mb-10">
-        <Link to="/">
-          <div className="font-extrabold flex flex-row justify-center gap-4">
-            <img src={icon} alt="logo" width="30px" />
-            <h1 className="text-xl">Kopi.</h1>
-          </div>
-        </Link>
-        <div className="text-xl font-semibold text-tertiary">Register</div>
+        ...
       </header>
+      */}
 
-      <section className="mt-16">
-        <form className="space-y-4 md:space-y-4 relative">
+      {/* === BỎ `mt-16` === */}
+      <section>
+        {/* === GIẢM SPACING XUỐNG `space-y-3` === */}
+        <form className="space-y-3 relative">
           {/* Email */}
           <div>
             <label htmlFor="email" className="text-[#4F5665] font-bold">
@@ -151,7 +149,8 @@ const Register = () => {
               value={form.email}
               onChange={onChangeForm}
             />
-            <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1 h-4">
+            {/* === BỎ `h-4` === */}
+            <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1">
               {error.email || ""}
             </span>
           </div>
@@ -172,7 +171,8 @@ const Register = () => {
               value={form.username}
               onChange={onChangeForm}
             />
-            <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1 h-4">
+            {/* === BỎ `h-4` === */}
+            <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1">
               {error.username || ""}
             </span>
           </div>
@@ -193,7 +193,8 @@ const Register = () => {
               value={form.password}
               onChange={onChangeForm}
             />
-            <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1 h-4">
+            {/* === BỎ `h-4` === */}
+            <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1">
               {error.password || ""}
             </span>
           </div>
@@ -217,7 +218,8 @@ const Register = () => {
               value={form.confirmPassword}
               onChange={onChangeForm}
             />
-            <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1 h-4">
+            {/* === BỎ `h-4` === */}
+            <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1">
               {error.confirmPassword || ""}
             </span>
           </div>
@@ -259,14 +261,17 @@ const Register = () => {
           </button>
 
           <div className="inline-flex items-center justify-center w-full">
-            <hr className="w-full h-px my-6 bg-gray-200 border-0" />
+            {/* === GIẢM MARGIN `my-6` XUỐNG `my-3` === */}
+            <hr className="w-full h-px my-3 bg-gray-200 border-0" />
             <span className="absolute px-3 font-medium text-gray-900 -translate-x-1/2 bg-white left-1/2 w-64 text-center">
-              Already have a account?
+              Already have an account?
             </span>
           </div>
 
-          <Link to="/auth/login">
-            <button className="w-full text-white bg-tertiary focus:ring-4 focus:outline-none focus:ring-primary-300 font-bold rounded-2xl text-lg p-3 text-center shadow-xl lg:mb-20">
+          {/* === THÊM `mt-2` VÀ `block` ĐỂ GIÃN RA === */}
+          <Link to="/auth/login" className="block mt-2">
+            {/* === BỎ `lg:mb-20` === */}
+            <button className="w-full text-white bg-tertiary focus:ring-4 focus:outline-none focus:ring-primary-300 font-bold rounded-2xl text-lg p-3 text-center shadow-xl">
               Login here
             </button>
           </Link>

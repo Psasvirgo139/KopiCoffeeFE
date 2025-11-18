@@ -26,135 +26,108 @@ class Footer extends Component {
                 coffee. We provide high quality beans
               </div>
               <div className="flex flex-row gap-5">
-                <a
-                  href="#"
-                  className="bg-tertiary h-[35px] w-[35px] flex items-center justify-center rounded-full"
-                >
-                  <img src={fbLogo} alt="" />
-                </a>
-                <a
-                  href="#"
-                  className="bg-tertiary h-[35px] w-[35px] flex items-center justify-center rounded-full"
-                >
-                  <img src={igLogo} alt="" />
-                </a>
-                <a
-                  href="#"
-                  className="bg-tertiary h-[35px] w-[35px] flex items-center justify-center rounded-full"
-                >
-                  <img src={twLogo} alt="" width="120%" className="w-16" />
-                </a>
-              </div>
+  {/* Facebook */}
+  <a
+    href="https://www.facebook.com/kopi.coffeeworkspace" 
+    target="_blank"
+    rel="noopener noreferrer"
+    className="bg-tertiary h-[35px] w-[35px] flex items-center justify-center rounded-full"
+  >
+    <img src={fbLogo} alt="Facebook" />
+  </a>
+
+  {/* Instagram */}
+  <a
+    href="https://www.facebook.com/kopi.coffeeworkspace" 
+    target="_blank"
+    rel="noopener noreferrer"
+    className="bg-tertiary h-[35px] w-[35px] flex items-center justify-center rounded-full"
+  >
+    <img src={igLogo} alt="Instagram" />
+  </a>
+
+  {/* Twitter (hoặc X) */}
+  <a
+    href="https://www.facebook.com/kopi.coffeeworkspace" 
+    target="_blank"
+    rel="noopener noreferrer"
+    className="bg-tertiary h-[35px] w-[35px] flex items-center justify-center rounded-full"
+  >
+    <img src={twLogo} alt="Twitter" className="w-16" />
+  </a>
+</div>
               <div className="copyright">(c) 2025 Kopi</div>
-            </div>
-            <nav className="flex flex-row gap-10 md:flex-1">
-              <div className="flex-1 flex flex-col gap-5">
-                <div className="grid-item">
-                  <h4 className="font-bold">Product</h4>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <div className="grid-item">
-                    <a
-                      href="https://"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {" "}
-                      Download
-                    </a>
-                  </div>
-                  <div className="grid-item">
-                    <a
-                      href="https://"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Pricing
-                    </a>
-                  </div>
-                  <div className="grid-item">
-                    <a
-                      href="https://"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Locations
-                    </a>
-                  </div>
-                  <div className="grid-item">
-                    <a
-                      href="https://"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Countries
-                    </a>
-                  </div>
-                  <div className="grid-item">
-                    <a
-                      href="https://"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Blog
-                    </a>
-                  </div>
-                </div>
-              </div>
-              <div className="flex-1 flex flex-col gap-5">
-                <div className="grid-item">
-                  <h4 className="font-bold">Engage</h4>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <div className="grid-item">
-                    <a
-                      href="https://"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Coffee Shop ?
-                    </a>
-                  </div>
-                  <div className="grid-item">
-                    <a
-                      href="https://"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      FAQ
-                    </a>
-                  </div>
-                  <div className="grid-item">
-                    <a
-                      href="https://"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      About Us
-                    </a>
-                  </div>
-                  <div className="grid-item">
-                    <a
-                      href="https://"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Privacy Policy
-                    </a>
-                  </div>
-                  <div className="grid-item">
-                    <a
-                      href="https://"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Terms of Services
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </nav>
           </div>
+  <nav className="flex flex-row gap-10 md:flex-1">
+    <div className="flex-1 flex flex-col gap-5">
+      <div className="grid-item">
+        <h4 className="font-bold">Product</h4>
+      </div>
+      <div className="flex flex-col gap-2">
+        <div className="grid-item">
+          {/* Đã bỏ target="_blank" và sửa href */}
+          <a href="#">
+            {" "}
+            Download
+          </a>
+        </div>
+        <div className="grid-item">
+          <a href="#">
+            Pricing
+          </a>
+        </div>
+        <div className="grid-item">
+          <a href="#">
+            Locations
+          </a>
+        </div>
+        <div className="grid-item">
+          <a href="#">
+            Countries
+          </a>
+        </div>
+        <div className="grid-item">
+          <a href="#">
+            Blog
+          </a>
+        </div>
+      </div>
+    </div>
+    <div className="flex-1 flex flex-col gap-5">
+      <div className="grid-item">
+        <h4 className="font-bold">Engage</h4>
+      </div>
+      <div className="flex flex-col gap-2">
+        <div className="grid-item">
+          {/* Đã bỏ target="_blank" và sửa href */}
+          <a href="#">
+            Coffee Shop ?
+          </a>
+        </div>
+        <div className="grid-item">
+          <a href="#">
+            FAQ
+          </a>
+        </div>
+        <div className="grid-item">
+          <a href="#">
+            About Us
+          </a>
+        </div>
+        <div className="grid-item">
+          <a href="#">
+            Privacy Policy
+          </a>
+        </div>
+        <div className="grid-item">
+          <a href="#">
+            Terms of Services
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+</div>
           <div className="py-5"></div>
         </div>
       </footer>

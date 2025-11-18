@@ -5,6 +5,59 @@ import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { cartActions } from "../redux/slices/cart.slice";
 
+// Draggable hook
+const useDraggable = (elementRef) => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+  const currentPosRef = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    currentPosRef.current = position;
+  }, [position]);
+
+  useEffect(() => {
+    const element = elementRef.current;
+    if (!element) return;
+
+    const handleMouseDown = (e) => {
+      // Only allow dragging from header
+      if (!e.target.closest('.cursor-move')) return;
+      if (e.target.closest('button, input, a')) return;
+      
+      setIsDragging(true);
+      dragStartPos.current = {
+        x: e.clientX - currentPosRef.current.x,
+        y: e.clientY - currentPosRef.current.y,
+      };
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isDragging) return;
+      setPosition({
+        x: e.clientX - dragStartPos.current.x,
+        y: e.clientY - dragStartPos.current.y,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    element.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      element.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [elementRef, isDragging]);
+
+  return { position, isDragging };
+};
+
 const ChatBox = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -15,6 +68,8 @@ const ChatBox = () => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const hasShownWelcome = useRef(false);
+  const chatWindowRef = useRef(null);
+  const { position, isDragging } = useDraggable(chatWindowRef);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -27,7 +82,7 @@ const ChatBox = () => {
         {
           role: "assistant",
           content:
-            "Xin chào! 👋\n\nTôi là trợ lý ảo của Kopi Coffee & Workspace. Tôi có thể giúp bạn:\n\n✨ Đặt hàng sản phẩm\n📋 Xem danh sách sản phẩm\n📊 Kiểm tra tồn kho (Admin)\n💰 Xem báo cáo doanh thu (Admin)\n\nHãy cho tôi biết bạn cần gì nhé! 😊",
+            "Xin chào!\n\nTôi là trợ lý ảo của Kopi Coffee & Workspace. Tôi có thể giúp bạn:\n\n• Đặt hàng sản phẩm\n• Xem danh sách sản phẩm\n• Kiểm tra tồn kho (Admin)\n• Xem báo cáo doanh thu (Admin)\n\nHãy cho tôi biết bạn cần gì nhé!",
           timestamp: new Date().toISOString(),
         },
       ]);
@@ -172,24 +227,35 @@ const ChatBox = () => {
     <div className="fixed bottom-6 right-6 z-50 font-sans">
       {/* Chat Window */}
       {isOpen && (
-        <div className="mb-4 w-[400px] h-[650px] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-slideUp">
+        <div 
+          ref={chatWindowRef}
+          className="mb-4 w-[400px] h-[650px] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-slideUp"
+          style={{
+            transform: `translate(${position.x}px, ${position.y}px)`,
+            cursor: isDragging ? 'grabbing' : 'default',
+          }}
+        >
           {/* Header */}
-          <div className="bg-gradient-to-br from-amber-900 via-amber-800 to-amber-900 text-white p-5 flex justify-between items-center shadow-lg">
+          <div className="bg-gradient-to-br from-tertiary to-[#8B5A3C] text-white p-5 flex justify-between items-center shadow-lg cursor-move">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl backdrop-blur-sm">
-                ☕
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
               </div>
               <div>
                 <div className="font-bold text-lg">Trợ lý ảo Kopi</div>
-                <div className="text-xs text-amber-100 opacity-90">Luôn sẵn sàng hỗ trợ bạn</div>
+                <div className="text-xs text-white/80">Luôn sẵn sàng hỗ trợ bạn</div>
               </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/20 transition-all duration-200 text-xl hover:rotate-90"
+              className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/20 transition-all duration-200"
               aria-label="Đóng chat"
             >
-              ×
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
 
@@ -204,14 +270,16 @@ const ChatBox = () => {
                   } animate-fadeIn`}
                 >
                   {msg.role === "assistant" && (
-                    <div className="w-8 h-8 bg-gradient-to-br from-amber-700 to-amber-900 rounded-full flex items-center justify-center text-white text-sm shadow-md flex-shrink-0">
-                      ☕
+                    <div className="w-8 h-8 bg-tertiary rounded-full flex items-center justify-center text-white shadow-md flex-shrink-0">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
                     </div>
                   )}
                   <div
                     className={`max-w-[75%] px-4 py-3 rounded-2xl ${
                       msg.role === "user"
-                        ? "bg-gradient-to-br from-amber-700 to-amber-900 text-white rounded-br-sm shadow-lg"
+                        ? "bg-gradient-to-br from-tertiary to-[#8B5A3C] text-white rounded-br-sm shadow-lg"
                         : "bg-white text-gray-800 border border-gray-200 rounded-bl-sm shadow-md hover:shadow-lg transition-shadow"
                     }`}
                     style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
@@ -242,8 +310,10 @@ const ChatBox = () => {
                   )}
                   </div>
                   {msg.role === "user" && (
-                    <div className="w-8 h-8 bg-gradient-to-br from-amber-600 to-amber-800 rounded-full flex items-center justify-center text-white text-sm shadow-md flex-shrink-0">
-                      👤
+                    <div className="w-8 h-8 bg-tertiary/80 rounded-full flex items-center justify-center text-white shadow-md flex-shrink-0">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
                     </div>
                   )}
                 </div>
@@ -252,14 +322,16 @@ const ChatBox = () => {
               {/* Loading Indicator */}
               {loading && (
                 <div className="flex items-end gap-2 justify-start animate-fadeIn">
-                  <div className="w-8 h-8 bg-gradient-to-br from-amber-700 to-amber-900 rounded-full flex items-center justify-center text-white text-sm shadow-md">
-                    ☕
+                  <div className="w-8 h-8 bg-tertiary rounded-full flex items-center justify-center text-white shadow-md">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
                   </div>
                   <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-3 shadow-md">
                     <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-amber-600 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                      <div className="w-2 h-2 bg-amber-600 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                      <div className="w-2 h-2 bg-amber-600 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                      <div className="w-2 h-2 bg-tertiary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                      <div className="w-2 h-2 bg-tertiary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                      <div className="w-2 h-2 bg-tertiary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
                     </div>
                   </div>
                 </div>
@@ -281,7 +353,7 @@ const ChatBox = () => {
                           <button
                             key={idx}
                             onClick={() => handleSuggestionClick(suggestionText)}
-                            className="px-4 py-2 text-xs font-medium bg-white border border-gray-300 rounded-full hover:bg-gradient-to-r hover:from-amber-700 hover:to-amber-900 hover:text-white hover:border-transparent transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
+                            className="px-4 py-2 text-xs font-medium bg-white border border-gray-300 rounded-full hover:bg-tertiary hover:text-white hover:border-transparent transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
                           >
                             {suggestionText}
                           </button>
@@ -306,21 +378,23 @@ const ChatBox = () => {
                   onKeyDown={handleKeyDown}
                   placeholder="Nhập tin nhắn của bạn..."
                   disabled={loading}
-                  className="w-full px-5 py-3 pr-12 border-2 border-gray-200 rounded-full outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="w-full px-5 py-3 pr-12 border-2 border-gray-200 rounded-full outline-none focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 />
                 {input.trim() && (
                   <button
                     onClick={handleSend}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center hover:bg-amber-700 transition-colors"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-tertiary text-white flex items-center justify-center hover:bg-[#8B5A3C] transition-colors"
                   >
-                    ➤
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
                   </button>
                 )}
               </div>
               <button
                 onClick={handleSend}
                 disabled={loading || !input.trim()}
-                className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-700 to-amber-900 text-white flex items-center justify-center hover:scale-110 active:scale-95 transition-transform duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="w-12 h-12 rounded-full bg-gradient-to-br from-tertiary to-[#8B5A3C] text-white flex items-center justify-center hover:scale-110 active:scale-95 transition-transform duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 aria-label="Gửi tin nhắn"
               >
                 {loading ? (
@@ -349,12 +423,18 @@ const ChatBox = () => {
       {/* Chat Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-16 h-16 rounded-full bg-gradient-to-br from-amber-700 to-amber-900 text-white shadow-2xl hover:shadow-amber-500/50 transition-all duration-300 flex items-center justify-center text-2xl ${
-          isOpen ? "rotate-180" : "hover:scale-110 hover:rotate-12"
-        }`}
+        className="w-16 h-16 rounded-full bg-gradient-to-br from-tertiary to-[#8B5A3C] text-white shadow-2xl hover:shadow-tertiary/50 transition-all duration-300 flex items-center justify-center"
         aria-label="Mở/Đóng chat"
       >
-        {isOpen ? "✕" : "💬"}
+        {isOpen ? (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        ) : (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+        )}
       </button>
     </div>
   );
