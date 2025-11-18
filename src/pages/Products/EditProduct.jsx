@@ -16,6 +16,7 @@ import {
   editProductEntry,
   getProductbyId,
 } from "../../utils/dataProvider/products";
+import { getCategories } from "../../utils/dataProvider/categories";
 import useDocumentTitle from "../../utils/documentTitle";
 
 export const EditProduct = (props) => {
@@ -27,6 +28,7 @@ export const EditProduct = (props) => {
     price: "",
     category_id: "",
     desc: "",
+    stock: "",
     image: "",
   };
   const [form, setForm] = useState({
@@ -34,6 +36,7 @@ export const EditProduct = (props) => {
     price: "",
     category_id: "",
     desc: "",
+    stock: "",
     image: "",
   });
   const [data, setData] = useState({
@@ -57,6 +60,7 @@ export const EditProduct = (props) => {
   const [cancel, setCancel] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     getProductbyId(productId, controller)
@@ -70,6 +74,15 @@ export const EditProduct = (props) => {
         // console.log(error);
         setIsLoading(false);
       });
+  }, []);
+
+  useEffect(() => {
+    getCategories(controller)
+      .then((res) => {
+        const data = res.data?.data || [];
+        setCategories(data.sort((a,b) => (a.display_order ?? 0) - (b.display_order ?? 0)));
+      })
+      .catch(() => setCategories([]));
   }, []);
 
   useEffect(() => {
@@ -115,7 +128,8 @@ export const EditProduct = (props) => {
       form.category_id === "" ||
       form.desc === "" ||
       form.name === "" ||
-      form.price === ""
+      form.price === "" ||
+      form.stock === ""
     ) {
       return toast.error("Input required form");
     }
@@ -210,6 +224,23 @@ export const EditProduct = (props) => {
                 className="hidden"
                 onChange={onSelectFile}
               />
+
+              <label
+                className="text-tertiary font-bold text-lg"
+                htmlFor="product_stock"
+              >
+                Stock :
+              </label>
+              <input
+                placeholder="Type stock quantity"
+                name="stock"
+                id="product_stock"
+                type="number"
+                min="0"
+                value={form.stock}
+                onChange={formChangeHandler}
+                className="border-b-2 py-2 border-gray-300 focus:border-tertiary outline-none"
+              />
               <label
                 className="text-tertiary font-bold text-lg"
                 htmlFor="product_name"
@@ -293,10 +324,9 @@ export const EditProduct = (props) => {
                 <option disabled value="">
                   Select related category
                 </option>
-                <option value="1">Coffee</option>
-                <option value="2">Non-Coffee</option>
-                <option value="3">Food</option>
-                <option value="4">Add-ons</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
               </select>
               <button
                 type="submit"
