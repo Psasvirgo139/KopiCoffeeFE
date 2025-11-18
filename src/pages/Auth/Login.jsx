@@ -6,7 +6,7 @@ import { useDispatch } from "react-redux";
 
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
-import icon from "../../assets/jokopi.svg";
+// import icon from "../../assets/jokopi.svg"; // Bỏ import vì không dùng nữa
 import { profileAction } from "../../redux/slices/profile.slice";
 import { uinfoAct } from "../../redux/slices/userInfo.slice";
 import { login } from "../../utils/dataProvider/auth";
@@ -148,19 +148,16 @@ const Login = () => {
 
   return (
     <>
+      {/* === BỎ HEADER ===
       <header className="flex justify-between mb-10">
-        <Link to="/">
-          <div className="font-extrabold flex flex-row justify-center gap-4">
-            <img src={icon} alt="logo" width="30px" />
-            <h1 className="text-xl">Kopi.</h1>
-          </div>
-        </Link>
-        <div className="text-lg md:text-xl font-semibold text-tertiary">
-          Login
-        </div>
+        ...
       </header>
-      <section className="mt-16">
-        <form className="space-y-3 md:space-y-4 relative">
+      */}
+
+      {/* === BỎ `mt-16` === */}
+      <section>
+        {/* === GIẢM SPACING TỪ `space-y-3 md:space-y-4` XUỐNG `space-y-3` === */}
+        <form className="space-y-3 relative">
           <div>
             <label
               name="email"
@@ -181,7 +178,8 @@ const Login = () => {
               value={form.email}
               onChange={onChangeForm}
             />
-            <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1 h-4">
+            {/* === BỎ `h-4` ĐỂ GIẢM CHIỀU CAO === */}
+            <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1">
               {error.email !== "" ? error.email : ""}
             </span>
           </div>
@@ -205,7 +203,8 @@ const Login = () => {
               value={form.password}
               onChange={onChangeForm}
             />
-            <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1 h-4">
+            {/* === BỎ `h-4` ĐỂ GIẢM CHIỀU CAO === */}
+            <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1">
               {error.password !== "" ? error.password : ""}
             </span>
           </div>
@@ -289,13 +288,16 @@ const Login = () => {
           </button>
 
           <div className="inline-flex items-center justify-center w-full">
-            <hr className="w-full h-px my-6 bg-gray-200 border-0 dark:bg-gray-700" />
+            {/* === GIẢM MARGIN TỪ `my-6` XUỐNG `my-3` === */}
+            <hr className="w-full h-px my-3 bg-gray-200 border-0 dark:bg-gray-700" />
             <span className="absolute px-3 font-medium text-gray-900 -translate-x-1/2 bg-white left-1/2 w-56">
               Don’t have an account?
             </span>
           </div>
-          <Link to="/auth/register">
-            <button className="w-full text-white bg-tertiary focus:ring-4 focus:outline-none focus:ring-primary-300 font-bold rounded-2xl text-base md:text-lg p-3 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 shadow-xl lg:mb-20">
+          {/* === THÊM `mt-2` ĐỂ GIÃN RA MỘT CHÚT === */}
+          <Link to="/auth/register" className="block mt-2">
+            {/* === BỎ `lg:mb-20` === */}
+            <button className="w-full text-white bg-tertiary focus:ring-4 focus:outline-none focus:ring-primary-300 font-bold rounded-2xl text-base md:text-lg p-3 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 shadow-xl">
               Sign up here
             </button>
           </Link>

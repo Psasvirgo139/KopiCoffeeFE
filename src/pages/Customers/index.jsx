@@ -12,6 +12,8 @@ import {
   updateCustomer,
   createEmployee,
 } from "../../utils/dataProvider/admin";
+// Import toast (đã có sẵn)
+import toast from "react-hot-toast";
 
 const Customers = () => {
   const userInfo = useSelector((s) => s.userInfo);
@@ -41,8 +43,21 @@ const Customers = () => {
   const [filters, setFilters] = useState({});
   const [roles, setRoles] = useState([]);
 
+  // --- THÊM STATE CHO MODAL XÁC NHẬN ---
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [confirmProps, setConfirmProps] = useState({
+    title: "Confirm Action",
+    message: "Are you sure?",
+    onConfirm: () => {},
+    confirmText: "Confirm",
+    confirmClass: "btn-primary",
+  });
+  // --- KẾT THÚC STATE MODAL ---
+
+
   const fetchCustomers = useCallback(
     async (p, s, filtersArg = undefined) => {
+      // ... (code fetchCustomers giữ nguyên, không thay đổi)
       const pageParam = p ?? 0;
       const sizeParam = s ?? size;
       const filtersToUse = filtersArg !== undefined ? filtersArg : filters;
@@ -112,7 +127,7 @@ const Customers = () => {
     fetchCustomers(0, size, f);
   };
 
-  // load positions and roles for dropdowns
+  // load positions and roles (giữ nguyên)
   useEffect(() => {
     let mounted = true;
     const c = new AbortController();
@@ -149,7 +164,21 @@ const Customers = () => {
     };
   }, [userInfo.token]);
 
+  // --- THÊM HÀM MỞ MODAL ---
+  const openConfirmModal = ({
+    title,
+    message,
+    onConfirm,
+    confirmText = "Confirm",
+    confirmClass = "btn-primary",
+  }) => {
+    setConfirmProps({ title, message, onConfirm, confirmText, confirmClass });
+    setIsConfirmOpen(true);
+  };
+  // --- KẾT THÚC HÀM MỞ MODAL ---
+
   const openDetail = async (userId) => {
+    // ... (code openDetail giữ nguyên, không thay đổi)
     detailControllerRef.current?.abort();
     const c = new AbortController();
     detailControllerRef.current = c;
@@ -186,117 +215,139 @@ const Customers = () => {
     setSelectedStatus(null);
   };
 
+  // --- CẬP NHẬT: deleteCustomerHandler ---
   const deleteCustomerHandler = async () => {
     if (!detail) return;
-    if (
-      !confirm(
-        `Are you sure you want to ban user ${
-          detail.fullName ?? detail.userId
-        }? This action cannot be undone.`
-      )
-    )
-      return;
-    setDeleting(true);
-    try {
-      await deleteCustomer(
-        userInfo.token,
-        detail.userId ?? detail.id ?? detail.user_id
-      );
-      // refresh list
-      fetchCustomers(page, size, filters);
-      closeDetail();
-    } catch (err) {
-      console.error("Failed to delete customer:", err);
-      alert(
-        "Failed to ban user: " + (err?.response?.data?.message || err.message)
-      );
-    } finally {
-      setDeleting(false);
-    }
+
+    // Logic xóa sẽ được gọi bởi modal
+    const doDelete = async () => {
+      setDeleting(true);
+      try {
+        await deleteCustomer(
+          userInfo.token,
+          detail.userId ?? detail.id ?? detail.user_id
+        );
+        // SỬA: Dùng toast thay vì alert
+        toast.success("User banned successfully");
+        fetchCustomers(page, size, filters);
+        closeDetail();
+      } catch (err) {
+        console.error("Failed to delete customer:", err);
+        // SỬA: Dùng toast thay vì alert
+        toast.error(
+          "Failed to ban user: " + (err?.response?.data?.message || err.message)
+        );
+      } finally {
+        setDeleting(false);
+      }
+    };
+
+    // SỬA: Mở modal thay vì confirm
+    openConfirmModal({
+      title: "Ban User?",
+      message: `Are you sure you want to ban user ${
+        detail.fullName ?? detail.userId
+      }? This action cannot be undone.`,
+      onConfirm: doDelete,
+      confirmText: "Yes, Ban User",
+      confirmClass: "btn-error",
+    });
   };
 
+  // --- CẬP NHẬT: saveStatusHandler ---
   const saveStatusHandler = async () => {
     if (!detail || !selectedStatus) return;
-    // confirm in English before saving
-    if (
-      !confirm(
-        `Are you sure you want to change status of ${
-          detail.fullName ?? detail.userId
-        } to ${selectedStatus}?`
-      )
-    )
-      return;
-    try {
-      await updateCustomer(
-        userInfo.token,
-        detail.userId ?? detail.id ?? detail.user_id,
-        { status: selectedStatus }
-      );
-      // refresh
-      fetchCustomers(page, size, filters);
-      // update detail locally
-      setDetail({ ...detail, status: selectedStatus });
-      alert("Status updated");
-    } catch (err) {
-      console.error("Failed to update status:", err);
-      const status = err?.response?.status;
-      const body = err?.response?.data;
-      let bodyStr = "";
-      try {
-        bodyStr = typeof body === "string" ? body : JSON.stringify(body);
-      } catch (e) {
-        bodyStr = String(body);
-      }
-      // If server returned 5xx, try a PATCH fallback (some backends accept PATCH but PUT fails)
-      if (status && status >= 500) {
-        console.debug(
-          "Attempting PATCH fallback for updating customer status..."
-        );
-        try {
-          const id = detail.userId ?? detail.id ?? detail.user_id;
-          const cfg = {};
-          if (userInfo?.token)
-            cfg.headers = { Authorization: `Bearer ${userInfo.token}` };
-          await api.patch(
-            `/apiv1/admin/customers/${id}`,
-            { status: selectedStatus },
-            cfg
-          );
-          // success
-          fetchCustomers(page, size, filters);
-          setDetail({ ...detail, status: selectedStatus });
-          alert("Status updated (via PATCH fallback)");
-          return;
-        } catch (patchErr) {
-          console.error("PATCH fallback also failed:", patchErr);
-          const pStatus = patchErr?.response?.status;
-          const pBody = patchErr?.response?.data;
-          let pBodyStr = "";
-          try {
-            pBodyStr =
-              typeof pBody === "string" ? pBody : JSON.stringify(pBody);
-          } catch (e) {
-            pBodyStr = String(pBody);
-          }
-          alert(
-            `Failed to update status (PUT and PATCH): ${status || "?"} - ${
-              bodyStr || err.message
-            }; PATCH: ${pStatus || "?"} - ${pBodyStr || patchErr.message}`
-          );
-          return;
-        }
-      }
 
-      alert(
-        `Failed to update status: ${status || "?"} - ${bodyStr || err.message}`
-      );
-    }
+    // Logic lưu sẽ được gọi bởi modal
+    const doSave = async () => {
+      try {
+        await updateCustomer(
+          userInfo.token,
+          detail.userId ?? detail.id ?? detail.user_id,
+          { status: selectedStatus }
+        );
+        fetchCustomers(page, size, filters);
+        setDetail({ ...detail, status: selectedStatus });
+        // SỬA: Dùng toast thay vì alert
+        toast.success("Status updated");
+      } catch (err) {
+        console.error("Failed to update status:", err);
+        const status = err?.response?.status;
+        const body = err?.response?.data;
+        let bodyStr = "";
+        try {
+          bodyStr = typeof body === "string" ? body : JSON.stringify(body);
+        } catch (e) {
+          bodyStr = String(body);
+        }
+
+        if (status && status >= 500) {
+          console.debug("Attempting PATCH fallback...");
+          try {
+            const id = detail.userId ?? detail.id ?? detail.user_id;
+            const cfg = {};
+            if (userInfo?.token)
+              cfg.headers = { Authorization: `Bearer ${userInfo.token}` };
+            await api.patch(
+              `/apiv1/admin/customers/${id}`,
+              { status: selectedStatus },
+              cfg
+            );
+            
+            fetchCustomers(page, size, filters);
+            setDetail({ ...detail, status: selectedStatus });
+            // SỬA: Dùng toast thay vì alert
+            toast.success("Status updated (via PATCH fallback)");
+            return;
+          } catch (patchErr) {
+            console.error("PATCH fallback also failed:", patchErr);
+            const pStatus = patchErr?.response?.status;
+            const pBody = patchErr?.response?.data;
+            let pBodyStr = "";
+            try {
+              pBodyStr =
+                typeof pBody === "string" ? pBody : JSON.stringify(pBody);
+            } catch (e) {
+              pBodyStr = String(pBody);
+            }
+            // SỬA: Dùng toast thay vì alert
+            toast.error(
+              `Failed to update status (PUT and PATCH): ${status || "?"} - ${
+                bodyStr || err.message
+              }; PATCH: ${pStatus || "?"} - ${pBodyStr || patchErr.message}`,
+              { duration: 6000 } // Tăng thời gian hiển thị cho lỗi dài
+            );
+            return;
+          }
+        }
+
+        // SỬA: Dùng toast thay vì alert
+        toast.error(
+          `Failed to update status: ${status || "?"} - ${bodyStr || err.message}`
+        );
+      }
+    };
+
+    // SỬA: Mở modal thay vì confirm
+    openConfirmModal({
+      title: "Change Status?",
+      message: `Are you sure you want to change status of ${
+        detail.fullName ?? detail.userId
+      } to ${selectedStatus}?`,
+      onConfirm: doSave,
+      confirmText: "Yes, Save",
+      confirmClass: "btn-primary",
+    });
   };
 
+  // --- CẬP NHẬT: promoteToEmployeeHandler ---
   const promoteToEmployeeHandler = async () => {
-    if (!detail || !selectedPositionId)
-      return alert("Select a position to promote");
-    // ask for confirmation in English
+    if (!detail || !selectedPositionId) {
+      // SỬA: Dùng toast thay vì alert
+      toast.error("Select a position to promote");
+      return;
+    }
+
     const chosenPos = positions.find(
       (p) =>
         (p.id ?? p.positionId) === selectedPositionId ||
@@ -307,46 +358,53 @@ const Customers = () => {
       chosenPos?.position_name ??
       chosenPos?.name ??
       String(selectedPositionId);
-    if (
-      !confirm(
-        `Are you sure you want to promote ${
-          detail.fullName ?? detail.userId
-        } to position '${posName}'?`
-      )
-    )
-      return;
-    setPromoting(true);
-    try {
-      // Use the customers PUT endpoint to change role_id -> 2 and set positionId.
-      // Backend's UpdateEmployeeRequest supports roleId and status updates via updateEmployee.
-      const id = detail.userId ?? detail.id ?? detail.user_id;
-      const payload = {
-        roleId: 2,
-        positionId: selectedPositionId,
-      };
-      await updateCustomer(userInfo.token, id, payload);
-      // refresh list and detail
-      fetchCustomers(page, size, filters);
-      setDetail({ ...detail, roleId: 2, positionId: selectedPositionId });
-      setShowPromote(false);
-      alert("Promoted to employee successfully");
-    } catch (err) {
-      console.error("Promote failed:", err);
-      const status = err?.response?.status;
-      const body = err?.response?.data;
-      let bodyStr = "";
+
+    // Logic thăng chức sẽ được gọi bởi modal
+    const doPromote = async () => {
+      setPromoting(true);
       try {
-        bodyStr = typeof body === "string" ? body : JSON.stringify(body);
-      } catch (e) {
-        bodyStr = String(body);
+        const id = detail.userId ?? detail.id ?? detail.user_id;
+        const payload = {
+          roleId: 2,
+          positionId: selectedPositionId,
+        };
+        await updateCustomer(userInfo.token, id, payload);
+        
+        fetchCustomers(page, size, filters);
+        setDetail({ ...detail, roleId: 2, positionId: selectedPositionId });
+        setShowPromote(false);
+        // SỬA: Dùng toast thay vì alert
+        toast.success("Promoted to employee successfully");
+      } catch (err) {
+        console.error("Promote failed:", err);
+        const status = err?.response?.status;
+        const body = err?.response?.data;
+        let bodyStr = "";
+        try {
+          bodyStr = typeof body === "string" ? body : JSON.stringify(body);
+        } catch (e) {
+          bodyStr = String(body);
+        }
+        // SỬA: Dùng toast thay vì alert
+        toast.error(`Promote failed: ${status || "?"} - ${bodyStr || err.message}`);
+      } finally {
+        setPromoting(false);
       }
-      alert(`Promote failed: ${status || "?"} - ${bodyStr || err.message}`);
-    } finally {
-      setPromoting(false);
-    }
+    };
+
+    // SỬA: Mở modal thay vì confirm
+    openConfirmModal({
+      title: "Promote to Employee?",
+      message: `Are you sure you want to promote ${
+        detail.fullName ?? detail.userId
+      } to position '${posName}'?`,
+      onConfirm: doPromote,
+      confirmText: "Yes, Promote",
+      confirmClass: "btn-success",
+    });
   };
 
-  // focus the promote select when it becomes visible
+  // focus the promote select (giữ nguyên)
   useEffect(() => {
     if (showPromote) {
       try {
@@ -359,6 +417,7 @@ const Customers = () => {
     <>
       <Header />
       <main className="container mx-auto p-4">
+        {/* ... (Toàn bộ JSX của Filters, Table, v.v. giữ nguyên) ... */}
         <h1 className="text-2xl font-semibold mb-4">Manage Users</h1>
 
         {/* Filters - always visible */}
@@ -581,7 +640,7 @@ const Customers = () => {
                         onClick={deleteCustomerHandler}
                         disabled={deleting}
                       >
-                        {deleting ? "Deleting..." : "Ban user"}
+                        {deleting ? "Banning..." : "Ban user"}{" "}
                       </button>
                     </div>
 
@@ -722,6 +781,41 @@ const Customers = () => {
           </div>
         )}
       </main>
+
+      {/* --- THÊM MODAL XÁC NHẬN CHUNG --- */}
+      {isConfirmOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3
+              className={`font-bold text-lg ${
+                confirmProps.confirmClass === "btn-error" ? "text-error" : ""
+              }`}
+            >
+              {confirmProps.title}
+            </h3>
+            <p className="py-4">{confirmProps.message}</p>
+            <div className="modal-action">
+              <button
+                className="btn"
+                onClick={() => setIsConfirmOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className={`btn ${confirmProps.confirmClass}`}
+                onClick={() => {
+                  confirmProps.onConfirm();
+                  setIsConfirmOpen(false);
+                }}
+              >
+                {confirmProps.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* --- KẾT THÚC MODAL --- */}
+
       <Footer />
     </>
   );

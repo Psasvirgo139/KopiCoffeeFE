@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { getEmployees } from "../../utils/dataProvider/admin";
+import toast from "react-hot-toast"; // <--- THÊM IMPORT NÀY
 
 const Employees = () => {
   const userInfo = useSelector((s) => s.userInfo);
@@ -24,6 +25,30 @@ const Employees = () => {
   const [filterPhone, setFilterPhone] = useState("");
   const [filterEmail, setFilterEmail] = useState("");
   const [filterPositionId, setFilterPositionId] = useState("");
+
+  // --- THÊM STATE CHO MODAL XÁC NHẬN ---
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [confirmProps, setConfirmProps] = useState({
+    title: "Confirm Action",
+    message: "Are you sure?",
+    onConfirm: () => {},
+    confirmText: "Confirm",
+    confirmClass: "btn-primary",
+  });
+  // --- KẾT THÚC STATE MODAL ---
+
+  // --- THÊM HÀM MỞ MODAL ---
+  const openConfirmModal = ({
+    title,
+    message,
+    onConfirm,
+    confirmText = "Confirm",
+    confirmClass = "btn-primary",
+  }) => {
+    setConfirmProps({ title, message, onConfirm, confirmText, confirmClass });
+    setIsConfirmOpen(true);
+  };
+  // --- KẾT THÚC HÀM MỞ MODAL ---
 
   const doSearch = (overrides = {}) => {
     fetchEmployees({
@@ -92,7 +117,7 @@ const Employees = () => {
         setLoading(false);
       }
     },
-    [userInfo.token]
+    [userInfo.token, filterEmail, filterPhone, filterPositionId, filterUsername] // Thêm dependencies
   );
 
   const openDetail = async (userId) => {
@@ -158,62 +183,91 @@ const Employees = () => {
     }
   };
 
+  // --- HÀM ĐÃ CẬP NHẬT: saveChanges ---
   const saveChanges = async () => {
     if (!detail) return;
-    const confirm = window.confirm(
-      "Save changes to this employee? This will update position and status."
-    );
-    if (!confirm) return;
-    setSaving(true);
-    const c = new AbortController();
-    try {
-      const { updateEmployee } = await import("../../utils/dataProvider/admin");
-      const payload = {};
-      if (selectedPositionId !== null) payload.positionId = selectedPositionId;
-      if (selectedStatus !== null) payload.status = selectedStatus;
-      await updateEmployee(userInfo.token, detail.userId, payload, c);
-      alert("Employee updated successfully.");
-      // refresh list and detail
-      fetchEmployees();
-      openDetail(detail.userId);
-    } catch (err) {
-      console.error("Failed to save employee:", err);
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        JSON.stringify(err?.response?.data || err);
-      alert("Failed to save: " + msg);
-    } finally {
-      setSaving(false);
-    }
+
+    // Tách logic ra hàm riêng
+    const doSave = async () => {
+      setSaving(true);
+      const c = new AbortController();
+      try {
+        const { updateEmployee } = await import("../../utils/dataProvider/admin");
+        const payload = {};
+        if (selectedPositionId !== null) payload.positionId = selectedPositionId;
+        if (selectedStatus !== null) payload.status = selectedStatus;
+        await updateEmployee(userInfo.token, detail.userId, payload, c);
+        
+        // SỬA: Dùng toast
+        toast.success("Employee updated successfully.");
+        
+        // refresh list and detail
+        fetchEmployees();
+        openDetail(detail.userId);
+      } catch (err) {
+        console.error("Failed to save employee:", err);
+        const msg =
+          err?.response?.data?.message ||
+          err?.message ||
+          JSON.stringify(err?.response?.data || err);
+        
+        // SỬA: Dùng toast
+        toast.error("Failed to save: " + msg);
+      } finally {
+        setSaving(false);
+      }
+    };
+    
+    // SỬA: Mở modal
+    openConfirmModal({
+      title: "Save Changes?",
+      message: "Save changes to this employee? This will update position and status.",
+      onConfirm: doSave,
+      confirmText: "Yes, Save",
+      confirmClass: "btn-primary"
+    });
   };
 
+  // --- HÀM ĐÃ CẬP NHẬT: deleteEmployee ---
   const deleteEmployee = async () => {
     if (!detail) return;
-    const confirm = window.confirm(
-      "Are you sure you want to delete this employee? This will change their role to customer."
-    );
-    if (!confirm) return;
-    setDeleting(true);
-    const c = new AbortController();
-    try {
-      const { demoteEmployeeToCustomer } = await import(
-        "../../utils/dataProvider/admin"
-      );
-      await demoteEmployeeToCustomer(userInfo.token, detail.userId, c);
-      alert("Employee deleted (demoted to customer).");
-      fetchEmployees();
-      closeDetail();
-    } catch (err) {
-      console.error("Failed to delete/demote employee:", err);
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        JSON.stringify(err?.response?.data || err);
-      alert("Failed to delete: " + msg);
-    } finally {
-      setDeleting(false);
-    }
+
+    // Tách logic ra hàm riêng
+    const doDelete = async () => {
+      setDeleting(true);
+      const c = new AbortController();
+      try {
+        const { demoteEmployeeToCustomer } = await import(
+          "../../utils/dataProvider/admin"
+        );
+        await demoteEmployeeToCustomer(userInfo.token, detail.userId, c);
+        
+        // SỬA: Dùng toast
+        toast.success("Employee deleted (demoted to customer).");
+        fetchEmployees();
+        closeDetail();
+      } catch (err) {
+        console.error("Failed to delete/demote employee:", err);
+        const msg =
+          err?.response?.data?.message ||
+          err?.message ||
+          JSON.stringify(err?.response?.data || err);
+        
+        // SỬA: Dùng toast
+        toast.error("Failed to delete: " + msg);
+      } finally {
+        setDeleting(false);
+      }
+    };
+
+    // SỬA: Mở modal
+    openConfirmModal({
+      title: "Delete Employee?",
+      message: "Are you sure you want to delete this employee? This will change their role to customer.",
+      onConfirm: doDelete,
+      confirmText: "Yes, Delete",
+      confirmClass: "btn-error"
+    });
   };
 
   const closeDetail = () => {
@@ -368,7 +422,7 @@ const Employees = () => {
             <div className="mt-3">
               <button
                 className="btn btn-sm btn-primary mr-2"
-                onClick={fetchEmployees}
+                onClick={() => fetchEmployees()} // Sửa: gọi fetchEmployees
               >
                 Retry
               </button>
@@ -573,6 +627,41 @@ const Employees = () => {
           </div>
         )}
       </main>
+
+      {/* --- THÊM MODAL XÁC NHẬN CHUNG --- */}
+      {isConfirmOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3
+              className={`font-bold text-lg ${
+                confirmProps.confirmClass === "btn-error" ? "text-error" : ""
+              }`}
+            >
+              {confirmProps.title}
+            </h3>
+            <p className="py-4">{confirmProps.message}</p>
+            <div className="modal-action">
+              <button
+                className="btn"
+                onClick={() => setIsConfirmOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className={`btn ${confirmProps.confirmClass}`}
+                onClick={() => {
+                  confirmProps.onConfirm();
+                  setIsConfirmOpen(false);
+                }}
+              >
+                {confirmProps.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* --- KẾT THÚC MODAL --- */}
+
       <Footer />
     </>
   );

@@ -207,17 +207,7 @@ function AllShifts() {
                       <div className="flex items-center gap-3">
                         <h2 className="text-lg font-semibold text-slate-800">
                           {s.shiftName}
-                        </h2>
-                        {/* Status Badge */}
-                        <div>
-                          {!s.isActive ? (
-                            <span className="badge badge-error">Canceled</span>
-                          ) : hasOccurrence ? (
-                            <span className="badge badge-primary">Added</span>
-                          ) : (
-                            <span className="badge badge-success">Active</span>
-                          )}
-                        </div>
+                        </h2> 
                       </div>
 
                       <div className="text-sm font-medium text-slate-600 mt-1">
