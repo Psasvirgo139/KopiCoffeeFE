@@ -71,10 +71,10 @@ const yTicks = useMemo(() => {
        getSellingReport(
         period,
         userInfo.token,
-        undefined,                 // controller
-        startDate || undefined,    // from: "YYYY-MM-DD"
-        endDate   || undefined,    // to:   "YYYY-MM-DD"
-        0                          // buckets=0 → không trim số điểm
+        undefined,                 
+        startDate || undefined,    
+        endDate   || undefined,    
+        0                          
       ),
     ]); 
     setSummary(summaryRes.data);               
