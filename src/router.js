@@ -33,6 +33,7 @@ import NewShift from "./pages/Schedules/NewShift";
 import EditShift from "./pages/Schedules/EditShift";
 import EmployeeAssignment from "./pages/Schedules/EmployeeAssignment";
 import GenerateFromPattern from "./pages/Schedules/GenerateFromPattern";
+import Tables from "./pages/Admin/Tables";
 import StaffSchedule from "./pages/Staff/StaffSchedule";
 import ScrollToTop from "./utils/scrollToTop";
 import ChangePassword from "./pages/Auth/ChangePassword";
@@ -153,6 +154,7 @@ const Routers = () => {
             />
             <Route path="admin/shifts" element={<AllShifts />} />
             <Route path="admin/timetable" element={<WeeklyTimetable />} />
+            <Route path="admin/tables" element={<Tables />} />
           </Route>
         </Route>
       </Routes>

@@ -273,18 +273,7 @@ function ShippingOrder() {
 export default ShippingOrder;
 
 function CashierActions({ o, userInfo, controller, onUpdated }) {
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  const createdAtMs = o.created_at ? new Date(o.created_at).getTime() : Date.now();
-  const diffMs = now - createdAtMs;
-  const waitMs = Math.max(0, 5 * 60 * 1000 - diffMs);
-  const mm = String(Math.floor(waitMs / 60000)).padStart(2, "0");
-  const ss = String(Math.floor((waitMs % 60000) / 1000)).padStart(2, "0");
-
-  const disabledAccept = waitMs > 0 || o.status !== "PENDING";
+  const disabledAccept = o.status !== "PENDING";
 
   return (
     <div className="flex flex-col gap-2">
@@ -303,22 +292,12 @@ function CashierActions({ o, userInfo, controller, onUpdated }) {
               }
             }}
           >
-            {disabledAccept ? (
-              <span className="flex items-center justify-center gap-1.5 text-xs">
-                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Accept in {mm}:{ss}
-              </span>
-            ) : (
-              <span className="flex items-center justify-center gap-1.5 text-xs">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Accept order
-              </span>
-            )}
+            <span className="flex items-center justify-center gap-1.5 text-xs">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Accept order
+            </span>
           </button>
           <button
             className="w-full btn btn-sm btn-error text-white hover:bg-red-600 transition-colors"

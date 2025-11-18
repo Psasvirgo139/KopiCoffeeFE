@@ -46,7 +46,12 @@ const Login = () => {
       );
 
       toast.success("Login with Google successful!");
-      navigate("/", { replace: true });
+      const roleNum = Number(role);
+      if (roleNum === 1) {
+        navigate("/admin", { replace: true });
+      } else {
+        navigate("/products", { replace: true });
+      }
     }
   }, []);
 
@@ -113,7 +118,13 @@ const Login = () => {
             }
 
             // Luồng cũ nếu không phải mật khẩu tạm
-            navigate("/products");
+            let roleNum = null;
+            try { roleNum = Number(jwtDecode(token)?.role); } catch {}
+            if (roleNum === 1) {
+              navigate("/admin");
+            } else {
+              navigate("/products");
+            }
             toast.success("Welcome to Kopi!\nYou can order for now!", {
               icon: "👋",
               duration: Infinity,
