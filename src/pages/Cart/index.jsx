@@ -560,38 +560,7 @@ function Cart() {
                         </option>
                       ))}
                     </select>
-                    {editMode && selectedAddressId === "__new__" && (
-                      <div className="w-full mt-2">
-                        <input
-                          type="text"
-                          className="w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all"
-                          placeholder="Type new address and press Enter"
-                          value={newAddressText}
-                          onChange={(e) => setNewAddressText(e.target.value)}
-                          onKeyDown={async (e) => {
-                            if (e.key === "Enter") {
-                              const text = (newAddressText || "").trim();
-                              if (!text) return;
-                              try {
-                                const resp = await createAddress(
-                                  userInfo.token,
-                                  { address_line: text, set_default: (addresses.length === 0) },
-                                  controller
-                                );
-                                const res2 = await listAddresses(userInfo.token, controller);
-                                const data2 = res2.data?.data || [];
-                                setAddresses(data2);
-                                const newId = resp.data?.address_id;
-                                if (newId) setSelectedAddressId(newId);
-                                toast.success("Address saved");
-                              } catch {
-                                toast.error("Failed to save address");
-                              }
-                            }
-                          }}
-                        />
-                      </div>
-                    )}
+                    
                     {missingAddress && (
                       <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
