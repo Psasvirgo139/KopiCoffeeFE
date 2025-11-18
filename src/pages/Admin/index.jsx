@@ -68,8 +68,15 @@ const yTicks = useMemo(() => {
       api.get("/apiv1/adminPanel/reports/summary", {
         headers: { Authorization: `Bearer ${userInfo.token}` },
       }),
-      getSellingReport(period, userInfo.token),
-    ]);
+       getSellingReport(
+        period,
+        userInfo.token,
+        undefined,                 // controller
+        startDate || undefined,    // from: "YYYY-MM-DD"
+        endDate   || undefined,    // to:   "YYYY-MM-DD"
+        0                          // buckets=0 → không trim số điểm
+      ),
+    ]); 
     setSummary(summaryRes.data);               
     setChartData(normalizeRevenueRows(reportRes));
   } catch (err) {
@@ -88,7 +95,7 @@ const yTicks = useMemo(() => {
   const handleExport = async () => {
     setExportLoading(true);
     try {
-      const params = { view: period };
+      const params = { view: period, buckets: 0 }; 
       if (startDate) params.from = startDate;
       if (endDate) params.to = endDate;
 
