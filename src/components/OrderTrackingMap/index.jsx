@@ -349,7 +349,7 @@ function OrderTrackingMap({ orderId, deliveryAddress }) {
                   console.log("OrderTrackingMap: Shipper location not available yet");
                 }
               } catch {}
-            }, 5000);
+            }, 1000);
           } catch (e) {
             console.error("OrderTrackingMap: Error in load handler:", e);
             if (!cancelled) setError(e?.message || "Failed to initialize map markers");
