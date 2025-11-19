@@ -210,9 +210,7 @@ class Header extends Component {
                   />
                 </svg>
               </div>
-              {!_.isEmpty(this.props.userInfo.token) && (
-                <NotificationIcon />
-              )}
+              {!_.isEmpty(this.props.userInfo.token) && <NotificationIcon />}
               <button onClick={this.toggleNavbar}>
                 <img
                   src={burgerIcon}
@@ -328,7 +326,7 @@ class Header extends Component {
                         isActive ? "font-bold text-[#6A4029]" : ""
                       }
                     >
-                      Manage Users
+                      Account Management
                     </NavLink>
                   </li>
                   <li className="list-none" key="ManageOrders">
@@ -556,19 +554,19 @@ class Header extends Component {
                               >
                                 AI Product Suggestions
                               </NavLink>
-                            </li>          
+                            </li>
                             <NavLink
                               className="block px-4 py-2 hover:bg-gray-100  duration-200"
                               to="/promo"
                             >
                               Manage Promo
                             </NavLink>
-                          <NavLink
-                            className="block px-4 py-2 hover:bg-gray-100  duration-200"
-                            to="/admin/tables"
-                          >
-                            Manage Tables
-                          </NavLink>
+                            <NavLink
+                              className="block px-4 py-2 hover:bg-gray-100  duration-200"
+                              to="/admin/tables"
+                            >
+                              Manage Tables
+                            </NavLink>
                           </div>
                         )}
                         {role === 2 && (

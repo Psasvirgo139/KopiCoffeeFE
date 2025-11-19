@@ -25,6 +25,7 @@ import NewPromo from "./pages/Promo/NewPromo";
 import PromoList from "./pages/Promo";
 import Employees from "./pages/Employees";
 import Customers from "./pages/Customers";
+import BannedAccounts from "./pages/Customers/BannedAccounts";
 import Schedules from "./pages/Schedules";
 import RecurrencePatterns from "./pages/Schedules/RecurrencePatterns";
 import AllShifts from "./pages/Schedules/AllShifts";
@@ -96,7 +97,7 @@ const Routers = () => {
 
           {/* Public thank-you page (after payment redirect) */}
           <Route path="thank-you" element={<ThankYou />} />
-          
+
           {/* Route must be logged in */}
           <Route element={<CheckAuth />}>
             <Route path="cart" element={<Cart />} />
@@ -125,6 +126,7 @@ const Routers = () => {
             <Route path="admin" element={<AdminDashboard />} />
             <Route path="employees" element={<Employees />} />
             <Route path="customers" element={<Customers />} />
+            <Route path="customers/banned" element={<BannedAccounts />} />
             <Route path="admin/ai-suggest" element={<AiSuggest />} />
             <Route path="products/new" element={<NewProduct />} />
             <Route path="products/edit/:productId" element={<EditProduct />} />
