@@ -51,6 +51,35 @@ function ShippingOrder() {
       .finally(() => { if (isInitial) setInitialLoading(false); });
   };
 
+  const getPaymentBadges = (o) => {
+    const method = String(o?.payment_method || "").toUpperCase();
+    const pStatus = String(o?.payment_status || "").toUpperCase();
+
+    const methodBadge = method ? (
+      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-300">
+        {method === "BANKING" ? "Banking" : method === "CASH" ? "Cash" : method}
+      </span>
+    ) : null;
+
+    let statusCfg = { bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-300", label: pStatus };
+    if (pStatus === "PAID") statusCfg = { bg: "bg-green-100", text: "text-green-800", border: "border-green-300", label: "Paid" };
+    else if (pStatus === "PENDING") statusCfg = { bg: "bg-yellow-100", text: "text-yellow-800", border: "border-yellow-300", label: "Pending" };
+    else if (["CANCELLED", "FAILED"].includes(pStatus)) statusCfg = { bg: "bg-red-100", text: "text-red-800", border: "border-red-300", label: pStatus === "FAILED" ? "Failed" : "Cancelled" };
+
+    const paymentStatusBadge = method === "BANKING" && pStatus ? (
+      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${statusCfg.bg} ${statusCfg.text} ${statusCfg.border} border`}>
+        {statusCfg.label}
+      </span>
+    ) : null;
+
+    return (
+      <>
+        {methodBadge}
+        {paymentStatusBadge}
+      </>
+    );
+  };
+
   useEffect(() => {
     if (pollStartedRef.current) return; // guard StrictMode double-invoke
     pollStartedRef.current = true;
@@ -148,6 +177,7 @@ function ShippingOrder() {
                     <div className="flex items-center gap-3">
                       <h3 className="text-lg font-bold">Order #{o.id}</h3>
                       {getStatusBadge(o.status)}
+                      {getPaymentBadges(o)}
                     </div>
                     <p className="text-xs text-white/90">
                       {o.created_at ? new Date(o.created_at).toLocaleString('en-US', {
@@ -483,7 +513,7 @@ function ShipperActions({ o, userInfo, controller, onUpdated, profile, hasActive
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              Confirm paid
+              {(o?.payment_method === "BANKING" && o?.payment_status === "PAID") ? "Confirm deliveried" : "Confirm paid"}
             </span>
           </button>
           <Link to={`/shipping/${o.id}`} className="w-full btn btn-sm btn-secondary text-white hover:bg-secondary-200 transition-colors">
