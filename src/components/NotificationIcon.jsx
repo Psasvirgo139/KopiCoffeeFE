@@ -39,9 +39,9 @@ function NotificationIcon() {
 
     // Polling every 30 seconds
     if (!disabledRef.current) {
-      intervalRef.current = setInterval(() => {
-        loadUnreadCount();
-      }, 30000);
+    intervalRef.current = setInterval(() => {
+      loadUnreadCount();
+    }, 30000);
     }
 
     return () => {

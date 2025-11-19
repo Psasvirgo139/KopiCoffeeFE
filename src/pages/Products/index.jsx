@@ -116,6 +116,39 @@ function Products(props) {
     }
   }, [search]);
 
+  // Handle payment success redirect (from PayOS)
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment");
+    const orderId = searchParams.get("orderId");
+    
+    if (paymentStatus === "success" && orderId) {
+      // Check if user is logged in
+      if (userInfo?.token && userInfo.token.length > 0) {
+        // User is logged in → redirect to order detail
+        toast.success("Payment successful! Redirecting to order details...");
+        setTimeout(() => {
+          navigate(`/history/${orderId}`, { replace: true });
+        }, 500);
+      } else {
+        // User not logged in → show success message and clear params
+        toast.success("Payment successful! Please log in to view your order details.");
+        setSearchParams((prev) => {
+          const newParams = new URLSearchParams(prev);
+          newParams.delete("payment");
+          newParams.delete("orderId");
+          return newParams;
+        });
+      }
+    } else if (searchParams.get("error") === "payment_failed") {
+      toast.error("Payment failed. Please try again.");
+      setSearchParams((prev) => {
+        const newParams = new URLSearchParams(prev);
+        newParams.delete("error");
+        return newParams;
+      });
+    }
+  }, [searchParams, userInfo, navigate, setSearchParams]);
+
   const confirmOrder = async () => {
     if (!userInfo?.token || userInfo.token === "") {
       navigate("/auth/login");
