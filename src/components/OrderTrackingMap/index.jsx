@@ -10,8 +10,12 @@ try {
   mapboxgl = require("mapbox-gl");
 } catch {}
 
-function OrderTrackingMap({ orderId, deliveryAddress }) {
-  console.log("OrderTrackingMap: Component mounted", { orderId, deliveryAddress });
+function OrderTrackingMap({ orderId, deliveryAddress, orderStatus }) {
+  console.log("OrderTrackingMap: Component mounted", { orderId, deliveryAddress, orderStatus });
+  
+  // Skip all API calls if order is cancelled, rejected, or completed
+  const statusUpper = String(orderStatus || "").toUpperCase();
+  const isFinalStatus = ["COMPLETED", "CANCELLED", "REJECTED"].includes(statusUpper);
   
   const userInfo = useSelector((s) => s.userInfo);
   const controller = useMemo(() => new AbortController(), []);
@@ -72,7 +76,11 @@ function OrderTrackingMap({ orderId, deliveryAddress }) {
     process.env.MAPBOX_STYLE ||
     "mapbox://styles/mapbox/streets-v11";
   const kopiAddress =
-    process.env.REACT_APP_KOPI_LOCATION || process.env.KOPI_LOCATION || "38 Pham Van Dong, An Hai Bac, Son Tra, Da Nang";
+    process.env.REACT_APP_KOPI_LOCATION || process.env.KOPI_LOCATION || "38 đường Phạm Văn Đồng, An Hải, Sơn Trà, Đà Nẵng 550000, Việt Nam";
+  // Default coordinates for Kopi Coffee & Workspace: 38 Phạm Văn Đồng, An Hải, Sơn Trà, Đà Nẵng
+  // Coordinates from Google Maps: 16.07018, 108.23775
+  const defaultKopiLat = 16.07018;
+  const defaultKopiLng = 108.23775;
   const envKopiLat = parseFloat(
     process.env.REACT_APP_KOPI_LAT || process.env.KOPI_LAT || "NaN"
   );
@@ -231,6 +239,12 @@ function OrderTrackingMap({ orderId, deliveryAddress }) {
 
   useEffect(() => {
     if (!containerReady) return; // Wait for container to be ready
+    if (isFinalStatus) {
+      // Skip API calls for cancelled/completed/rejected orders
+      console.log("OrderTrackingMap: Skipping API calls for final status:", statusUpper);
+      setLoading(false);
+      return;
+    }
     
     let cancelled = false;
     let mapLoadTimeout = null;
@@ -262,17 +276,10 @@ function OrderTrackingMap({ orderId, deliveryAddress }) {
         const destAddress = infoResp?.data?.data?.address || deliveryAddress;
         if (!destAddress) throw new Error("Order has no address");
 
-        // Compute Kopi coord
-        let kopi;
-        if (Number.isFinite(envKopiLat) && Number.isFinite(envKopiLng)) {
-          kopi = { lat: envKopiLat, lng: envKopiLng };
-          console.log("OrderTrackingMap: Using env Kopi coordinates:", kopi);
-        } else if (kopiAddress) {
-          console.log("OrderTrackingMap: Geocoding Kopi address:", kopiAddress);
-          kopi = await geocodeAddress(kopiAddress);
-        } else {
-          throw new Error("Kopi location not configured");
-        }
+        // Compute Kopi coord - Always use default coordinates for accurate shop location
+        // Default coordinates are from Google Maps for "38 đường Phạm Văn Đồng, An Hải, Sơn Trà, Đà Nẵng"
+        let kopi = { lat: defaultKopiLat, lng: defaultKopiLng };
+        console.log("OrderTrackingMap: Using Kopi coordinates:", kopi);
 
         // Destination
         const destLat = infoResp?.data?.data?.lat;
@@ -325,28 +332,41 @@ function OrderTrackingMap({ orderId, deliveryAddress }) {
             console.log("OrderTrackingMap: Bounds fitted");
             setLoading(false);
 
-            // Poll shipper location
-            pollingRef.current = setInterval(async () => {
-              if (cancelled) return;
-              try {
-                const resp = await getShipperLocation(orderId, userInfo.token, controller);
-                const coord = resp?.data?.data;
-                if (coord && typeof coord.lng === "number" && typeof coord.lat === "number") {
-                  console.log("OrderTrackingMap: Shipper location received:", coord);
-                  upsertMarker(shipperMarkerRef, { lng: coord.lng, lat: coord.lat }, "#3b82f6", "Shipper");
-                  try {
-                    const line = await fetchDirections({ lng: coord.lng, lat: coord.lat }, dest);
-                    if (line) {
-                      console.log("OrderTrackingMap: Route drawn");
-                      drawRoute(line);
-                    }
-                    // Don't auto-fit bounds when updating shipper location (user might be zooming)
-                    // fitBoundsToPoints([kopi, dest, { lng: coord.lng, lat: coord.lat }]);
-                  } catch (e) {
-                    console.error("OrderTrackingMap: Error drawing route:", e);
+            // Poll shipper location (only if order is not in final status)
+            if (!isFinalStatus) {
+              pollingRef.current = setInterval(async () => {
+                if (cancelled || isFinalStatus) {
+                  if (pollingRef.current) {
+                    clearInterval(pollingRef.current);
+                    pollingRef.current = null;
                   }
-                } else {
-                  console.log("OrderTrackingMap: Shipper location not available yet");
+                  return;
+                }
+                try {
+                  const resp = await getShipperLocation(orderId, userInfo.token, controller);
+                  const coord = resp?.data?.data;
+                  if (coord && typeof coord.lng === "number" && typeof coord.lat === "number") {
+                    console.log("OrderTrackingMap: Shipper location received:", coord);
+                    upsertMarker(shipperMarkerRef, { lng: coord.lng, lat: coord.lat }, "#3b82f6", "Shipper");
+                    try {
+                      const line = await fetchDirections({ lng: coord.lng, lat: coord.lat }, dest);
+                      if (line) {
+                        console.log("OrderTrackingMap: Route drawn");
+                        drawRoute(line);
+                      }
+                      // Don't auto-fit bounds when updating shipper location (user might be zooming)
+                      // fitBoundsToPoints([kopi, dest, { lng: coord.lng, lat: coord.lat }]);
+                    } catch (e) {
+                      console.error("OrderTrackingMap: Error drawing route:", e);
+                    }
+                  } else {
+                    console.log("OrderTrackingMap: Shipper location not available yet");
+                  }
+                } catch (e) {
+                  // Silently ignore errors for cancelled/completed orders
+                  if (!isFinalStatus) {
+                    console.warn("OrderTrackingMap: Error fetching shipper location:", e?.message || e);
+                  }
                 }
               } catch {}
             }, 1000);
@@ -375,7 +395,7 @@ function OrderTrackingMap({ orderId, deliveryAddress }) {
         mapRef.current = null;
       }
     };
-  }, [containerReady, orderId, userInfo.token, accessToken, geocodeAddress, initMapIfNeeded, upsertMarker, fitBoundsToPoints, fetchDirections, drawRoute, controller, kopiAddress, envKopiLat, envKopiLng, deliveryAddress]);
+  }, [containerReady, orderId, orderStatus, isFinalStatus, statusUpper, userInfo.token, accessToken, geocodeAddress, initMapIfNeeded, upsertMarker, fitBoundsToPoints, fetchDirections, drawRoute, controller, kopiAddress, envKopiLat, envKopiLng, deliveryAddress]);
 
   // Always render container div so ref can be set, even when loading
   const containerDiv = (

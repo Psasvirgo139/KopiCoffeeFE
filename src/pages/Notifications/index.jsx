@@ -173,18 +173,17 @@ function NotificationPage() {
   }, []);
 
   const handleMarkAsRead = async (notificationId) => {
-    try {
-      await markAsRead(notificationId);
-      // Reload without abort controller (fresh load)
-      const controller = new AbortController();
-      loadAllNotifications(controller);
-    } catch (error) {
-      console.error("Failed to mark as read:", error);
-      if (error.message !== 'canceled' && error.name !== 'AbortError') {
-        toast.error("Cannot mark as read. Please try again.");
-      }
-    }
-  };
+  try {
+    await markAsRead(notificationId);
+  } catch (error) {
+    console.error("Failed to mark as read:", error);
+  } finally {
+    // Luôn reload lại danh sách để đồng bộ trạng thái
+    const controller = new AbortController();
+    loadAllNotifications(controller);
+  }
+};
+
 
   const handleMarkAllAsRead = async () => {
     try {

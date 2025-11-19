@@ -81,7 +81,7 @@ function EditShift() {
     }));
   };
 
-// THAY THẾ HÀM handleSubmit CŨ BẰNG HÀM NÀY
+  // THAY THẾ HÀM handleSubmit CŨ BẰNG HÀM NÀY
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -142,7 +142,6 @@ function EditShift() {
       toast.success("Shift updated successfully");
       navigate("/admin/shifts");
       // --- Kết thúc logic copy ---
-
     } catch (err) {
       console.error("Update shift error:", err);
       const serverMsg =
@@ -280,32 +279,30 @@ function EditShift() {
           </div>
         </div>
       </div>
-{/* --- THÊM MODAL XÁC NHẬN TẠI ĐÂY --- */}
-    {isConfirmUpdateOpen && (
-      <div className="modal modal-open">
-        <div className="modal-box">
-          <h3 className="font-bold text-lg">Confirm Update</h3>
-          <p className="py-4">
-            Are you sure you want to update this shift?
-          </p>
-          <div className="modal-action">
-            <button
-              className="btn btn-ghost"
-              onClick={() => setIsConfirmUpdateOpen(false)}
-            >
-              Cancel
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={handleConfirmUpdate} // Gọi hàm update
-            >
-              Yes, Update
-            </button>
+      {/* --- THÊM MODAL XÁC NHẬN TẠI ĐÂY --- */}
+      {isConfirmUpdateOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Confirm Update</h3>
+            <p className="py-4">Are you sure you want to update this shift?</p>
+            <div className="modal-action">
+              <button
+                className="btn btn-ghost"
+                onClick={() => setIsConfirmUpdateOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={handleConfirmUpdate} // Gọi hàm update
+              >
+                Yes, Update
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    )}
-    {/* --- KẾT THÚC MODAL --- */}
+      )}
+      {/* --- KẾT THÚC MODAL --- */}
       <Footer />
     </>
   );

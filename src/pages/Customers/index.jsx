@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
@@ -17,6 +18,7 @@ import toast from "react-hot-toast";
 
 const Customers = () => {
   const userInfo = useSelector((s) => s.userInfo);
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -53,7 +55,6 @@ const Customers = () => {
     confirmClass: "btn-primary",
   });
   // --- KẾT THÚC STATE MODAL ---
-
 
   const fetchCustomers = useCallback(
     async (p, s, filtersArg = undefined) => {
@@ -293,7 +294,7 @@ const Customers = () => {
               { status: selectedStatus },
               cfg
             );
-            
+
             fetchCustomers(page, size, filters);
             setDetail({ ...detail, status: selectedStatus });
             // SỬA: Dùng toast thay vì alert
@@ -323,7 +324,9 @@ const Customers = () => {
 
         // SỬA: Dùng toast thay vì alert
         toast.error(
-          `Failed to update status: ${status || "?"} - ${bodyStr || err.message}`
+          `Failed to update status: ${status || "?"} - ${
+            bodyStr || err.message
+          }`
         );
       }
     };
@@ -369,7 +372,7 @@ const Customers = () => {
           positionId: selectedPositionId,
         };
         await updateCustomer(userInfo.token, id, payload);
-        
+
         fetchCustomers(page, size, filters);
         setDetail({ ...detail, roleId: 2, positionId: selectedPositionId });
         setShowPromote(false);
@@ -386,7 +389,9 @@ const Customers = () => {
           bodyStr = String(body);
         }
         // SỬA: Dùng toast thay vì alert
-        toast.error(`Promote failed: ${status || "?"} - ${bodyStr || err.message}`);
+        toast.error(
+          `Promote failed: ${status || "?"} - ${bodyStr || err.message}`
+        );
       } finally {
         setPromoting(false);
       }
@@ -418,7 +423,17 @@ const Customers = () => {
       <Header />
       <main className="container mx-auto p-4">
         {/* ... (Toàn bộ JSX của Filters, Table, v.v. giữ nguyên) ... */}
-        <h1 className="text-2xl font-semibold mb-4">Manage Users</h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-semibold">Account Management</h1>
+          <div>
+            <button
+              className="btn btn-sm btn-warning"
+              onClick={() => navigate("/customers/banned")}
+            >
+              Banned account
+            </button>
+          </div>
+        </div>
 
         {/* Filters - always visible */}
         <div className="mb-4 p-3 bg-gray-50 border border-gray-100 rounded">
@@ -795,10 +810,7 @@ const Customers = () => {
             </h3>
             <p className="py-4">{confirmProps.message}</p>
             <div className="modal-action">
-              <button
-                className="btn"
-                onClick={() => setIsConfirmOpen(false)}
-              >
+              <button className="btn" onClick={() => setIsConfirmOpen(false)}>
                 Cancel
               </button>
               <button

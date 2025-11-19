@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 /**
  * OrderProgressBar Component
@@ -8,7 +8,7 @@ import React from 'react';
  * 3. On the way (SHIPPING)
  * 4. Delivered (COMPLETED)
  */
-function OrderProgressBar({ status }) {
+function OrderProgressBar({ status, orderId, createdAt, onCancel }) {
   const statusUpper = String(status || "").toUpperCase();
 
   // Determine current stage
@@ -68,6 +68,37 @@ function OrderProgressBar({ status }) {
   const isCancelled = ["CANCELLED", "REJECTED"].includes(statusUpper);
   const isOrderCompleted = currentStage === 4;
   const isShipping = ["SHIPPING", "ON_THE_WAY", "DELIVERED"].includes(statusUpper);
+  
+  // Cancel button logic: 5 minutes after order creation, before staff marks as READY
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  
+  // Can cancel: Within 5 minutes from order creation, and before staff marks as READY (PENDING or ACCEPTED only)
+  const canCancel = orderId && createdAt && !isCancelled && 
+    ["PENDING", "ACCEPTED", "PAID"].includes(statusUpper);
+  
+  let cancelCountdown = null;
+  let canCancelNow = false;
+  if (canCancel && createdAt) {
+    const createdAtMs = new Date(createdAt).getTime();
+    const diffMs = now - createdAtMs;
+    const cancelWindowMs = 5 * 60 * 1000; // 5 minutes window
+    const remainingMs = Math.max(0, cancelWindowMs - diffMs);
+    
+    // Can cancel if still within 5 minutes window
+    if (remainingMs > 0) {
+      canCancelNow = true;
+      const mm = String(Math.floor(remainingMs / 60000)).padStart(2, "0");
+      const ss = String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, "0");
+      cancelCountdown = `${mm}:${ss}`;
+    } else {
+      // After 5 minutes, cannot cancel anymore
+      canCancelNow = false;
+    }
+  }
   
   // Get color scheme based on status - softer, muted colors
   const getProgressColor = () => {
@@ -247,6 +278,28 @@ function OrderProgressBar({ status }) {
       {!isCancelled && currentStage === 4 && (
         <div className="mt-6 text-center">
           <p className={`text-lg ${getIconTextColor()} font-black drop-shadow-md`}>Order completed</p>
+        </div>
+      )}
+
+      {/* Cancel Button - Only show if can cancel and not cancelled */}
+      {canCancel && !isCancelled && (
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <button
+            onClick={onCancel}
+            disabled={!canCancelNow}
+            className={`px-6 py-3 rounded-lg font-semibold text-white transition-all duration-200 ${
+              canCancelNow
+                ? "bg-red-500 hover:bg-red-600 shadow-lg hover:shadow-xl active:scale-95"
+                : "bg-gray-400 cursor-not-allowed opacity-60"
+            }`}
+          >
+            Cancel Order
+          </button>
+          {cancelCountdown && (
+            <p className="text-sm text-gray-500 font-medium">
+              Cancel available for: {cancelCountdown}
+            </p>
+          )}
         </div>
       )}
     </div>

@@ -6,6 +6,7 @@ import React, {
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 import loadingImage from '../../assets/images/loading.svg';
 import productPlaceholder from '../../assets/images/placeholder-image.webp';
@@ -13,7 +14,7 @@ import Footer from '../../components/Footer';
 import Header from '../../components/Header';
 import OrderProgressBar from '../../components/OrderProgressBar';
 import OrderTrackingMap from '../../components/OrderTrackingMap';
-import { getTransactionDetail } from '../../utils/dataProvider/transaction';
+import { getTransactionDetail, updateTransactionStatus } from '../../utils/dataProvider/transaction';
 import useDocumentTitle from '../../utils/documentTitle';
 import {
   formatDateTime,
@@ -55,8 +56,34 @@ function HistoryDetail() {
   const [dataDetail, setDataDetail] = useState({
     ...initialValue,
   });
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   useDocumentTitle("Order Detail");
+
+  const handleCancelOrder = () => {
+    setShowCancelConfirm(true);
+  };
+
+  const confirmCancelOrder = async () => {
+    if (!orderId || !authInfo.token) return;
+    
+    setShowCancelConfirm(false);
+    const controller = new AbortController();
+    try {
+      await updateTransactionStatus(orderId, "CANCELLED", authInfo.token, controller);
+      toast.success("Order cancelled successfully. If you paid via PayOS, refund will be processed within 4-10 business days.");
+      
+      // Reload order data to reflect cancelled status
+      const result = await getTransactionDetail(orderId, authInfo.token, controller);
+      if (result.data && result.data.data && result.data.data[0]) {
+        setDataDetail(result.data.data[0]);
+      }
+    } catch (error) {
+      if (axios.isCancel(error)) return;
+      console.error("Cancel order error:", error);
+      toast.error(error.response?.data?.message || "Failed to cancel order. Please try again.");
+    }
+  };
 
   const getStatusBadgeClass = (status) => {
     const statusUpper = String(status || "").toUpperCase();
@@ -255,7 +282,12 @@ function HistoryDetail() {
               {/* Order Progress Bar Section - Show for all orders */}
               {dataDetail.id > 0 && (
                 <div className="mb-8 bg-gradient-to-br from-white to-gray-50 rounded-2xl p-8 border-2 border-gray-100 shadow-lg">
-                  <OrderProgressBar status={dataDetail.status_name || "PENDING"} />
+                  <OrderProgressBar 
+                    status={dataDetail.status_name || "PENDING"}
+                    orderId={orderId}
+                    createdAt={dataDetail.transaction_time || dataDetail.created_at}
+                    onCancel={handleCancelOrder}
+                  />
                 </div>
               )}
 
@@ -321,6 +353,7 @@ function HistoryDetail() {
                     <OrderTrackingMap 
                       orderId={orderId} 
                       deliveryAddress={dataDetail.delivery_address}
+                      orderStatus={dataDetail.status_name}
                     />
                   </div>
                 ) : null;
@@ -459,6 +492,34 @@ function HistoryDetail() {
         </section>
       </main>
       <Footer />
+
+      {/* Cancel Order Confirmation Modal */}
+      {showCancelConfirm && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg text-red-600 mb-2">
+              Cancel Order
+            </h3>
+            <p className="py-4 text-gray-700">
+              Are you sure you want to cancel this order? If you paid via PayOS, a refund will be processed within 4-10 business days.
+            </p>
+            <div className="modal-action">
+              <button
+                className="btn"
+                onClick={() => setShowCancelConfirm(false)}
+              >
+                Keep Order
+              </button>
+              <button
+                className="btn btn-error text-white"
+                onClick={confirmCancelOrder}
+              >
+                Yes, Cancel Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
