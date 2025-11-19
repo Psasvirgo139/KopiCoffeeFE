@@ -368,8 +368,8 @@ function OrderTrackingMap({ orderId, deliveryAddress, orderStatus }) {
                     console.warn("OrderTrackingMap: Error fetching shipper location:", e?.message || e);
                   }
                 }
-              } catch {}
             }, 1000);
+          }
           } catch (e) {
             console.error("OrderTrackingMap: Error in load handler:", e);
             if (!cancelled) setError(e?.message || "Failed to initialize map markers");
