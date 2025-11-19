@@ -5,12 +5,13 @@ const buildAuth = (token, controller) => ({
   signal: controller?.signal,
 });
 
-
 export const getMonthlyReport = async (token, controller) => {
-  const res = await api.get("/apiv1/adminPanel/monthlyReport", buildAuth(token, controller));
-  return res.data; 
+  const res = await api.get(
+    "/apiv1/adminPanel/monthlyReport",
+    buildAuth(token, controller)
+  );
+  return res.data;
 };
-
 
 export const getSellingReport = async (
   view = "monthly",
@@ -32,17 +33,23 @@ export const getSellingReport = async (
 
   try {
     const r1 = await api.get("/apiv1/adminPanel/reports", { params, ...auth });
-    return r1.data; 
+    return r1.data;
   } catch (e1) {
     try {
-      const r2 = await api.get("/apiv1/admin/selling-report", { params, ...auth });
+      const r2 = await api.get("/apiv1/admin/selling-report", {
+        params,
+        ...auth,
+      });
       return r2.data;
     } catch (e2) {
       try {
-        const r3 = await api.get("/apiv1/admin/sellingReport", { params, ...auth });
+        const r3 = await api.get("/apiv1/admin/sellingReport", {
+          params,
+          ...auth,
+        });
         return r3.data;
       } catch (e3) {
-        throw (e1.response ? e1 : e2.response ? e2 : e3);
+        throw e1.response ? e1 : e2.response ? e2 : e3;
       }
     }
   }
@@ -64,7 +71,7 @@ export const exportRevenueReport = async (
     ...buildAuth(token),
     responseType: "blob",
   });
-  return res.data; 
+  return res.data;
 };
 
 export const getEmployees = (token, controller, params = {}) => {
@@ -132,6 +139,26 @@ export const updateCustomer = (token, userId, payload = {}, controller) => {
   const cfg = { signal: controller?.signal };
   if (token) cfg.headers = { Authorization: `Bearer ${token}` };
   return api.put(`/apiv1/admin/customers/${userId}`, payload, cfg);
+};
+
+export const unbanCustomer = async (token, userId, controller) => {
+  const cfg = { signal: controller?.signal };
+  if (token) cfg.headers = { Authorization: `Bearer ${token}` };
+
+  try {
+    return await api.put(`/apiv1/admin/customers/${userId}/unban`, {}, cfg);
+  } catch (err) {
+    const statusCode = err?.response?.status;
+    if (!statusCode || [404, 405, 400, 501].includes(statusCode)) {
+      return await updateCustomer(
+        token,
+        userId,
+        { status: "ACTIVE" },
+        controller
+      );
+    }
+    throw err;
+  }
 };
 
 export const createEmployee = (token, payload = {}, controller) => {
